@@ -1,2 +1,2 @@
 # azure-extension-helper
-Repository for 
+Repository for common boilerplate code for Azure VM extensions (WIP)
