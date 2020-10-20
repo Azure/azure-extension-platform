@@ -21,7 +21,7 @@ type InitializationInfo struct {
 	OtherExitCode       int                // Exit code to use for all other cases
 	EnableCallback      EnableCallbackFunc // Called for the enable operation
 	DisableCallback     CallbackFunc       // Called for the disable operation. Only set this if the extension wants a callback.
-	UpdateCallback      CallbackFunc       // Called for the udpate operation. If nil, then update is not supported.
+	UpdateCallback      CallbackFunc       // Called for the update operation. If nil, then update is not supported.
 }
 
 // GetInitializationInfo returns a new InitializationInfo object
