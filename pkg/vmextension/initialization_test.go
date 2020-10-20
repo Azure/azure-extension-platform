@@ -4,7 +4,7 @@ import (
 	"testing"
 	"github.com/go-kit/kit/log"
 	"github.com/stretchr/testify/require"
-	"github.com/Azure/VMApplication-Extension/VmExtensionHelper/extensionerrors"
+	"github.com/D1v38om83r/azure-extension-platform/pkg/extensionerrors"
 )
 
 func Test_initializationInfoValidate(t *testing.T) {

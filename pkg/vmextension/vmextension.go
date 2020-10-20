@@ -2,11 +2,11 @@ package vmextension
 
 import (
 	"fmt"
-	"github.com/Azure/VMApplication-Extension/VmExtensionHelper/seqno"
-	"github.com/Azure/VMApplication-Extension/VmExtensionHelper/settings"
-	"github.com/Azure/VMApplication-Extension/VmExtensionHelper/extensionerrors"
-	"github.com/Azure/VMApplication-Extension/VmExtensionHelper/handlerenv"
-	"github.com/Azure/VMApplication-Extension/VmExtensionHelper/status"
+	"github.com/D1v38om83r/azure-extension-platform/pkg/seqno"
+	"github.com/D1v38om83r/azure-extension-platform/pkg/settings"
+	"github.com/D1v38om83r/azure-extension-platform/pkg/extensionerrors"
+	"github.com/D1v38om83r/azure-extension-platform/pkg/handlerenv"
+	"github.com/D1v38om83r/azure-extension-platform/pkg/status"
 	"os"
 	"strings"
 	"github.com/go-kit/kit/log"

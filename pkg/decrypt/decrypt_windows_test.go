@@ -2,7 +2,7 @@ package decrypt
 
 import (
 	"encoding/hex"
-	"github.com/Azure/VMApplication-Extension/VmExtensionHelper/extensionerrors"
+	"github.com/D1v38om83r/azure-extension-platform/pkg/extensionerrors"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/sys/windows"
 	"syscall"

@@ -2,7 +2,7 @@ package seqno
 
 import (
 	"fmt"
-	"github.com/Azure/VMApplication-Extension/VmExtensionHelper/extensionerrors"
+	"github.com/D1v38om83r/azure-extension-platform/pkg/extensionerrors"
 	"golang.org/x/sys/windows/registry"
 )
 
@@ -12,7 +12,7 @@ const (
 
 // getSequenceNumberInternal is the Windows specific logic for reading the current
 // sequence number for the extension from the registry
-func getSequenceNumberInternal(name, version, configFolder string) (uint, error) {
+func getSequenceNumberInternal(name, version string) (uint, error) {
 	extensionKeyName := getExtensionKeyName(name, version)
 	k, err := registry.OpenKey(registry.LOCAL_MACHINE, extensionKeyName, registry.QUERY_VALUE)
 	if err != nil {

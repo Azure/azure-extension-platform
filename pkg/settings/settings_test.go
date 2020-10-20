@@ -3,8 +3,8 @@ package settings
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/Azure/VMApplication-Extension/VmExtensionHelper/extensionerrors"
-	"github.com/Azure/VMApplication-Extension/VmExtensionHelper/handlerenv"
+	"github.com/D1v38om83r/azure-extension-platform/pkg/extensionerrors"
+	"github.com/D1v38om83r/azure-extension-platform/pkg/handlerenv"
 	"io/ioutil"
 	"os"
 	"path/filepath"

@@ -1,7 +1,7 @@
 package seqno
 
 import (
-	"github.com/Azure/VMApplication-Extension/VmExtensionHelper/extensionerrors"
+	"github.com/D1v38om83r/azure-extension-platform/pkg/extensionerrors"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/sys/windows/registry"
 	"testing"
@@ -17,7 +17,7 @@ const (
 
 func Test_getSequenceNumberInternalNoRegistryKey(t *testing.T) {
 	ensureRegistryKeyMissing(t, testKeyName)
-	sn, err := getSequenceNumberInternal(testExtensionName, testExtensionVersion, sequenceNumberTestFolder)
+	sn, err := getSequenceNumberInternal(testExtensionName, testExtensionVersion)
 	require.Error(t, err, extensionerrors.ErrNotFound)
 	require.Equal(t, uint(0), sn)
 }
@@ -25,7 +25,7 @@ func Test_getSequenceNumberInternalNoRegistryKey(t *testing.T) {
 func Test_getSequenceNumberInternalNoValue(t *testing.T) {
 	ensureRegistryKeyCreated(t, testKeyName)
 	ensureRegistryValueMissing(t, testKeyName, sequenceNumberKeyName)
-	sn, err := getSequenceNumberInternal(testExtensionName, testExtensionVersion, sequenceNumberTestFolder)
+	sn, err := getSequenceNumberInternal(testExtensionName, testExtensionVersion)
 	require.Error(t, err, extensionerrors.ErrNotFound)
 	require.Equal(t, uint(0), sn)
 }
@@ -33,7 +33,7 @@ func Test_getSequenceNumberInternalNoValue(t *testing.T) {
 func Test_getSequenceNumberInternalHasValue(t *testing.T) {
 	ensureRegistryKeyCreated(t, testKeyName)
 	ensureRegistryValueCreated(t, testKeyName, sequenceNumberKeyName, 5)
-	sn, err := getSequenceNumberInternal(testExtensionName, testExtensionVersion, sequenceNumberTestFolder)
+	sn, err := getSequenceNumberInternal(testExtensionName, testExtensionVersion)
 	require.NoError(t, err, "getSequenceNumberInternal failed")
 	require.Equal(t, uint(5), sn)
 }
@@ -49,7 +49,7 @@ func Test_setSequenceNumberInternalValidReplace(t *testing.T) {
 	ensureRegistryValueCreated(t, testKeyName, sequenceNumberKeyName, 5)
 	err := setSequenceNumberInternal(testExtensionName, testExtensionVersion, 42)
 	require.NoError(t, err, "setSequenceNumberInternal failed")
-	sn, err := getSequenceNumberInternal(testExtensionName, testExtensionVersion, sequenceNumberTestFolder)
+	sn, err := getSequenceNumberInternal(testExtensionName, testExtensionVersion)
 	require.NoError(t, err, "getSquenceNumberInternal failed")
 	require.Equal(t, uint(42), sn)
 }
@@ -59,7 +59,7 @@ func Test_setSequenceNumberInternalValidSet(t *testing.T) {
 	ensureRegistryValueMissing(t, testKeyName, sequenceNumberKeyName)
 	err := setSequenceNumberInternal(testExtensionName, testExtensionVersion, 42)
 	require.NoError(t, err, "setSequenceNumberInternal failed")
-	sn, err := getSequenceNumberInternal(testExtensionName, testExtensionVersion, sequenceNumberTestFolder)
+	sn, err := getSequenceNumberInternal(testExtensionName, testExtensionVersion)
 	require.NoError(t, err, "getSquenceNumberInternal failed")
 	require.Equal(t, uint(42), sn)
 }

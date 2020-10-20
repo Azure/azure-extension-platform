@@ -1,8 +1,8 @@
 package seqno
 
 import (
-	"github.com/Azure/VMApplication-Extension/VmExtensionHelper/extensionerrors"
-	"github.com/Azure/VMApplication-Extension/VmExtensionHelper/testhelpers"
+	"github.com/D1v38om83r/azure-extension-platform/pkg/extensionerrors"
+	"github.com/D1v38om83r/azure-extension-platform/pkg/testhelpers"
 	"io/ioutil"
 	"os"
 	"path"

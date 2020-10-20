@@ -2,7 +2,7 @@ package vmextension
 
 import (
 	"fmt"
-	"github.com/Azure/VMApplication-Extension/VmExtensionHelper/handlerenv"
+	"github.com/D1v38om83r/azure-extension-platform/pkg/handlerenv"
 	"golang.org/x/sys/windows/registry"
 	"os"
 	"path"
