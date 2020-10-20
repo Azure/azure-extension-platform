@@ -1,3 +1,3 @@
 # azure-extension-helper
-Repository for common boilerplate code for Azure VM extensions.
+Repository for common code for Azure VM extensions in golang.
 For an example of how to use to packages please referer to master/master.go
