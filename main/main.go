@@ -1,6 +1,6 @@
 // Sample code to for how to use azure-extension-helper with your extension
 
-package azure_extension_platform
+package main
 
 import (
 	"github.com/D1v38om83r/azure-extension-platform/vmextension"
