@@ -13,8 +13,6 @@ const (
 	testExtensionVersion = "5.0"
 )
 
-
-
 func Test_getSequenceNumberInternalNoRegistryKey(t *testing.T) {
 	ensureRegistryKeyMissing(t, testKeyName)
 	sn, err := getSequenceNumberInternal(testExtensionName, testExtensionVersion)

@@ -106,7 +106,7 @@ func isDisabled(ctx log.Logger, ext *VMExtension) bool {
 	disabledFile := path.Join(ext.HandlerEnv.ConfigFolder, disabledFileName)
 	exists, err := doesFileExistDisableDependency(disabledFile)
 	if err != nil {
-		ctx.Log("message", "doesFileExit error detected: " + err.Error())
+		ctx.Log("message", "doesFileExit error detected: "+err.Error())
 	}
 	return exists
 }
@@ -115,7 +115,7 @@ func setDisabled(ctx log.Logger, ext *VMExtension, disabled bool) error {
 	disabledFile := path.Join(ext.HandlerEnv.ConfigFolder, disabledFileName)
 	exists, err := doesFileExistDisableDependency(disabledFile)
 	if err != nil {
-		ctx.Log("message", "doesFileExit error detected: " + err.Error())
+		ctx.Log("message", "doesFileExit error detected: "+err.Error())
 	}
 	if exists != disabled {
 		if disabled {

@@ -7,9 +7,7 @@ import (
 	"testing"
 )
 
-
-
-func Test_writeReadSequenceNumberFile(t *testing.T){
+func Test_writeReadSequenceNumberFile(t *testing.T) {
 	defer cleanupTest()
 	seqno := uint(rand.Int())
 	err := setSequenceNumberInternal("some name", "some version", seqno)
@@ -19,6 +17,6 @@ func Test_writeReadSequenceNumberFile(t *testing.T){
 	assert.Equal(t, seqno, readSeqno, "read sequence number should be same as set sequence number")
 }
 
-func cleanupTest(){
+func cleanupTest() {
 	os.Remove(mostRecentSequenceFileName)
 }

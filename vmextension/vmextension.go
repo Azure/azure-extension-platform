@@ -2,16 +2,15 @@ package vmextension
 
 import (
 	"fmt"
-	"github.com/D1v38om83r/azure-extension-platform/pkg/seqno"
-	"github.com/D1v38om83r/azure-extension-platform/pkg/settings"
 	"github.com/D1v38om83r/azure-extension-platform/pkg/extensionerrors"
 	"github.com/D1v38om83r/azure-extension-platform/pkg/handlerenv"
+	"github.com/D1v38om83r/azure-extension-platform/pkg/seqno"
+	"github.com/D1v38om83r/azure-extension-platform/pkg/settings"
 	"github.com/D1v38om83r/azure-extension-platform/pkg/status"
-	"os"
-	"strings"
 	"github.com/go-kit/kit/log"
 	"github.com/pkg/errors"
-
+	"os"
+	"strings"
 )
 
 type cmdFunc func(ctx log.Logger, ext *VMExtension) (msg string, err error)
@@ -39,16 +38,14 @@ type executionInfo struct {
 
 // VMExtension is an abstraction for standard extension operations in an OS agnostic manner
 type VMExtension struct {
-	Name                    string              // The name of the extension. This will contain 'Windows' or 'Linux'
-	Version                 string              // The version of the extension
-	RequestedSequenceNumber uint                // The requested sequence number to run
-	CurrentSequenceNumber   uint                // The last run sequence number
+	Name                    string                         // The name of the extension. This will contain 'Windows' or 'Linux'
+	Version                 string                         // The version of the extension
+	RequestedSequenceNumber uint                           // The requested sequence number to run
+	CurrentSequenceNumber   uint                           // The last run sequence number
 	HandlerEnv              *handlerenv.HandlerEnvironment // Contains information about the folders necessary for the extension
-	Settings                *settings.HandlerSettings    // Contains settings passed to the extension
-	exec                    *executionInfo      // Internal information necessary for the extension to run
+	Settings                *settings.HandlerSettings      // Contains settings passed to the extension
+	exec                    *executionInfo                 // Internal information necessary for the extension to run
 }
-
-
 
 // Allows for mocking all environment operations when running tests against VM extensions
 type getVMExtensionEnvironmentManager interface {
@@ -255,5 +252,3 @@ func noop(ctx log.Logger, ext *VMExtension) (string, error) {
 	ctx.Log("event", "noop")
 	return "", nil
 }
-
-

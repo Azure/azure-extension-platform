@@ -174,5 +174,3 @@ func writeSequenceNumberFile(t *testing.T, testDirectory string, name string) st
 
 	return fullPath
 }
-
-

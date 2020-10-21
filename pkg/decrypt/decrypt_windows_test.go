@@ -12,8 +12,8 @@ import (
 )
 
 const (
-	certNCryptKeySpec    = 0xFFFFFFFF
-	szOID_RSA_RC4        = "1.2.840.113549.3.4"
+	certNCryptKeySpec = 0xFFFFFFFF
+	szOID_RSA_RC4     = "1.2.840.113549.3.4"
 )
 
 var (

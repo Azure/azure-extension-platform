@@ -1,9 +1,9 @@
 // Sample code to for how to use azure-extension-helper with your extension
 
-package main
+package azure_extension_platform
 
 import (
-	"github.com/D1v38om83r/azure-extension-platform/pkg/vmextension"
+	"github.com/D1v38om83r/azure-extension-platform/vmextension"
 	"github.com/go-kit/kit/log"
 	"os"
 )
@@ -40,7 +40,7 @@ func main() {
 	}
 }
 
-func getExtensionAndRun() (error) {
+func getExtensionAndRun() error {
 	initilizationInfo, err := vmextension.GetInitializationInfo(extensionName, extensionVersion, true, enableCallbackFunc)
 	if err != nil {
 		return err
@@ -49,7 +49,7 @@ func getExtensionAndRun() (error) {
 	initilizationInfo.DisableCallback = disableCallbackFunc
 	initilizationInfo.UpdateCallback = updateCallbackFunc
 	ctx := log.With(log.With(logger, "time", log.DefaultTimestampUTC), "version", extensionVersion)
-	vmExt , err := vmextension.GetVMExtension(ctx, initilizationInfo)
+	vmExt, err := vmextension.GetVMExtension(ctx, initilizationInfo)
 	if err != nil {
 		return err
 	}

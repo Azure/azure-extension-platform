@@ -20,7 +20,7 @@ func getSequenceNumberInternal(name, version string) (uint, error) {
 		return 0, fmt.Errorf("failed to read mrseq file : %s", err)
 	}
 
-	seqNum, err :=  strconv.Atoi(string(mrseqStr))
+	seqNum, err := strconv.Atoi(string(mrseqStr))
 	if err != nil {
 		return 0, err
 	}

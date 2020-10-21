@@ -46,4 +46,3 @@ func GetInitializationInfo(name string, version string, requiresSeqNoChange bool
 		UpdateCallback:      nil,
 	}, nil
 }
-

@@ -20,7 +20,7 @@ type ISequenceNumberRetriever interface {
 type ProcSequenceNumberRetriever struct {
 }
 
-func (*ProcSequenceNumberRetriever) GetSequenceNumber(name , version string) (uint, error) {
+func (*ProcSequenceNumberRetriever) GetSequenceNumber(name, version string) (uint, error) {
 	return getSequenceNumberInternal(name, version)
 }
 

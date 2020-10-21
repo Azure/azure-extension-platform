@@ -3,10 +3,12 @@ package settings
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/D1v38om83r/azure-extension-platform/pkg/constants"
 	"github.com/D1v38om83r/azure-extension-platform/pkg/extensionerrors"
 	"github.com/D1v38om83r/azure-extension-platform/pkg/handlerenv"
 	"io/ioutil"
 	"os"
+	"path"
 	"path/filepath"
 	"testing"
 
@@ -17,6 +19,7 @@ import (
 const (
 	testSeqNo      = 5
 	testThumbprint = "0b612f714b8defd5592bd45da9fe8cc5bbba3648"
+	testdir        = "testdir"
 )
 
 func Test_settingsFileDoesntExist(t *testing.T) {
@@ -29,8 +32,12 @@ func Test_settingsFileDoesntExist(t *testing.T) {
 
 func Test_settingsEmptyFile(t *testing.T) {
 	he := getTestHandlerEnvironment()
+	err := initHandlerEnvironmentDirs(he)
+	defer cleanuphandlerEnvDir(he)
+	require.NoError(t, err)
+
 	contents := []byte("")
-	err := ioutil.WriteFile(getTestSettingsFileName(he), contents, 0644)
+	err = ioutil.WriteFile(getTestSettingsFileName(he), contents, 0644)
 	require.NoError(t, err, "WriteFile failed")
 
 	ctx := log.NewSyncLogger(log.NewLogfmtLogger(os.Stdout))
@@ -43,8 +50,10 @@ func Test_settingsEmptyFile(t *testing.T) {
 
 func Test_settingsCannotParseSettings(t *testing.T) {
 	he := getTestHandlerEnvironment()
+	err := initHandlerEnvironmentDirs(he)
+	defer cleanuphandlerEnvDir(he)
 	contents := []byte("flarfegnugen")
-	err := ioutil.WriteFile(getTestSettingsFileName(he), contents, 0644)
+	err = ioutil.WriteFile(getTestSettingsFileName(he), contents, 0644)
 	require.NoError(t, err, "WriteFile failed")
 
 	ctx := log.NewSyncLogger(log.NewLogfmtLogger(os.Stdout))
@@ -54,6 +63,8 @@ func Test_settingsCannotParseSettings(t *testing.T) {
 
 func Test_settingsNoProtectedSettings(t *testing.T) {
 	he := getTestHandlerEnvironment()
+	err := initHandlerEnvironmentDirs(he)
+	defer cleanuphandlerEnvDir(he)
 	ctx := log.NewSyncLogger(log.NewLogfmtLogger(os.Stdout))
 	settingsFile := getTestSettingsFileName(he)
 	writeSettingsToFile(t, testThumbprint, "", 1, settingsFile)
@@ -65,41 +76,49 @@ func Test_settingsNoProtectedSettings(t *testing.T) {
 
 func Test_settingsNoThumbprint(t *testing.T) {
 	he := getTestHandlerEnvironment()
+	err := initHandlerEnvironmentDirs(he)
+	defer cleanuphandlerEnvDir(he)
 	ctx := log.NewSyncLogger(log.NewLogfmtLogger(os.Stdout))
 	settingsFile := getTestSettingsFileName(he)
 	writeSettingsToFile(t, "", "eWFiYQ==", 1, settingsFile)
 
-	_, err := GetHandlerSettings(ctx, he, testSeqNo)
+	_, err = GetHandlerSettings(ctx, he, testSeqNo)
 	require.Equal(t, extensionerrors.ErrNoCertificateThumbprint, err)
 }
 
 func Test_settingsCannotDecodeProtectedSettings(t *testing.T) {
 	he := getTestHandlerEnvironment()
+	err := initHandlerEnvironmentDirs(he)
+	defer cleanuphandlerEnvDir(he)
 	ctx := log.NewSyncLogger(log.NewLogfmtLogger(os.Stdout))
 	settingsFile := getTestSettingsFileName(he)
 	writeSettingsToFile(t, testThumbprint, "&(*@#&JH", 1, settingsFile)
 
-	_, err := GetHandlerSettings(ctx, he, testSeqNo)
+	_, err = GetHandlerSettings(ctx, he, testSeqNo)
 	require.Equal(t, extensionerrors.ErrInvalidProtectedSettingsData, err)
 }
 
 func Test_settingsNoRuntimeSettings(t *testing.T) {
 	he := getTestHandlerEnvironment()
+	err := initHandlerEnvironmentDirs(he)
+	defer cleanuphandlerEnvDir(he)
 	ctx := log.NewSyncLogger(log.NewLogfmtLogger(os.Stdout))
 	settingsFile := getTestSettingsFileName(he)
 	writeSettingsToFile(t, testThumbprint, "", 0, settingsFile)
 
-	_, err := GetHandlerSettings(ctx, he, testSeqNo)
+	_, err = GetHandlerSettings(ctx, he, testSeqNo)
 	require.Equal(t, extensionerrors.ErrInvalidSettingsRuntimeSettingsCount, err)
 }
 
 func Test_settingsTooManyRuntimeSettings(t *testing.T) {
 	he := getTestHandlerEnvironment()
+	err := initHandlerEnvironmentDirs(he)
+	defer cleanuphandlerEnvDir(he)
 	ctx := log.NewSyncLogger(log.NewLogfmtLogger(os.Stdout))
 	settingsFile := getTestSettingsFileName(he)
 	writeSettingsToFile(t, testThumbprint, "", 2, settingsFile)
 
-	_, err := GetHandlerSettings(ctx, he, testSeqNo)
+	_, err = GetHandlerSettings(ctx, he, testSeqNo)
 	require.Equal(t, extensionerrors.ErrInvalidSettingsRuntimeSettingsCount, err)
 }
 
@@ -117,13 +136,28 @@ func getTestSettingsFileName(he *handlerenv.HandlerEnvironment) string {
 }
 
 func getTestHandlerEnvironment() *handlerenv.HandlerEnvironment {
+
 	return &handlerenv.HandlerEnvironment{
 		HeartbeatFile: "./heartbeat.txt",
-		StatusFolder:  "./status/",
-		ConfigFolder:  "./config/",
-		LogFolder:     "./log/",
-		DataFolder:    "./data/",
+		StatusFolder:  path.Join(".", testdir, "./status/"),
+		ConfigFolder:  path.Join(".", testdir, "./config/"),
+		LogFolder:     path.Join(".", testdir, "./log/"),
+		DataFolder:    path.Join(".", testdir, "./data/"),
 	}
+}
+
+func cleanuphandlerEnvDir(he *handlerenv.HandlerEnvironment) {
+	os.RemoveAll(testdir)
+}
+
+func initHandlerEnvironmentDirs(handlerEnv *handlerenv.HandlerEnvironment) error {
+	err := os.MkdirAll(handlerEnv.StatusFolder, constants.FilePermissions_UserOnly_ReadWriteExecute)
+	err2 := os.MkdirAll(handlerEnv.ConfigFolder, constants.FilePermissions_UserOnly_ReadWriteExecute)
+	err = extensionerrors.CombineErrors(err, err2)
+	err2 = os.MkdirAll(handlerEnv.LogFolder, constants.FilePermissions_UserOnly_ReadWriteExecute)
+	err = extensionerrors.CombineErrors(err, err2)
+	err2 = os.MkdirAll(handlerEnv.DataFolder, constants.FilePermissions_UserOnly_ReadWriteExecute)
+	return extensionerrors.CombineErrors(err, err2)
 }
 
 func writeSettingsToFile(t *testing.T, thumbprint string, protectedSettings string, runtimeSettingsCount int, fileName string) {

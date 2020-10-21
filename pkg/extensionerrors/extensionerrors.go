@@ -38,4 +38,3 @@ var (
 
 	ErrNotFound = errors.New("NotFound")
 )
-

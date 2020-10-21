@@ -502,7 +502,7 @@ func createMockVMExtensionEnvironmentManager() *mockGetVMExtensionEnvironmentMan
 	}
 }
 
-func createDirsForVMExtension(vmExt *VMExtension) (error) {
+func createDirsForVMExtension(vmExt *VMExtension) error {
 	if err := os.MkdirAll(vmExt.HandlerEnv.StatusFolder, 0700); err != nil {
 		return err
 	}

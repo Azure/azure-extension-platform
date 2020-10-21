@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-type CmdFunc func()(message string, err error)
+type CmdFunc func() (message string, err error)
 
 type Cmd struct {
 	f                  CmdFunc // associated function
@@ -102,8 +102,6 @@ func (r StatusReport) Save(statusFolder string, seqNo uint) error {
 
 	return nil
 }
-
-
 
 // StatusMsg creates the reported status message based on the provided operation
 // type and the given message string.

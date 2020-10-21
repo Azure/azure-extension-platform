@@ -108,4 +108,3 @@ func parseHandlerSettingsFile(ctx log.Logger, path string) (h handlerSettings, _
 
 	return f.RuntimeSettings[0].HandlerSettings, nil
 }
-

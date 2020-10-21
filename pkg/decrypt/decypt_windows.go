@@ -12,8 +12,8 @@ import (
 )
 
 const (
-	certHashPropID        = 3
-	crypteEAsn1BadTag     = 2148086027
+	certHashPropID    = 3
+	crypteEAsn1BadTag = 2148086027
 )
 
 var (

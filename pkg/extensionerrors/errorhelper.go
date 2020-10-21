@@ -19,8 +19,8 @@ func NewErrorWithStack(errString string) error {
 	return fmt.Errorf("%s\nCallStack: %s", errString, stackString)
 }
 
-func CombineErrors(err1 error, err2 error)(error){
-	if err1 == nil && err2 == nil{
+func CombineErrors(err1 error, err2 error) error {
+	if err1 == nil && err2 == nil {
 		return nil
 	}
 	if err1 != nil && err2 == nil {

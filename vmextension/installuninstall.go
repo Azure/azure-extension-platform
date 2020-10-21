@@ -1,6 +1,5 @@
 package vmextension
 
-
 import (
 	"os"
 
@@ -97,4 +96,3 @@ func uninstall(ctx log.Logger, ext *VMExtension) (string, error) {
 	ctx.Log("event", "uninstalled")
 	return "", nil
 }
-
