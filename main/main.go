@@ -3,7 +3,7 @@
 package main
 
 import (
-	"github.com/D1v38om83r/azure-extension-platform/vmextension"
+	"github.com/Azure/azure-extension-platform/vmextension"
 	"github.com/go-kit/kit/log"
 	"os"
 )

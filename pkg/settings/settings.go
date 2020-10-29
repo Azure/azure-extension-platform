@@ -4,9 +4,9 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/D1v38om83r/azure-extension-platform/pkg/decrypt"
-	"github.com/D1v38om83r/azure-extension-platform/pkg/extensionerrors"
-	"github.com/D1v38om83r/azure-extension-platform/pkg/handlerenv"
+	"github.com/Azure/azure-extension-platform/pkg/decrypt"
+	"github.com/Azure/azure-extension-platform/pkg/extensionerrors"
+	"github.com/Azure/azure-extension-platform/pkg/handlerenv"
 	"io/ioutil"
 	"path/filepath"
 

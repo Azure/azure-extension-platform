@@ -2,7 +2,7 @@ package status
 
 import (
 	"encoding/json"
-	"github.com/D1v38om83r/azure-extension-platform/pkg/testhelpers"
+	"github.com/Azure/azure-extension-platform/pkg/testhelpers"
 	"io/ioutil"
 	"path"
 	"testing"

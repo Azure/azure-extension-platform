@@ -2,11 +2,11 @@ package vmextension
 
 import (
 	"errors"
-	"github.com/D1v38om83r/azure-extension-platform/pkg/extensionerrors"
-	"github.com/D1v38om83r/azure-extension-platform/pkg/handlerenv"
-	"github.com/D1v38om83r/azure-extension-platform/pkg/seqno"
-	"github.com/D1v38om83r/azure-extension-platform/pkg/settings"
-	"github.com/D1v38om83r/azure-extension-platform/pkg/status"
+	"github.com/Azure/azure-extension-platform/pkg/extensionerrors"
+	"github.com/Azure/azure-extension-platform/pkg/handlerenv"
+	"github.com/Azure/azure-extension-platform/pkg/seqno"
+	"github.com/Azure/azure-extension-platform/pkg/settings"
+	"github.com/Azure/azure-extension-platform/pkg/status"
 	"github.com/go-kit/kit/log"
 	"github.com/stretchr/testify/require"
 	"os"
