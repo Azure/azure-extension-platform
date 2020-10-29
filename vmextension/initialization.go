@@ -1,7 +1,7 @@
 package vmextension
 
 import (
-	"github.com/D1v38om83r/azure-extension-platform/pkg/extensionerrors"
+	"github.com/Azure/azure-extension-platform/pkg/extensionerrors"
 	"github.com/go-kit/kit/log"
 )
 

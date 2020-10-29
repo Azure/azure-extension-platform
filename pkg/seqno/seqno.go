@@ -2,7 +2,7 @@ package seqno
 
 import (
 	"fmt"
-	"github.com/D1v38om83r/azure-extension-platform/pkg/extensionerrors"
+	"github.com/Azure/azure-extension-platform/pkg/extensionerrors"
 	"io/ioutil"
 	"path/filepath"
 	"sort"
