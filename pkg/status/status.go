@@ -23,7 +23,7 @@ type StatusReport []StatusItem
 
 // StatusItem is used to serialize an individual part of the status read by the server
 type StatusItem struct {
-	Version      string `json:"version"`
+	Version      int    `json:"version"`
 	TimestampUTC string `json:"timestampUTC"`
 	Status       Status `json:"status"`
 }
@@ -58,7 +58,7 @@ type FormattedMessage struct {
 func New(t StatusType, operation string, message string) StatusReport {
 	return []StatusItem{
 		{
-			Version:      "1.0",
+			Version:      1, // this is the protocol version do not change unless you are sure
 			TimestampUTC: time.Now().UTC().Format(time.RFC3339),
 			Status: Status{
 				Operation: operation,

@@ -2,6 +2,7 @@ package vmextension
 
 import (
 	"errors"
+	"github.com/Azure/azure-extension-platform/pkg/exithelper"
 	"github.com/Azure/azure-extension-platform/pkg/extensionerrors"
 	"github.com/Azure/azure-extension-platform/pkg/handlerenv"
 	"github.com/Azure/azure-extension-platform/pkg/seqno"
@@ -32,7 +33,7 @@ type mockGetVMExtensionEnvironmentManager struct {
 	setSequenceNumberError        error
 }
 
-func (mm *mockGetVMExtensionEnvironmentManager) getHandlerEnvironment(name string, version string) (he *handlerenv.HandlerEnvironment, _ error) {
+func (mm *mockGetVMExtensionEnvironmentManager) GetHandlerEnvironment(name string, version string) (he *handlerenv.HandlerEnvironment, _ error) {
 	if mm.getHandlerEnvironmentError != nil {
 		return he, mm.getHandlerEnvironmentError
 	}
@@ -40,7 +41,7 @@ func (mm *mockGetVMExtensionEnvironmentManager) getHandlerEnvironment(name strin
 	return mm.he, nil
 }
 
-func (mm *mockGetVMExtensionEnvironmentManager) findSeqNum(ctx log.Logger, configFolder string) (uint, error) {
+func (mm *mockGetVMExtensionEnvironmentManager) FindSeqNum(ctx log.Logger, configFolder string) (uint, error) {
 	if mm.findSeqNumError != nil {
 		return 0, mm.findSeqNumError
 	}
@@ -48,7 +49,7 @@ func (mm *mockGetVMExtensionEnvironmentManager) findSeqNum(ctx log.Logger, confi
 	return mm.seqNo, nil
 }
 
-func (mm *mockGetVMExtensionEnvironmentManager) getCurrentSequenceNumber(ctx log.Logger, retriever seqno.ISequenceNumberRetriever, name, version string) (uint, error) {
+func (mm *mockGetVMExtensionEnvironmentManager) GetCurrentSequenceNumber(ctx log.Logger, retriever seqno.ISequenceNumberRetriever, name, version string) (uint, error) {
 	if mm.getCurrentSequenceNumberError != nil {
 		return 0, mm.getCurrentSequenceNumberError
 	}
@@ -56,7 +57,7 @@ func (mm *mockGetVMExtensionEnvironmentManager) getCurrentSequenceNumber(ctx log
 	return mm.currentSeqNo, nil
 }
 
-func (mm *mockGetVMExtensionEnvironmentManager) getHandlerSettings(ctx log.Logger, he *handlerenv.HandlerEnvironment, seqNo uint) (hs *settings.HandlerSettings, _ error) {
+func (mm *mockGetVMExtensionEnvironmentManager) GetHandlerSettings(ctx log.Logger, he *handlerenv.HandlerEnvironment, seqNo uint) (hs *settings.HandlerSettings, _ error) {
 	if mm.getHandlerSettingsError != nil {
 		return hs, mm.getHandlerSettingsError
 	}
@@ -64,7 +65,7 @@ func (mm *mockGetVMExtensionEnvironmentManager) getHandlerSettings(ctx log.Logge
 	return mm.hs, nil
 }
 
-func (mm *mockGetVMExtensionEnvironmentManager) setSequenceNumberInternal(ve *VMExtension, seqNo uint) error {
+func (mm *mockGetVMExtensionEnvironmentManager) SetSequenceNumberInternal(extensionName, extensionVersion string, seqNo uint) error {
 	if mm.setSequenceNumberError != nil {
 		return mm.setSequenceNumberError
 	}
@@ -319,7 +320,7 @@ func Test_enableNoSeqNoChangeButRequired(t *testing.T) {
 		ext, _ := getVMExtensionInternal(ctx, ii, mm)
 
 		enable(ctx, ext)
-		os.Exit(2) // enable above should exit the process cleanly. If it doesn't, fail.
+		exithelper.Exiter.Exit(2) // enable above should exit the process cleanly. If it doesn't, fail.
 	}
 
 	// Verify that the process exits
@@ -468,12 +469,14 @@ func getTestHandlerEnvironment() *handlerenv.HandlerEnvironment {
 	}
 }
 
+var one uint = 1
+
 func createTestVMExtension() *VMExtension {
 	return &VMExtension{
 		Name:                    "yaba",
 		Version:                 "5.0",
 		RequestedSequenceNumber: 2,
-		CurrentSequenceNumber:   1,
+		CurrentSequenceNumber:   &one,
 		HandlerEnv:              getTestHandlerEnvironment(),
 		Settings:                &settings.HandlerSettings{},
 		exec: &executionInfo{
