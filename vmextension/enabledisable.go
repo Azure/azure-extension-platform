@@ -1,6 +1,7 @@
 package vmextension
 
 import (
+	"github.com/Azure/azure-extension-platform/pkg/exithelper"
 	"github.com/go-kit/kit/log"
 	"io/ioutil"
 	"os"
@@ -16,9 +17,9 @@ var (
 
 func enable(ctx log.Logger, ext *VMExtension) (string, error) {
 	// If the sequence number has not changed and we require it to, then exit
-	if ext.exec.requiresSeqNoChange && ext.RequestedSequenceNumber <= ext.CurrentSequenceNumber {
+	if ext.exec.requiresSeqNoChange && ext.CurrentSequenceNumber != nil && ext.RequestedSequenceNumber <= *ext.CurrentSequenceNumber {
 		ctx.Log("message", "sequence number has not increased. Exiting.")
-		os.Exit(0)
+		exithelper.Exiter.Exit(0)
 	}
 
 	if ext.exec.supportsDisable && isDisabled(ctx, ext) {
@@ -35,6 +36,8 @@ func enable(ctx log.Logger, ext *VMExtension) (string, error) {
 	msg, runErr := ext.exec.enableCallback(ctx, ext)
 	if runErr != nil {
 		ctx.Log("message", "Enable failed", "error", runErr)
+	} else {
+		ctx.Log("message", "Enable succeeded")
 	}
 
 	return msg, runErr
