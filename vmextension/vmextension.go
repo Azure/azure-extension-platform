@@ -2,6 +2,8 @@ package vmextension
 
 import (
 	"fmt"
+	"github.com/Azure/azure-extension-platform/pkg/environmentmanager"
+	"github.com/Azure/azure-extension-platform/pkg/exithelper"
 	"github.com/Azure/azure-extension-platform/pkg/extensionerrors"
 	"github.com/Azure/azure-extension-platform/pkg/handlerenv"
 	"github.com/Azure/azure-extension-platform/pkg/seqno"
@@ -27,13 +29,13 @@ type cmd struct {
 
 // executionInfo contains internal information necessary for the extension to execute
 type executionInfo struct {
-	cmds                map[string]cmd                   // Execution commands keyed by operation
-	requiresSeqNoChange bool                             // True if Enable will only execute if the sequence number changes
-	supportsDisable     bool                             // Whether to run extension agnostic disable code
-	enableCallback      EnableCallbackFunc               // A method provided by the extension for Enable
-	updateCallback      CallbackFunc                     // A method provided by the extension for Update
-	disableCallback     CallbackFunc                     // A method provided by the extension for disable
-	manager             getVMExtensionEnvironmentManager // Used by tests to mock the environment
+	cmds                map[string]cmd                                       // Execution commands keyed by operation
+	requiresSeqNoChange bool                                                 // True if Enable will only execute if the sequence number changes
+	supportsDisable     bool                                                 // Whether to run extension agnostic disable code
+	enableCallback      EnableCallbackFunc                                   // A method provided by the extension for Enable
+	updateCallback      CallbackFunc                                         // A method provided by the extension for Update
+	disableCallback     CallbackFunc                                         // A method provided by the extension for disable
+	manager             environmentmanager.IGetVMExtensionEnvironmentManager // Used by tests to mock the environment
 }
 
 // VMExtension is an abstraction for standard extension operations in an OS agnostic manner
@@ -41,42 +43,33 @@ type VMExtension struct {
 	Name                    string                         // The name of the extension. This will contain 'Windows' or 'Linux'
 	Version                 string                         // The version of the extension
 	RequestedSequenceNumber uint                           // The requested sequence number to run
-	CurrentSequenceNumber   uint                           // The last run sequence number
+	CurrentSequenceNumber   *uint                          // The last run sequence number, null means no existing sequence number was found
 	HandlerEnv              *handlerenv.HandlerEnvironment // Contains information about the folders necessary for the extension
 	Settings                *settings.HandlerSettings      // Contains settings passed to the extension
 	exec                    *executionInfo                 // Internal information necessary for the extension to run
 }
 
-// Allows for mocking all environment operations when running tests against VM extensions
-type getVMExtensionEnvironmentManager interface {
-	getHandlerEnvironment(name string, version string) (*handlerenv.HandlerEnvironment, error)
-	findSeqNum(ctx log.Logger, configFolder string) (uint, error)
-	getCurrentSequenceNumber(ctx log.Logger, retriever seqno.ISequenceNumberRetriever, name, version string) (uint, error)
-	getHandlerSettings(ctx log.Logger, he *handlerenv.HandlerEnvironment, seqNo uint) (*settings.HandlerSettings, error)
-	setSequenceNumberInternal(ve *VMExtension, seqNo uint) error
-}
-
 type prodGetVMExtensionEnvironmentManager struct {
 }
 
-func (*prodGetVMExtensionEnvironmentManager) getHandlerEnvironment(name string, version string) (*handlerenv.HandlerEnvironment, error) {
+func (*prodGetVMExtensionEnvironmentManager) GetHandlerEnvironment(name string, version string) (*handlerenv.HandlerEnvironment, error) {
 	return getHandlerEnvironment(name, version)
 }
 
-func (*prodGetVMExtensionEnvironmentManager) findSeqNum(ctx log.Logger, configFolder string) (uint, error) {
+func (*prodGetVMExtensionEnvironmentManager) FindSeqNum(ctx log.Logger, configFolder string) (uint, error) {
 	return seqno.FindSeqNum(ctx, configFolder)
 }
 
-func (*prodGetVMExtensionEnvironmentManager) getCurrentSequenceNumber(ctx log.Logger, retriever seqno.ISequenceNumberRetriever, name, version string) (uint, error) {
+func (*prodGetVMExtensionEnvironmentManager) GetCurrentSequenceNumber(ctx log.Logger, retriever seqno.ISequenceNumberRetriever, name, version string) (uint, error) {
 	return seqno.GetCurrentSequenceNumber(ctx, retriever, name, version)
 }
 
-func (*prodGetVMExtensionEnvironmentManager) getHandlerSettings(ctx log.Logger, he *handlerenv.HandlerEnvironment, seqNo uint) (*settings.HandlerSettings, error) {
+func (*prodGetVMExtensionEnvironmentManager) GetHandlerSettings(ctx log.Logger, he *handlerenv.HandlerEnvironment, seqNo uint) (*settings.HandlerSettings, error) {
 	return settings.GetHandlerSettings(ctx, he, seqNo)
 }
 
-func (*prodGetVMExtensionEnvironmentManager) setSequenceNumberInternal(ve *VMExtension, seqNo uint) error {
-	return seqno.SetSequenceNumber(ve.Name, ve.Version, seqNo)
+func (*prodGetVMExtensionEnvironmentManager) SetSequenceNumberInternal(extensionName, extensionVersion string, seqNo uint) error {
+	return seqno.SetSequenceNumber(extensionName, extensionVersion, seqNo)
 }
 
 // GetVMExtension returns a new VMExtension object
@@ -84,13 +77,19 @@ func GetVMExtension(ctx log.Logger, initInfo *InitializationInfo) (ext *VMExtens
 	return getVMExtensionInternal(ctx, initInfo, &prodGetVMExtensionEnvironmentManager{})
 }
 
+// Use this method to mock out the environment part of the VM extension for use with your extension
+func GetVMExtensionForTesting(ctx log.Logger, initInfo *InitializationInfo, manager environmentmanager.IGetVMExtensionEnvironmentManager) (ext *VMExtension, _ error) {
+	return getVMExtensionInternal(ctx, initInfo, manager)
+}
+
 // Internal method that allows mocking for unit tests
-func getVMExtensionInternal(ctx log.Logger, initInfo *InitializationInfo, manager getVMExtensionEnvironmentManager) (ext *VMExtension, _ error) {
+func getVMExtensionInternal(ctx log.Logger, initInfo *InitializationInfo, manager environmentmanager.IGetVMExtensionEnvironmentManager) (ext *VMExtension, _ error) {
 	if initInfo == nil {
 		return nil, extensionerrors.ErrArgCannotBeNull
 	}
 
 	if len(initInfo.Name) < 1 || len(initInfo.Version) < 1 {
+		return nil, extensionerrors.ErrArgCannotBeNullOrEmpty
 		return nil, extensionerrors.ErrArgCannotBeNullOrEmpty
 	}
 
@@ -98,22 +97,30 @@ func getVMExtensionInternal(ctx log.Logger, initInfo *InitializationInfo, manage
 		return nil, extensionerrors.ErrArgCannotBeNull
 	}
 
-	handlerEnv, err := manager.getHandlerEnvironment(initInfo.Name, initInfo.Version)
+	handlerEnv, err := manager.GetHandlerEnvironment(initInfo.Name, initInfo.Version)
 	if err != nil {
 		return nil, err
 	}
 
 	// Determine the sequence number requested
-	newSeqNo, err := manager.findSeqNum(ctx, handlerEnv.ConfigFolder)
+	newSeqNo, err := manager.FindSeqNum(ctx, handlerEnv.ConfigFolder)
 	if err != nil {
 		return nil, errors.Wrap(err, "Failed to find sequence number")
 	}
 
 	// Determine the current sequence number
 	retriever := seqno.ProcSequenceNumberRetriever{}
-	currentSeqNo, err := manager.getCurrentSequenceNumber(ctx, &retriever, initInfo.Name, initInfo.Version)
+	var currentSeqNo = new(uint)
+	retrievedSequenceNumber, err := manager.GetCurrentSequenceNumber(ctx, &retriever, initInfo.Name, initInfo.Version)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to read the current sequence number due to '%v'", err)
+		if err == extensionerrors.ErrNoSettingsFiles {
+			// current sequence number could not be found, this is a special error
+			currentSeqNo = nil
+		} else {
+			return nil, fmt.Errorf("Failed to read the current sequence number due to '%v'", err)
+		}
+	} else {
+		*currentSeqNo = retrievedSequenceNumber
 	}
 
 	cmdInstall := cmd{install, "Install", false, initInfo.InstallExitCode}
@@ -135,7 +142,7 @@ func getVMExtensionInternal(ctx log.Logger, initInfo *InitializationInfo, manage
 		cmdDisable = cmd{noop, "Disable", true, 3}
 	}
 
-	settings, err := manager.getHandlerSettings(ctx, handlerEnv, newSeqNo)
+	settings, err := manager.GetHandlerSettings(ctx, handlerEnv, newSeqNo)
 	if err != nil {
 		return nil, err
 	}
@@ -177,7 +184,7 @@ func (ve *VMExtension) Do(ctx log.Logger) {
 	ctx = log.With(ctx, "seq", ve.RequestedSequenceNumber)
 
 	// remember the squence number
-	err := ve.exec.manager.setSequenceNumberInternal(ve, ve.RequestedSequenceNumber)
+	err := ve.exec.manager.SetSequenceNumberInternal(ve.Name, ve.Version, ve.RequestedSequenceNumber)
 	if err != nil {
 		ctx.Log("message", "failed to write the new sequence number", "error", err)
 	}
@@ -188,7 +195,7 @@ func (ve *VMExtension) Do(ctx log.Logger) {
 	if err != nil {
 		ctx.Log("event", "failed to handle", "error", err)
 		reportStatus(ctx, ve, status.StatusError, cmd, err.Error()+msg)
-		os.Exit(cmd.failExitCode)
+		exithelper.Exiter.Exit(cmd.failExitCode)
 	}
 
 	reportStatus(ctx, ve, status.StatusSuccess, cmd, msg)
@@ -219,7 +226,7 @@ func (ve *VMExtension) parseCmd(args []string) cmd {
 	if len(args) != 2 {
 		ve.printUsage(args)
 		fmt.Println("Incorrect usage.")
-		os.Exit(2)
+		exithelper.Exiter.Exit(2)
 	}
 
 	op := args[1]
@@ -227,7 +234,7 @@ func (ve *VMExtension) parseCmd(args []string) cmd {
 	if !ok {
 		ve.printUsage(args)
 		fmt.Printf("Incorrect command: %q\n", op)
-		os.Exit(2)
+		exithelper.Exiter.Exit(2)
 	}
 	return cmd
 }

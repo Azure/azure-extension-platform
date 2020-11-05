@@ -31,6 +31,9 @@ var disableCallbackFunc vmextension.CallbackFunc = func(ctx log.Logger, ext *vme
 	return nil
 }
 
+var getVMExtensionFuncToCall = vmextension.GetVMExtension
+var getInitializationInfoFuncToCall = vmextension.GetInitializationInfo
+
 var logger = log.NewSyncLogger(log.NewLogfmtLogger(os.Stdout))
 
 func main() {
@@ -41,7 +44,7 @@ func main() {
 }
 
 func getExtensionAndRun() error {
-	initilizationInfo, err := vmextension.GetInitializationInfo(extensionName, extensionVersion, true, enableCallbackFunc)
+	initilizationInfo, err := getInitializationInfoFuncToCall(extensionName, extensionVersion, true, enableCallbackFunc)
 	if err != nil {
 		return err
 	}
@@ -49,7 +52,7 @@ func getExtensionAndRun() error {
 	initilizationInfo.DisableCallback = disableCallbackFunc
 	initilizationInfo.UpdateCallback = updateCallbackFunc
 	ctx := log.With(log.With(logger, "time", log.DefaultTimestampUTC), "version", extensionVersion)
-	vmExt, err := vmextension.GetVMExtension(ctx, initilizationInfo)
+	vmExt, err := getVMExtensionFuncToCall(ctx, initilizationInfo)
 	if err != nil {
 		return err
 	}
