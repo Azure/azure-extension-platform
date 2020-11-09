@@ -5,22 +5,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/Azure/azure-extension-platform/pkg/extensionerrors"
+	"github.com/Azure/azure-extension-platform/pkg/internal/crypto"
 	"golang.org/x/sys/windows"
 	"strconv"
 	"syscall"
 	"unsafe"
 )
 
-const (
-	certHashPropID    = 3
-	crypteEAsn1BadTag = 2148086027
-)
-
-var (
-	modcrypt32                            = syscall.NewLazyDLL("crypt32.dll")
-	procCertGetCertificateContextProperty = modcrypt32.NewProc("CertGetCertificateContextProperty")
-	procCryptDecryptMessage               = modcrypt32.NewProc("CryptDecryptMessage")
-)
 
 type cryptDecryptMessagePara struct {
 	cbSize                   uint32
@@ -71,7 +62,7 @@ func DecryptProtectedSettings(configFolder string, thumbprint string, decoded []
 		}
 
 		// Determine the cert thumbprint
-		foundthumbprint, err := getCertificateThumbprint(cert)
+		foundthumbprint, err := crypto.GetCertificateThumbprint(cert)
 		if err == nil && foundthumbprint != nil {
 			// TODO: consider logging if we have an error. For now, we just ignore the cert
 			if bytes.Compare(decodedThumbprint, foundthumbprint) == 0 {
@@ -134,7 +125,7 @@ func decryptDataWithCert(decoded []byte, cert *syscall.CertContext, storeHandle 
 	var cbDecryptedBlob uint32
 	pbEncryptedBlob = &decoded[0]
 	raw, _, err := syscall.Syscall6(
-		procCryptDecryptMessage.Addr(),
+		crypto.ProcCryptDecryptMessage.Addr(),
 		6,
 		uintptr(unsafe.Pointer(&cryptDecryptMessagePara)),
 		uintptr(unsafe.Pointer(pbEncryptedBlob)),
@@ -145,7 +136,7 @@ func decryptDataWithCert(decoded []byte, cert *syscall.CertContext, storeHandle 
 	)
 	if raw == 0 {
 		errno := syscall.Errno(err)
-		if errno == crypteEAsn1BadTag {
+		if errno == crypto.CrypteEAsn1BadTag {
 			return nil, extensionerrors.ErrInvalidProtectedSettingsData
 		}
 
@@ -162,7 +153,7 @@ func decryptDataWithCert(decoded []byte, cert *syscall.CertContext, storeHandle 
 	pdecryptedBytes = &decryptedBytes[0]
 
 	raw, _, err = syscall.Syscall6(
-		procCryptDecryptMessage.Addr(),
+		crypto.ProcCryptDecryptMessage.Addr(),
 		6,
 		uintptr(unsafe.Pointer(&cryptDecryptMessagePara)),
 		uintptr(unsafe.Pointer(pbEncryptedBlob)),
@@ -181,46 +172,3 @@ func decryptDataWithCert(decoded []byte, cert *syscall.CertContext, storeHandle 
 	return returnedBytes, nil
 }
 
-// getCertificateThumbprint hashes the cert to obtain the thumbprint
-func getCertificateThumbprint(cert *syscall.CertContext) ([]byte, error) {
-	// Call it once to retrieve the thumbprint size
-	var cbComputedHash uint32
-	ret, _, err := syscall.Syscall6(
-		procCertGetCertificateContextProperty.Addr(),
-		4,
-		uintptr(unsafe.Pointer(cert)),            // pCertContext
-		uintptr(certHashPropID),                  // dwPropId
-		uintptr(0),                               // pvData)
-		uintptr(unsafe.Pointer(&cbComputedHash)), // pcbData
-		0,
-		0,
-	)
-
-	if ret == 0 {
-		return nil, fmt.Errorf("VmExtension: Could not hash certificate due to '%d'", syscall.Errno(err))
-	}
-
-	// Create our buffer
-	if cbComputedHash == 0 {
-		return nil, nil
-	}
-
-	var computedHashBuffer = make([]byte, cbComputedHash)
-	var pComputedHash *byte
-	pComputedHash = &computedHashBuffer[0]
-	ret, _, err = syscall.Syscall6(
-		procCertGetCertificateContextProperty.Addr(),
-		4,
-		uintptr(unsafe.Pointer(cert)),            // pCertContext
-		uintptr(certHashPropID),                  // dwPropId
-		uintptr(unsafe.Pointer(pComputedHash)),   // pvData)
-		uintptr(unsafe.Pointer(&cbComputedHash)), // pcbData
-		0,
-		0,
-	)
-	if ret == 0 {
-		return nil, fmt.Errorf("VmExtension: Could not hash certificate due to '%d'", syscall.Errno(err))
-	}
-
-	return computedHashBuffer, nil
-}
