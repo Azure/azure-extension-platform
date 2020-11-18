@@ -6,18 +6,11 @@ import (
 	"github.com/Azure/azure-extension-platform/pkg/internal/crypto"
 	"golang.org/x/sys/windows"
 	"syscall"
-	"time"
 	"unsafe"
 )
 
 const (
-	certNCryptKeySpec = 0xFFFFFFFF
 	szOID_RSA_RC4     = "1.2.840.113549.3.4"
-)
-
-var (
-	procCryptAcquireCertificatePrivateKey = crypto.Modcrypt32.NewProc("CryptAcquireCertificatePrivateKey")
-	procNCryptFreeObject                  = crypto.Modcrypt32.NewProc("NCryptFreeObject")
 )
 
 type certHandler struct {
@@ -37,11 +30,11 @@ func (cHandler *certHandler)  Encrypt(bytesToEncrypt []byte)( encryptedBytes []b
 	alg := szOID_RSA_RC4
 	buffer := []byte(alg)
 	procCryptEncryptMessage := crypto.Modcrypt32.NewProc("CryptEncryptMessage")
-	cai := cryptAlgorithmIdentifier{
-		pszObjID: uintptr(unsafe.Pointer(&buffer[0])),
-		parameters: cryptObjectIDBlob{
-			cbData: uint32(0),
-			pbData: uintptr(0),
+	cai := crypto.CryptAlgorithmIdentifier{
+		PszObjID: uintptr(unsafe.Pointer(&buffer[0])),
+		Parameters: crypto.CryptObjectIDBlob{
+			CbData: uint32(0),
+			PbData: uintptr(0),
 		},
 	}
 
@@ -112,7 +105,7 @@ func newCertHandler()(ICertHandler, error){
 
 	// Due to the trickyness of creating our own cert, we'll just pick a cert and then check
 	// if what we get back looks like a thumbprint
-	cert, err := getAUsableCert(handle)
+	cert, err := crypto.GetAUsableCert(handle)
 	return &certHandler{certContext: cert}, err
 }
 
@@ -120,151 +113,11 @@ type cryptEncryptMessagePara struct {
 	cbSize                     uint32
 	dwMsgEncodingType          uint32
 	hCryptProv                 uint32
-	ContentEncryptionAlgorithm cryptAlgorithmIdentifier
+	ContentEncryptionAlgorithm crypto.CryptAlgorithmIdentifier
 	pvEncryptionAuxInfo        uintptr
 	dwFlags                    uint32
 	dwInnerContentType         uint32
 }
 
-type cryptAlgorithmIdentifier struct {
-	pszObjID   uintptr
-	parameters cryptObjectIDBlob
-}
-
-type cryptIntegerBlob struct {
-	cbData uint32
-	pbData uintptr
-}
-
-type cryptObjectIDBlob struct {
-	cbData uint32
-	pbData uintptr
-}
-
-type cryptBitBlob struct {
-	cbData      uint32
-	pbData      uintptr
-	cUnusedBits uint32
-}
-
-type certNameBlob struct {
-	cbData uint32
-	pbData uintptr
-}
-
-type certPublicKeyInfo struct {
-	Algorithm cryptAlgorithmIdentifier
-	PublicKey cryptBitBlob
-}
-
-// This struct is not implemented in syscall, so we need to do this ourselves
-type certInfo struct {
-	dwVersion            uint32
-	SerialNumber         cryptIntegerBlob
-	SignatureAlgorithm   cryptAlgorithmIdentifier
-	Issuer               certNameBlob
-	NotBefore            syscall.Filetime
-	NotAfter             syscall.Filetime
-	Subject              certNameBlob
-	SubjectPublicKeyInfo certPublicKeyInfo
-	IssuerUniqueID       cryptBitBlob
-	SubjectUniqueID      cryptBitBlob
-	cExtension           uint32
-	rgExtension          uintptr
-}
 
 
-type certContext struct {
-	EncodingType uint32
-	EncodedCert  *byte
-	Length       uint32
-	CertInfo     *certInfo
-	Store        syscall.Handle
-}
-
-// We look for a cert with the following
-// - Not expired
-// - Has a private key
-// Note that the dev code uses syscall.CertContext. However that doesn't have the CERT_INFO
-// structure, so we need to find the cert manually, then convert it to the syscall structure
-func getAUsableCert( handle syscall.Handle) (cert *syscall.CertContext, _ error) {
-	var testCert *certContext
-	var prevCert *certContext
-	procCertEnumCertificatesInStore := crypto.Modcrypt32.NewProc("CertEnumCertificatesInStore")
-
-	for {
-		ret, _, _ := syscall.Syscall(
-			procCertEnumCertificatesInStore.Addr(),
-			2,
-			uintptr(handle),
-			uintptr(unsafe.Pointer(prevCert)),
-			0)
-
-		// Not that we don't handle ENotFound, since that's an error case for us (we couldn't find a cert)
-		testCert = (*certContext)(unsafe.Pointer(ret))
-		usable := isAUsableCert(testCert)
-		if usable {
-			// We need a syscall.CertContext
-			syscallContext := (*syscall.CertContext)(unsafe.Pointer(ret))
-			return syscallContext, nil
-		}
-
-		prevCert = testCert
-	}
-}
-
-func isAUsableCert(cert *certContext) (usable bool) {
-	// First check if the cert has expired
-	ended := time.Unix(0, cert.CertInfo.NotAfter.Nanoseconds())
-	started := time.Unix(0, cert.CertInfo.NotBefore.Nanoseconds())
-	now := time.Now()
-	if now.After(ended) || now.Before(started) {
-		return false
-	}
-
-	// Check that it has a private key
-	if !hasPrivateKey(cert) {
-		return false
-	}
-
-	return true
-}
-
-func hasPrivateKey(cert *certContext) bool {
-	var ncryptKeyHandle uintptr
-	var dwKeySpec uint32
-	var fCallerFreeProvOrNCryptKey uint32
-	ret, _, err := syscall.Syscall6(
-		procCryptAcquireCertificatePrivateKey.Addr(),
-		6,
-		uintptr(unsafe.Pointer(cert)),
-		uintptr(0),
-		uintptr(0),
-		uintptr(unsafe.Pointer(&ncryptKeyHandle)),
-		uintptr(unsafe.Pointer(&dwKeySpec)),
-		uintptr(unsafe.Pointer(&fCallerFreeProvOrNCryptKey)))
-	if ret == 0 {
-		if err > 0 {
-			// If for some reason we can't retrieve the private key, move on
-			return false
-		}
-	}
-
-	// Figure out if we need to release the handle
-	if fCallerFreeProvOrNCryptKey != 0 {
-		if dwKeySpec == certNCryptKeySpec {
-			// We received an CERT_NCRYPT_KEY_SPEC
-			syscall.Syscall(
-				procNCryptFreeObject.Addr(),
-				1,
-				uintptr(ncryptKeyHandle),
-				0,
-				0)
-		} else {
-			handle := syscall.Handle(ncryptKeyHandle)
-			syscall.CryptReleaseContext(handle, 0)
-		}
-	}
-
-	return true
-}
