@@ -99,7 +99,7 @@ func (cHandler *certHandler)  Encrypt(bytesToEncrypt []byte)( encryptedBytes []b
 	return encryptedBytes, nil
 }
 
-func newCertHandler()(ICertHandler, error){
+func newCertHandler(certLocation string) (ICertHandler, error) {
 	handle, err := syscall.CertOpenStore(windows.CERT_STORE_PROV_SYSTEM, 0, 0, windows.CERT_SYSTEM_STORE_LOCAL_MACHINE, uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr("MY"))))
 	defer syscall.CertCloseStore(handle, 0)
 
@@ -118,6 +118,3 @@ type cryptEncryptMessagePara struct {
 	dwFlags                    uint32
 	dwInnerContentType         uint32
 }
-
-
-

@@ -67,7 +67,7 @@ func (*mockVMExtensionEnvironmentManager) GetHandlerSettings(ctx log.Logger, he 
 	return settings.GetHandlerSettings(ctx, he, seqNo)
 }
 func (mock *mockVMExtensionEnvironmentManager) SetSequenceNumberInternal(extensionName, extensionVersion string, seqNo uint) error {
-	if mock.currentSeqNum == nil{
+	if mock.currentSeqNum == nil {
 		mock.currentSeqNum = new(uint)
 	}
 	*mock.currentSeqNum = seqNo
@@ -204,7 +204,7 @@ func TestMainFirstEnable(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-func TestHigherSequenceNumberIsExecuted(t *testing.T){
+func TestHigherSequenceNumberIsExecuted(t *testing.T) {
 	initialize(t)
 	defer cleanupTest()
 	os.Args = []string{"testprogram", "enable"}

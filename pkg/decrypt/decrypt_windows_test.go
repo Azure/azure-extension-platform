@@ -8,7 +8,7 @@ import (
 )
 
 func Test_getCertificateThumbprint(t *testing.T) {
-	encryptHandler, err := encrypt.New()
+	encryptHandler, err := encrypt.New("")
 	require.NoError(t, err, "could not get a certificate")
 	thumbprint, err := encryptHandler.GetThumbprint()
 	require.NoError(t, err, "getCertificateThumbprint failed")
@@ -25,7 +25,7 @@ func Test_decryptSettingsCertNotFound(t *testing.T) {
 
 func Test_decryptSettingsMisencoded(t *testing.T) {
 	serialized := getTestData()
-	encryptHandler, err := encrypt.New()
+	encryptHandler, err := encrypt.New("")
 	require.NoError(t, err, "could not get a certificate")
 	thumbprint, err := encryptHandler.GetThumbprint()
 	require.NoError(t, err, "getCertificateThumbprint failed")
@@ -42,7 +42,7 @@ func Test_decryptSettingsMisencoded(t *testing.T) {
 
 func Test_decryptProtectedSettings(t *testing.T) {
 	serialized := getTestData()
-	encryptHandler, err := encrypt.New()
+	encryptHandler, err := encrypt.New("")
 	require.NoError(t, err, "could not get a certificate")
 	thumbprint, err := encryptHandler.GetThumbprint()
 	require.NoError(t, err, "getCertificateThumbprint failed")

@@ -8,6 +8,7 @@ import (
 	"crypto/x509/pkix"
 	"encoding/hex"
 	"encoding/pem"
+	"github.com/Azure/azure-extension-platform/pkg/extensionerrors"
 	"math/big"
 	"os"
 	"strings"
@@ -38,7 +39,7 @@ func NewSelfSignedx509Certificate() (*SelfSignedCertificateKey, error) {
 	privateKey, err := rsa.GenerateKey(rand.Reader, 1024)
 
 	if err != nil {
-		return nil, errorhelper.AddStackToError(err)
+		return nil, extensionerrors.AddStackToError(err)
 	}
 
 	certSubject := pkix.Name{
@@ -62,12 +63,12 @@ func NewSelfSignedx509Certificate() (*SelfSignedCertificateKey, error) {
 
 	certBytes, err := x509.CreateCertificate(rand.Reader, &certTemplate, &certTemplate, &privateKey.PublicKey, privateKey)
 	if err != nil {
-		return nil, errorhelper.AddStackToError(err)
+		return nil, extensionerrors.AddStackToError(err)
 	}
 
 	x509Cert, err := x509.ParseCertificate(certBytes)
 	if err != nil {
-		return nil, errorhelper.AddStackToError(err)
+		return nil, extensionerrors.AddStackToError(err)
 	}
 
 	return &SelfSignedCertificateKey{Cert: *x509Cert, PrivKey: *privateKey}, nil
@@ -76,14 +77,14 @@ func NewSelfSignedx509Certificate() (*SelfSignedCertificateKey, error) {
 func (cert *SelfSignedCertificateKey) WriteCertificateToDisk(certificateOutputPath string) error {
 	certFH, err := os.OpenFile(certificateOutputPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 	if err != nil {
-		return errorhelper.AddStackToError(err)
+		return extensionerrors.AddStackToError(err)
 	}
 
 	if err = pem.Encode(certFH, &pem.Block{Type: "CERTIFICATE", Bytes: cert.Cert.Raw}); err != nil {
-		return errorhelper.AddStackToError(err)
+		return extensionerrors.AddStackToError(err)
 	}
 	if err = certFH.Close(); err != nil {
-		return errorhelper.AddStackToError(err)
+		return extensionerrors.AddStackToError(err)
 	}
 	return nil
 }
@@ -91,13 +92,13 @@ func (cert *SelfSignedCertificateKey) WriteCertificateToDisk(certificateOutputPa
 func (cert *SelfSignedCertificateKey) WriteKeyToDisk(keyOutputPath string) error {
 	keyFH, err := os.OpenFile(keyOutputPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 	if err != nil {
-		return errorhelper.AddStackToError(err)
+		return extensionerrors.AddStackToError(err)
 	}
 	if err := pem.Encode(keyFH, &pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(&cert.PrivKey)}); err != nil {
-		return errorhelper.AddStackToError(err)
+		return extensionerrors.AddStackToError(err)
 	}
 	if err := keyFH.Close(); err != nil {
-		return errorhelper.AddStackToError(err)
+		return extensionerrors.AddStackToError(err)
 	}
 	return nil
 }

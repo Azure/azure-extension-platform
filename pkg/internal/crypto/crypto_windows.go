@@ -13,7 +13,6 @@ const (
 	certNCryptKeySpec = 0xFFFFFFFF
 )
 
-
 var (
 	Modcrypt32                            = syscall.NewLazyDLL("crypt32.dll")
 	procCertGetCertificateContextProperty = Modcrypt32.NewProc("CertGetCertificateContextProperty")
@@ -21,7 +20,6 @@ var (
 	procCryptAcquireCertificatePrivateKey = Modcrypt32.NewProc("CryptAcquireCertificatePrivateKey")
 	procNCryptFreeObject                  = Modcrypt32.NewProc("NCryptFreeObject")
 )
-
 
 type CryptAlgorithmIdentifier struct {
 	PszObjID   uintptr
@@ -70,7 +68,6 @@ type certInfo struct {
 	rgExtension          uintptr
 }
 
-
 type CertContext struct {
 	EncodingType uint32
 	EncodedCert  *byte
@@ -84,7 +81,7 @@ type CertContext struct {
 // - Has a private key
 // Note that the dev code uses syscall.CertContext. However that doesn't have the CERT_INFO
 // structure, so we need to find the cert manually, then convert it to the syscall structure
-func GetAUsableCert( handle syscall.Handle) (cert *syscall.CertContext, _ error) {
+func GetAUsableCert(handle syscall.Handle) (cert *syscall.CertContext, _ error) {
 	var testCert *CertContext
 	var prevCert *CertContext
 	procCertEnumCertificatesInStore := Modcrypt32.NewProc("CertEnumCertificatesInStore")
@@ -165,7 +162,6 @@ func hasPrivateKey(cert *CertContext) bool {
 
 	return true
 }
-
 
 func GetCertificateThumbprint(cert *syscall.CertContext) ([]byte, error) {
 	// Call it once to retrieve the thumbprint size

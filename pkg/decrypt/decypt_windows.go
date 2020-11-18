@@ -12,7 +12,6 @@ import (
 	"unsafe"
 )
 
-
 type cryptDecryptMessagePara struct {
 	cbSize                   uint32
 	dwMsgAndCertEncodingType uint32
@@ -171,4 +170,3 @@ func decryptDataWithCert(decoded []byte, cert *syscall.CertContext, storeHandle 
 
 	return returnedBytes, nil
 }
-
