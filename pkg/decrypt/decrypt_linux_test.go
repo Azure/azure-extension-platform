@@ -31,7 +31,7 @@ func cleanupTest() {
 }
 
 // base 64 string can be longer than input param
-func generateRandomBase64String(len int) (string, error) {
+func generateRandomProtectedSettings(len int) (string, error) {
 	buff := make([]byte, len)
 	_, err := rand.Read(buff)
 	if err != nil {
@@ -48,7 +48,7 @@ func TestCanEncryptAndDecrypt(t *testing.T) {
 	assert.NoError(t, err, "certificate creation must succeed")
 	thumbprint, err := certHandler.GetThumbprint()
 	assert.NoError(t, err, "getting thumbprint should succeed")
-	stringToEncrypt, err := generateRandomBase64String(30)
+	stringToEncrypt, err := generateRandomProtectedSettings(30)
 	bytesToEncrypt := []byte(stringToEncrypt)
 	assert.NoError(t, err, "Error creating random string")
 	encryptedBytes, err := certHandler.Encrypt(bytesToEncrypt)

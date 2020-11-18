@@ -11,7 +11,7 @@ import (
 
 type LinuxCertificateHandler struct {
 	CertOperations crypto.CertificateOperations
-	certLcoation   string
+	certLocation   string
 }
 
 func (ch *LinuxCertificateHandler) GetThumbprint() (certThumbprint string, err error) {
