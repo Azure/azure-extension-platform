@@ -5,14 +5,19 @@ import (
 	"encoding/json"
 	"fmt"
 	"os/exec"
+	"path"
 	"path/filepath"
 )
+
+var getCertificateDir = func(configFolder string) (certificateFolder string) {
+	return path.Join(configFolder, "..", "..")
+}
 
 // decryptProtectedSettings decrypts the read protected settigns using certificates
 func DecryptProtectedSettings(configFolder string, thumbprint string, decoded []byte) (map[string]interface{}, error) {
 	// go two levels up where certs are placed (/var/lib/waagent)
-	crt := filepath.Join(configFolder, "..", "..", fmt.Sprintf("%s.crt", thumbprint))
-	prv := filepath.Join(configFolder, "..", "..", fmt.Sprintf("%s.prv", thumbprint))
+	crt := filepath.Join(getCertificateDir(configFolder), fmt.Sprintf("%s.crt", thumbprint))
+	prv := filepath.Join(getCertificateDir(configFolder), fmt.Sprintf("%s.prv", thumbprint))
 
 	// we use os/exec instead of azure-docker-extension/pkg/executil here as
 	// other extension handlers depend on this package for parsing handler
