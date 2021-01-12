@@ -4,11 +4,12 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"path/filepath"
+
 	"github.com/Azure/azure-extension-platform/pkg/decrypt"
 	"github.com/Azure/azure-extension-platform/pkg/extensionerrors"
 	"github.com/Azure/azure-extension-platform/pkg/handlerenv"
-	"io/ioutil"
-	"path/filepath"
 
 	"github.com/go-kit/kit/log"
 )
@@ -20,15 +21,15 @@ const (
 
 // HandlerSettings contains the decrypted settings for the extension
 type HandlerSettings struct {
-	PublicSettings    map[string]interface{}
+	PublicSettings    string
 	ProtectedSettings string
 }
 
 // handlerSettings is an internal structure used to deserialize the file
 type handlerSettings struct {
-	PublicSettings          map[string]interface{} `json:"publicSettings"`
-	ProtectedSettingsBase64 string                 `json:"protectedSettings"`
-	SettingsCertThumbprint  string                 `json:"protectedSettingsCertThumbprint"`
+	PublicSettings          string `json:"publicSettings"`
+	ProtectedSettingsBase64 string `json:"protectedSettings"`
+	SettingsCertThumbprint  string `json:"protectedSettingsCertThumbprint"`
 }
 
 type handlerSettingsFile struct {
@@ -67,17 +68,17 @@ func GetHandlerSettings(ctx log.Logger, he *handlerenv.HandlerEnvironment, seqNo
 func unmarshalProtectedSettings(ctx log.Logger, configFolder string, hs handlerSettings) (string, error) {
 	if hs.ProtectedSettingsBase64 == "" {
 		// No protected settings
-		return nil, nil
+		return "", nil
 	}
 	if hs.SettingsCertThumbprint == "" {
 		ctx.Log("message", "parseHandlerSettingsFile failed", "error", extensionerrors.ErrNoCertificateThumbprint)
-		return nil, extensionerrors.ErrNoCertificateThumbprint
+		return "", extensionerrors.ErrNoCertificateThumbprint
 	}
 
 	decoded, err := base64.StdEncoding.DecodeString(hs.ProtectedSettingsBase64)
 	if err != nil {
 		ctx.Log("message", "parseHandlerSettingsFile failed", "error", fmt.Errorf("failed to decode base64: %v", err))
-		return nil, extensionerrors.ErrInvalidProtectedSettingsData
+		return "", extensionerrors.ErrInvalidProtectedSettingsData
 	}
 
 	v, err := decrypt.DecryptProtectedSettings(configFolder, hs.SettingsCertThumbprint, decoded)

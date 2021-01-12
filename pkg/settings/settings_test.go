@@ -3,14 +3,15 @@ package settings
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/Azure/azure-extension-platform/pkg/constants"
-	"github.com/Azure/azure-extension-platform/pkg/extensionerrors"
-	"github.com/Azure/azure-extension-platform/pkg/handlerenv"
 	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
 	"testing"
+
+	"github.com/Azure/azure-extension-platform/pkg/constants"
+	"github.com/Azure/azure-extension-platform/pkg/extensionerrors"
+	"github.com/Azure/azure-extension-platform/pkg/handlerenv"
 
 	"github.com/go-kit/kit/log"
 	"github.com/stretchr/testify/require"
@@ -44,8 +45,8 @@ func Test_settingsEmptyFile(t *testing.T) {
 	hs, err := GetHandlerSettings(ctx, he, testSeqNo)
 	require.NoError(t, err, "getHandlerSettings failed")
 	require.NotNil(t, hs)
-	require.Nil(t, hs.PublicSettings)
-	require.Nil(t, hs.ProtectedSettings)
+	require.Empty(t, hs.PublicSettings)
+	require.Empty(t, hs.ProtectedSettings)
 }
 
 func Test_settingsCannotParseSettings(t *testing.T) {
@@ -124,10 +125,11 @@ func Test_settingsTooManyRuntimeSettings(t *testing.T) {
 
 func validateHandlerSettings(t *testing.T, hs *HandlerSettings) {
 	require.NotNil(t, hs)
-	flopperRaw := hs.PublicSettings["Flopper"]
-	require.NotNil(t, flopperRaw)
-	flopper, ok := flopperRaw.(string)
-	require.True(t, ok)
+	v := make(map[string]interface{})
+	err := json.Unmarshal([]byte(hs.PublicSettings), &v)
+	require.NoError(t, err, "json unmarshal failed")
+	flopper := v["Flopper"]
+	require.NotEmpty(t, flopper)
 	require.Equal(t, "flop", flopper)
 }
 
@@ -168,7 +170,8 @@ func writeSettingsToFile(t *testing.T, thumbprint string, protectedSettings stri
 	publicSettings := make(map[string]interface{})
 	publicSettings["Flipper"] = "flip"
 	publicSettings["Flopper"] = "flop"
-	hs := handlerSettings{PublicSettings: publicSettings, ProtectedSettingsBase64: protectedSettings, SettingsCertThumbprint: thumbprint}
+	jsonPublic, _ := json.Marshal(publicSettings)
+	hs := handlerSettings{PublicSettings: string(jsonPublic), ProtectedSettingsBase64: protectedSettings, SettingsCertThumbprint: thumbprint}
 	hsf := handlerSettingsFile{}
 
 	hsContainer := handlerSettingsContainer{HandlerSettings: hs}
