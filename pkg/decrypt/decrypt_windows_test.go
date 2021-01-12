@@ -1,10 +1,12 @@
 package decrypt
 
 import (
+	"encoding/json"
+	"testing"
+
 	"github.com/Azure/azure-extension-platform/pkg/encrypt"
 	"github.com/Azure/azure-extension-platform/pkg/extensionerrors"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func Test_getCertificateThumbprint(t *testing.T) {
@@ -49,8 +51,11 @@ func Test_decryptProtectedSettings(t *testing.T) {
 	encrypted, err := encryptHandler.Encrypt([]byte(serialized))
 	require.NoError(t, err, "encryptTestData failed")
 
-	v, err := DecryptProtectedSettings("", thumbprint, encrypted)
+	s, err := DecryptProtectedSettings("", thumbprint, encrypted)
 	require.NoError(t, err, "decryptProtectedSettings failed")
+	v := make(map[string]interface{})
+	err = json.Unmarshal([]byte(s), &v)
+	require.NoError(t, err, "json unmarshal failed")
 	landMammal, ok := v["AfricanLandMammal"].(string)
 	require.True(t, ok, "African land mammal is not OK")
 	chipmunk, ok := v["ChipmunkType"].(string)

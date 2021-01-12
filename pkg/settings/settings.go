@@ -21,7 +21,7 @@ const (
 // HandlerSettings contains the decrypted settings for the extension
 type HandlerSettings struct {
 	PublicSettings    map[string]interface{}
-	ProtectedSettings map[string]interface{}
+	ProtectedSettings string
 }
 
 // handlerSettings is an internal structure used to deserialize the file
@@ -64,7 +64,7 @@ func GetHandlerSettings(ctx log.Logger, he *handlerenv.HandlerEnvironment, seqNo
 // unmarshalProtectedSettings decodes the protected settings from handler
 // runtime settings JSON file, decrypts it using the certificates and unmarshals
 // into the given struct v.
-func unmarshalProtectedSettings(ctx log.Logger, configFolder string, hs handlerSettings) (map[string]interface{}, error) {
+func unmarshalProtectedSettings(ctx log.Logger, configFolder string, hs handlerSettings) (string, error) {
 	if hs.ProtectedSettingsBase64 == "" {
 		// No protected settings
 		return nil, nil
