@@ -21,7 +21,10 @@ const (
 
 // HandlerSettings contains the decrypted settings for the extension
 type HandlerSettings struct {
-	PublicSettings    string
+	// string containing the json sent for the public settings
+	PublicSettings string
+
+	// string containing the decrypted protected settings
 	ProtectedSettings string
 }
 
