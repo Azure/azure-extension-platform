@@ -2,14 +2,14 @@ package decrypt
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
-	"github.com/Azure/azure-extension-platform/pkg/extensionerrors"
-	"github.com/Azure/azure-extension-platform/pkg/internal/crypto"
-	"golang.org/x/sys/windows"
 	"strconv"
 	"syscall"
 	"unsafe"
+
+	"github.com/Azure/azure-extension-platform/pkg/extensionerrors"
+	"github.com/Azure/azure-extension-platform/pkg/internal/crypto"
+	"golang.org/x/sys/windows"
 )
 
 type cryptDecryptMessagePara struct {
@@ -21,21 +21,21 @@ type cryptDecryptMessagePara struct {
 }
 
 // decryptProtectedSettings decrypts the read protected settings using certificates
-func DecryptProtectedSettings(configFolder string, thumbprint string, decoded []byte) (map[string]interface{}, error) {
+func DecryptProtectedSettings(configFolder string, thumbprint string, decoded []byte) (string, error) {
 	// Open My/Local
 	handle, err := syscall.CertOpenStore(windows.CERT_STORE_PROV_SYSTEM, 0, 0, windows.CERT_SYSTEM_STORE_LOCAL_MACHINE, uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr("MY"))))
 	if err != nil {
-		return nil, fmt.Errorf("VMextension: Cannot open certificate store due to '%v'", err)
+		return "", fmt.Errorf("VMextension: Cannot open certificate store due to '%v'", err)
 	}
 	if handle == 0 {
-		return nil, extensionerrors.ErrMustRunAsAdmin
+		return "", extensionerrors.ErrMustRunAsAdmin
 	}
 	defer syscall.CertCloseStore(handle, 0)
 
 	// Convert the thumbprint to bytes. We do byte comparison vs string comparison because otherwise we'd need to normalize the strings
 	decodedThumbprint, err := thumbprintStringToHex(thumbprint)
 	if err != nil {
-		return nil, fmt.Errorf("VmExtension: Invalid thumbprint")
+		return "", fmt.Errorf("VmExtension: Invalid thumbprint")
 	}
 
 	// Find the certificate by thumbprint
@@ -53,7 +53,7 @@ func DecryptProtectedSettings(configFolder string, thumbprint string, decoded []
 					break
 				}
 			}
-			return nil, fmt.Errorf("VmExtension: Could not enumerate certificates due to '%v'", err)
+			return "", fmt.Errorf("VmExtension: Could not enumerate certificates due to '%v'", err)
 		}
 
 		if cert == nil {
@@ -74,18 +74,17 @@ func DecryptProtectedSettings(configFolder string, thumbprint string, decoded []
 	}
 
 	if !found {
-		return nil, extensionerrors.ErrCertWithThumbprintNotFound
+		return "", extensionerrors.ErrCertWithThumbprintNotFound
 	}
 
 	// Decrypt the protected settings
 	decryptedBytes, err := decryptDataWithCert(decoded, cert, uintptr(handle))
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	// Now deserialize the data
-	var v map[string]interface{}
-	err = json.Unmarshal(decryptedBytes, &v)
+	v := string(decryptedBytes[:])
 	return v, err
 }
 
