@@ -10,14 +10,14 @@ import (
 )
 
 const (
-	szOID_RSA_RC4     = "1.2.840.113549.3.4"
+	szOID_RSA_RC4 = "1.2.840.113549.3.4"
 )
 
 type certHandler struct {
 	certContext *syscall.CertContext
 }
 
-func (cHandler *certHandler) GetThumbprint()(certThumbprint string, err error){
+func (cHandler *certHandler) GetThumbprint() (certThumbprint string, err error) {
 	thumbprintHex, err := crypto.GetCertificateThumbprint(cHandler.certContext)
 	if err != nil {
 		return "", err
@@ -26,7 +26,7 @@ func (cHandler *certHandler) GetThumbprint()(certThumbprint string, err error){
 	return
 }
 
-func (cHandler *certHandler)  Encrypt(bytesToEncrypt []byte)( encryptedBytes []byte, err error){
+func (cHandler *certHandler) Encrypt(bytesToEncrypt []byte) (encryptedBytes []byte, err error) {
 	alg := szOID_RSA_RC4
 	buffer := []byte(alg)
 	procCryptEncryptMessage := crypto.Modcrypt32.NewProc("CryptEncryptMessage")
@@ -56,8 +56,8 @@ func (cHandler *certHandler)  Encrypt(bytesToEncrypt []byte)( encryptedBytes []b
 	ret, _, err := syscall.Syscall9(
 		procCryptEncryptMessage.Addr(),
 		7,
-		uintptr(unsafe.Pointer(&cemp)),                 //pEncryptPara,
-		uintptr(1),                                     // cRecipientCert,
+		uintptr(unsafe.Pointer(&cemp)), //pEncryptPara,
+		uintptr(1),                     // cRecipientCert,
 		uintptr(unsafe.Pointer(&cHandler.certContext)), // rgpRecipientCert,
 		uintptr(unsafe.Pointer(pbToBeEncrypted)),       // *pbToBeEncrypted,
 		uintptr(len(bytesToEncrypt)),                   // cbToBeEncrypted,
@@ -71,7 +71,7 @@ func (cHandler *certHandler)  Encrypt(bytesToEncrypt []byte)( encryptedBytes []b
 	}
 
 	// Build the buffer
-	if  cbEncryptedBlob <= 0{
+	if cbEncryptedBlob <= 0 {
 		return nil, fmt.Errorf("the count of encrypted bytes was 0")
 	}
 	encryptedBytes = make([]byte, cbEncryptedBlob)
@@ -82,8 +82,8 @@ func (cHandler *certHandler)  Encrypt(bytesToEncrypt []byte)( encryptedBytes []b
 	ret, _, err = syscall.Syscall9(
 		procCryptEncryptMessage.Addr(),
 		7,
-		uintptr(unsafe.Pointer(&cemp)),                 // pEncryptPara,
-		uintptr(1),                                     // cRecipientCert,
+		uintptr(unsafe.Pointer(&cemp)), // pEncryptPara,
+		uintptr(1),                     // cRecipientCert,
 		uintptr(unsafe.Pointer(&cHandler.certContext)), // rgpRecipientCert,
 		uintptr(unsafe.Pointer(pbToBeEncrypted)),       // *pbToBeEncrypted,
 		uintptr(len(bytesToEncrypt)),                   // cbToBeEncrypted,

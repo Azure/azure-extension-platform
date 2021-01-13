@@ -4,7 +4,6 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/json"
-	"fmt"
 	"github.com/Azure/azure-extension-platform/pkg/constants"
 	"github.com/Azure/azure-extension-platform/pkg/encrypt"
 	"github.com/stretchr/testify/assert"
@@ -38,7 +37,17 @@ func generateRandomProtectedSettings(len int) (string, error) {
 		return "", err
 	}
 	base64string := base64.StdEncoding.EncodeToString(buff)
-	return fmt.Sprintf("{ \"key1\" : \"value1\", \"key2\" : \"%s\"}", base64string), nil
+	protSettings := ProtectedSettings{Key1: "value1", Key2: base64string}
+	bytes, err := json.Marshal(&protSettings)
+	if err != nil {
+		return "", err
+	}
+	return string(bytes), nil
+}
+
+type ProtectedSettings struct {
+	Key1 string
+	Key2 string
 }
 
 func TestCanEncryptAndDecrypt(t *testing.T) {
@@ -55,8 +64,8 @@ func TestCanEncryptAndDecrypt(t *testing.T) {
 	assert.NoError(t, err, "encryption should succeed")
 	assert.NotEqualValues(t, stringToEncrypt, encryptedBytes, "encrypted bytes should be different from original")
 	decrypted, err := DecryptProtectedSettings(testdir, thumbprint, encryptedBytes)
-	assert.Equal(t, "value1", decrypted["key1"], "values associated with key1 should be the same")
-	original := make(map[string]interface{})
-	json.Unmarshal(bytesToEncrypt, &original)
-	assert.Equal(t, original, decrypted, "the decrypted message should be the same as the original")
+	protSettings := ProtectedSettings{}
+	assert.NoError(t, json.Unmarshal([]byte(decrypted), &protSettings))
+	assert.Equal(t, "value1", protSettings.Key1, "values associated with key1 should be the same")
+	assert.Equal(t, stringToEncrypt, decrypted, "the decrypted message should be the same as the original")
 }

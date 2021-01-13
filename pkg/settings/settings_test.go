@@ -126,7 +126,8 @@ func Test_settingsTooManyRuntimeSettings(t *testing.T) {
 func validateHandlerSettings(t *testing.T, hs *HandlerSettings) {
 	require.NotNil(t, hs)
 	v := make(map[string]interface{})
-	err := json.Unmarshal([]byte(hs.PublicSettings), &v)
+	jsonBytes := []byte(hs.PublicSettings)
+	err := json.Unmarshal(jsonBytes, &v)
 	require.NoError(t, err, "json unmarshal failed")
 	flopper := v["Flopper"]
 	require.NotEmpty(t, flopper)
@@ -170,8 +171,7 @@ func writeSettingsToFile(t *testing.T, thumbprint string, protectedSettings stri
 	publicSettings := make(map[string]interface{})
 	publicSettings["Flipper"] = "flip"
 	publicSettings["Flopper"] = "flop"
-	jsonPublic, _ := json.Marshal(publicSettings)
-	hs := handlerSettings{PublicSettings: string(jsonPublic), ProtectedSettingsBase64: protectedSettings, SettingsCertThumbprint: thumbprint}
+	hs := handlerSettings{PublicSettings: publicSettings, ProtectedSettingsBase64: protectedSettings, SettingsCertThumbprint: thumbprint}
 	hsf := handlerSettingsFile{}
 
 	hsContainer := handlerSettingsContainer{HandlerSettings: hs}
