@@ -30,9 +30,9 @@ type HandlerSettings struct {
 
 // handlerSettings is an internal structure used to deserialize the file
 type handlerSettings struct {
-	PublicSettings          string `json:"publicSettings"`
-	ProtectedSettingsBase64 string `json:"protectedSettings"`
-	SettingsCertThumbprint  string `json:"protectedSettingsCertThumbprint"`
+	PublicSettings          interface{} `json:"publicSettings"`
+	ProtectedSettingsBase64 string      `json:"protectedSettings"`
+	SettingsCertThumbprint  string      `json:"protectedSettingsCertThumbprint"`
 }
 
 type handlerSettingsFile struct {
@@ -57,8 +57,18 @@ func GetHandlerSettings(ctx log.Logger, he *handlerenv.HandlerEnvironment, seqNo
 		return hs, err
 	}
 
+	var publicSettingJsonString = ""
+	// parsedHS.PublicSettings is an interface, has to be marshaled to get the string representation
+	if parsedHs.PublicSettings != nil {
+		jsonBytes, err := json.Marshal(parsedHs.PublicSettings)
+		if err != nil {
+			return hs, err
+		}
+		publicSettingJsonString = string(jsonBytes)
+	}
+
 	hs = &HandlerSettings{
-		PublicSettings:    parsedHs.PublicSettings,
+		PublicSettings:    publicSettingJsonString,
 		ProtectedSettings: protectedSettings,
 	}
 

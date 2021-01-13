@@ -1,6 +1,7 @@
 package vmextension
 
 import (
+	"encoding/json"
 	"errors"
 	"github.com/Azure/azure-extension-platform/pkg/exithelper"
 	"github.com/Azure/azure-extension-platform/pkg/extensionerrors"
@@ -494,7 +495,8 @@ func createMockVMExtensionEnvironmentManager() *mockGetVMExtensionEnvironmentMan
 	publicSettings := make(map[string]interface{})
 	publicSettings["Flipper"] = "flip"
 	publicSettings["Flopper"] = "flop"
-	hs := &settings.HandlerSettings{PublicSettings: publicSettings, ProtectedSettings: nil}
+	publiSettingJsonBytes, _ := json.Marshal(publicSettings)
+	hs := &settings.HandlerSettings{PublicSettings: string(publiSettingJsonBytes), ProtectedSettings: ""}
 	he := getTestHandlerEnvironment()
 
 	return &mockGetVMExtensionEnvironmentManager{

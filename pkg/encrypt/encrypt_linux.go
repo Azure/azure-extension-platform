@@ -23,7 +23,7 @@ func (ch *LinuxCertificateHandler) Encrypt(bytesToEncrypt []byte) (encryptedByte
 	if err != nil {
 		return nil, err
 	}
-	crt := filepath.Join(ch.certLcoation, fmt.Sprintf("%s.crt", thumbprint))
+	crt := filepath.Join(ch.certLocation, fmt.Sprintf("%s.crt", thumbprint))
 
 	// we use os/exec instead of azure-docker-extension/pkg/executil here as
 	// other extension handlers depend on this package for parsing handler
@@ -57,5 +57,5 @@ func newCertHandler(certLocation string) (ICertHandler, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &LinuxCertificateHandler{CertOperations: cert, certLcoation: certLocation}, nil
+	return &LinuxCertificateHandler{CertOperations: cert, certLocation: certLocation}, nil
 }
