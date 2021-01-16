@@ -12,8 +12,8 @@ import (
 	"github.com/Azure/azure-extension-platform/pkg/constants"
 	"github.com/Azure/azure-extension-platform/pkg/extensionerrors"
 	"github.com/Azure/azure-extension-platform/pkg/handlerenv"
+	"github.com/Azure/azure-extension-platform/pkg/logging"
 
-	"github.com/go-kit/kit/log"
 	"github.com/stretchr/testify/require"
 )
 
@@ -25,9 +25,9 @@ const (
 
 func Test_settingsFileDoesntExist(t *testing.T) {
 	he := getTestHandlerEnvironment()
-	ctx := log.NewSyncLogger(log.NewLogfmtLogger(os.Stdout))
+	el := logging.New(nil)
 	os.Remove(getTestSettingsFileName(he))
-	_, err := GetHandlerSettings(ctx, he, 5)
+	_, err := GetHandlerSettings(el, he, 5)
 	require.Equal(t, extensionerrors.ErrInvalidSettingsFile, err)
 }
 
@@ -41,8 +41,8 @@ func Test_settingsEmptyFile(t *testing.T) {
 	err = ioutil.WriteFile(getTestSettingsFileName(he), contents, 0644)
 	require.NoError(t, err, "WriteFile failed")
 
-	ctx := log.NewSyncLogger(log.NewLogfmtLogger(os.Stdout))
-	hs, err := GetHandlerSettings(ctx, he, testSeqNo)
+	el := logging.New(nil)
+	hs, err := GetHandlerSettings(el, he, testSeqNo)
 	require.NoError(t, err, "getHandlerSettings failed")
 	require.NotNil(t, hs)
 	require.Empty(t, hs.PublicSettings)
@@ -57,8 +57,8 @@ func Test_settingsCannotParseSettings(t *testing.T) {
 	err = ioutil.WriteFile(getTestSettingsFileName(he), contents, 0644)
 	require.NoError(t, err, "WriteFile failed")
 
-	ctx := log.NewSyncLogger(log.NewLogfmtLogger(os.Stdout))
-	_, err = GetHandlerSettings(ctx, he, testSeqNo)
+	el := logging.New(nil)
+	_, err = GetHandlerSettings(el, he, testSeqNo)
 	require.Equal(t, extensionerrors.ErrInvalidSettingsFile, err)
 }
 
@@ -66,11 +66,11 @@ func Test_settingsNoProtectedSettings(t *testing.T) {
 	he := getTestHandlerEnvironment()
 	err := initHandlerEnvironmentDirs(he)
 	defer cleanuphandlerEnvDir(he)
-	ctx := log.NewSyncLogger(log.NewLogfmtLogger(os.Stdout))
+	el := logging.New(nil)
 	settingsFile := getTestSettingsFileName(he)
 	writeSettingsToFile(t, testThumbprint, "", 1, settingsFile)
 
-	hs, err := GetHandlerSettings(ctx, he, testSeqNo)
+	hs, err := GetHandlerSettings(el, he, testSeqNo)
 	require.NoError(t, err)
 	validateHandlerSettings(t, hs)
 }
@@ -79,11 +79,11 @@ func Test_settingsNoThumbprint(t *testing.T) {
 	he := getTestHandlerEnvironment()
 	err := initHandlerEnvironmentDirs(he)
 	defer cleanuphandlerEnvDir(he)
-	ctx := log.NewSyncLogger(log.NewLogfmtLogger(os.Stdout))
+	el := logging.New(nil)
 	settingsFile := getTestSettingsFileName(he)
 	writeSettingsToFile(t, "", "eWFiYQ==", 1, settingsFile)
 
-	_, err = GetHandlerSettings(ctx, he, testSeqNo)
+	_, err = GetHandlerSettings(el, he, testSeqNo)
 	require.Equal(t, extensionerrors.ErrNoCertificateThumbprint, err)
 }
 
@@ -91,11 +91,11 @@ func Test_settingsCannotDecodeProtectedSettings(t *testing.T) {
 	he := getTestHandlerEnvironment()
 	err := initHandlerEnvironmentDirs(he)
 	defer cleanuphandlerEnvDir(he)
-	ctx := log.NewSyncLogger(log.NewLogfmtLogger(os.Stdout))
+	el := logging.New(nil)
 	settingsFile := getTestSettingsFileName(he)
 	writeSettingsToFile(t, testThumbprint, "&(*@#&JH", 1, settingsFile)
 
-	_, err = GetHandlerSettings(ctx, he, testSeqNo)
+	_, err = GetHandlerSettings(el, he, testSeqNo)
 	require.Equal(t, extensionerrors.ErrInvalidProtectedSettingsData, err)
 }
 
@@ -103,11 +103,11 @@ func Test_settingsNoRuntimeSettings(t *testing.T) {
 	he := getTestHandlerEnvironment()
 	err := initHandlerEnvironmentDirs(he)
 	defer cleanuphandlerEnvDir(he)
-	ctx := log.NewSyncLogger(log.NewLogfmtLogger(os.Stdout))
+	el := logging.New(nil)
 	settingsFile := getTestSettingsFileName(he)
 	writeSettingsToFile(t, testThumbprint, "", 0, settingsFile)
 
-	_, err = GetHandlerSettings(ctx, he, testSeqNo)
+	_, err = GetHandlerSettings(el, he, testSeqNo)
 	require.Equal(t, extensionerrors.ErrInvalidSettingsRuntimeSettingsCount, err)
 }
 
@@ -115,11 +115,11 @@ func Test_settingsTooManyRuntimeSettings(t *testing.T) {
 	he := getTestHandlerEnvironment()
 	err := initHandlerEnvironmentDirs(he)
 	defer cleanuphandlerEnvDir(he)
-	ctx := log.NewSyncLogger(log.NewLogfmtLogger(os.Stdout))
+	el := logging.New(nil)
 	settingsFile := getTestSettingsFileName(he)
 	writeSettingsToFile(t, testThumbprint, "", 2, settingsFile)
 
-	_, err = GetHandlerSettings(ctx, he, testSeqNo)
+	_, err = GetHandlerSettings(el, he, testSeqNo)
 	require.Equal(t, extensionerrors.ErrInvalidSettingsRuntimeSettingsCount, err)
 }
 

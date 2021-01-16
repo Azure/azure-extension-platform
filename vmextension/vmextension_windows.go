@@ -2,16 +2,18 @@ package vmextension
 
 import (
 	"fmt"
-	"github.com/Azure/azure-extension-platform/pkg/handlerenv"
-	"golang.org/x/sys/windows/registry"
 	"os"
 	"path"
+
+	"github.com/Azure/azure-extension-platform/pkg/handlerenv"
+	"golang.org/x/sys/windows/registry"
 )
 
 const (
-	sequenceNumberKeyName = "SequenceNumber"
-	heartBeatFileKeyName  = "HeartBeatFile"
-	statusFolderKeyName   = "StatusFolder"
+	sequenceNumberKeyName     = "SequenceNumber"
+	heartBeatFileKeyName      = "HeartBeatFile"
+	statusFolderKeyName       = "StatusFolder"
+	extensionEventsFolderName = "Events"
 )
 
 // GetOSName returns the name of the OS
@@ -55,12 +57,17 @@ func getHandlerEnvironment(name string, version string) (he *handlerenv.HandlerE
 	// Logs folder is at %SYSTEMDRIVE%\WindowsAzure\Logs\Plugins\{extension name}\{extension version}
 	logFolder := path.Join(systemDriveFolder, "WindowsAzure\\Logs\\Plugins", name, version)
 
+	// Extension events folder is passed in an environment variable
+	// TODO: change the others to read from environment variables too?
+	eventsFolder := os.Getenv(extensionEventsFolderName)
+
 	he = &handlerenv.HandlerEnvironment{
 		HeartbeatFile: heartBeatFile,
 		StatusFolder:  statusFolder,
 		ConfigFolder:  configFolder,
 		LogFolder:     logFolder,
 		DataFolder:    dataFolder,
+		EventsFolder:  eventsFolder,
 	}
 
 	return he, nil

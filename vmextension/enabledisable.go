@@ -1,12 +1,12 @@
 package vmextension
 
 import (
-	"github.com/Azure/azure-extension-platform/pkg/exithelper"
-	"github.com/go-kit/kit/log"
 	"io/ioutil"
 	"os"
 	"path"
 	"syscall"
+
+	"github.com/Azure/azure-extension-platform/pkg/exithelper"
 )
 
 const disabledFileName = "disable"
@@ -15,29 +15,29 @@ var (
 	disableDependency disableDependencies = &disableDependencyImpl{}
 )
 
-func enable(ctx log.Logger, ext *VMExtension) (string, error) {
+func enable(ext *VMExtension) (string, error) {
 	// If the sequence number has not changed and we require it to, then exit
 	if ext.exec.requiresSeqNoChange && ext.CurrentSequenceNumber != nil && ext.RequestedSequenceNumber <= *ext.CurrentSequenceNumber {
-		ctx.Log("message", "sequence number has not increased. Exiting.")
+		ext.ExtensionLogger.Info("sequence number has not increased. Exiting.")
 		exithelper.Exiter.Exit(0)
 	}
 
-	if ext.exec.supportsDisable && isDisabled(ctx, ext) {
+	if ext.exec.supportsDisable && isDisabled(ext) {
 		// The sequence number has changed and we're disabled, so reenable the extension
-		ctx.Log("message", "Reenabling the extension")
-		err := setDisabled(ctx, ext, false)
+		ext.ExtensionLogger.Info("Reenabling the extension")
+		err := setDisabled(ext, false)
 		if err != nil {
 			// Note: we don't return here because the least we can do is let the extension do its stuff
-			ctx.Log("message", "Could not reenable the extension", "error", err)
+			ext.ExtensionLogger.Error("Could not reenable the extension: %v", err)
 		}
 	}
 
 	// execute the command, save its error
-	msg, runErr := ext.exec.enableCallback(ctx, ext)
+	msg, runErr := ext.exec.enableCallback(ext)
 	if runErr != nil {
-		ctx.Log("message", "Enable failed", "error", runErr)
+		ext.ExtensionLogger.Error("Enable failed: %v", runErr)
 	} else {
-		ctx.Log("message", "Enable succeeded")
+		ext.ExtensionLogger.Info("Enable succeeded")
 	}
 
 	return msg, runErr
@@ -71,28 +71,28 @@ func doesFileExistDisableDependency(filePath string) (bool, error) {
 	return true, nil
 }
 
-func disable(ctx log.Logger, ext *VMExtension) (string, error) {
-	ctx.Log("event", "disable")
+func disable(ext *VMExtension) (string, error) {
+	ext.ExtensionLogger.Info("disable called")
 
 	if ext.exec.supportsDisable {
-		ctx.Log("event", "Disabling extension")
-		if isDisabled(ctx, ext) {
-			ctx.Log("message", "Extension is already disabled")
+		ext.ExtensionLogger.Info("Disabling extension")
+		if isDisabled(ext) {
+			ext.ExtensionLogger.Info("Extension is already disabled")
 		} else {
-			err := setDisabled(ctx, ext, true)
+			err := setDisabled(ext, true)
 			if err != nil {
 				return "", err
 			}
 		}
 	} else {
-		ctx.Log("message", "VMExtension supportsDisable is set to false. No action to be taken")
+		ext.ExtensionLogger.Info("VMExtension supportsDisable is set to false. No action to be taken")
 	}
 
 	// Call the callback if we have one
 	if ext.exec.disableCallback != nil {
-		err := ext.exec.disableCallback(ctx, ext)
+		err := ext.exec.disableCallback(ext)
 		if err != nil {
-			ctx.Log("message", "Disable failed", "error", err)
+			ext.ExtensionLogger.Error("Disable failed: %v", err)
 			return "", err
 		}
 	}
@@ -100,44 +100,44 @@ func disable(ctx log.Logger, ext *VMExtension) (string, error) {
 	return "", nil
 }
 
-func isDisabled(ctx log.Logger, ext *VMExtension) bool {
+func isDisabled(ext *VMExtension) bool {
 	if ext.exec.supportsDisable == false {
-		ctx.Log("message", "supportsDisable was false, skipping check for disableFile")
+		ext.ExtensionLogger.Info("supportsDisable was false, skipping check for disableFile")
 		return false
 	}
 	// We are disabled if the disabled file exists in the config folder
 	disabledFile := path.Join(ext.HandlerEnv.ConfigFolder, disabledFileName)
 	exists, err := doesFileExistDisableDependency(disabledFile)
 	if err != nil {
-		ctx.Log("message", "doesFileExit error detected: "+err.Error())
+		ext.ExtensionLogger.Error("doesFileExit error detected: %v", err.Error())
 	}
 	return exists
 }
 
-func setDisabled(ctx log.Logger, ext *VMExtension, disabled bool) error {
+func setDisabled(ext *VMExtension, disabled bool) error {
 	disabledFile := path.Join(ext.HandlerEnv.ConfigFolder, disabledFileName)
 	exists, err := doesFileExistDisableDependency(disabledFile)
 	if err != nil {
-		ctx.Log("message", "doesFileExit error detected: "+err.Error())
+		ext.ExtensionLogger.Error("doesFileExit error detected: %v", err.Error())
 	}
 	if exists != disabled {
 		if disabled {
 			// Create the file
-			ctx.Log("Event", "Disabling extension")
+			ext.ExtensionLogger.Info("Disabling extension")
 			b := []byte("1")
 			err := disableDependency.writeFile(disabledFile, b, 0644)
 			if err != nil {
-				ctx.Log("message", "Could not disable the extension", "error", err)
+				ext.ExtensionLogger.Error("Could not disable the extension: %v", err)
 				return err
 			}
 
-			ctx.Log("Event", "Disabled extension")
+			ext.ExtensionLogger.Info("Disabled extension")
 		} else {
 			// Remove the file
-			ctx.Log("Event", "Un-disabling extension")
+			ext.ExtensionLogger.Info("Un-disabling extension")
 			err := disableDependency.remove(disabledFile)
 			if err == nil {
-				ctx.Log("Event", "Re-enabled extension")
+				ext.ExtensionLogger.Info("Re-enabled extension")
 				return nil
 			}
 
@@ -146,12 +146,12 @@ func setDisabled(ctx log.Logger, ext *VMExtension, disabled bool) error {
 			pathError, isPathError := err.(*os.PathError)
 			if isPathError {
 				if pathError.Err == syscall.ENOENT {
-					ctx.Log("message", "Disable file was not present ignoring error")
+					ext.ExtensionLogger.Warn("Disable file was not present ignoring error")
 					return nil
 				}
 			}
 
-			ctx.Log("message", "Could not re-enable the extension", "error", err)
+			ext.ExtensionLogger.Error("Could not re-enable the extension: %v", err)
 			return err
 		}
 	}

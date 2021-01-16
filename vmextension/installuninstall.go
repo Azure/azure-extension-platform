@@ -3,7 +3,6 @@ package vmextension
 import (
 	"os"
 
-	"github.com/go-kit/kit/log"
 	"github.com/pkg/errors"
 )
 
@@ -44,21 +43,21 @@ func doesFileExistInstallDependency(filePath string) (bool, error) {
 	return true, nil
 }
 
-func update(ctx log.Logger, ext *VMExtension) (string, error) {
-	ctx.Log("event", "update")
+func update(ext *VMExtension) (string, error) {
+	ext.ExtensionLogger.Info("update called")
 
 	// The only thing we do for update is call the callback if we have one
 	if ext.exec.updateCallback != nil {
-		err := ext.exec.updateCallback(ctx, ext)
+		err := ext.exec.updateCallback(ext)
 		if err != nil {
-			ctx.Log("message", "Update failed", "error", err)
+			ext.ExtensionLogger.Error("Update failed: %v", err)
 		}
 	}
 
 	return "", nil
 }
 
-func install(ctx log.Logger, ext *VMExtension) (string, error) {
+func install(ext *VMExtension) (string, error) {
 	// Create the data directory if it doesn't exist
 	exists, err := doesFileExistInstallDependency(ext.HandlerEnv.DataFolder)
 	if err != nil {
@@ -66,33 +65,32 @@ func install(ctx log.Logger, ext *VMExtension) (string, error) {
 	}
 
 	if !exists {
-		ctx.Log("event", "Creating data dir", "path", ext.HandlerEnv.DataFolder)
+		ext.ExtensionLogger.Info("Creating data dir %v", ext.HandlerEnv.DataFolder)
 		if err := installDependency.mkdirAll(ext.HandlerEnv.DataFolder, 0755); err != nil {
 			return "", errors.Wrap(err, "failed to create data dir")
 		}
 
-		ctx.Log("event", "created data dir", "path", ext.HandlerEnv.DataFolder)
+		ext.ExtensionLogger.Info("Created data dir %s", ext.HandlerEnv.DataFolder)
 	}
 
-	ctx.Log("event", "installed")
+	ext.ExtensionLogger.Info("installed")
 	return "", nil
 }
 
-func uninstall(ctx log.Logger, ext *VMExtension) (string, error) {
+func uninstall(ext *VMExtension) (string, error) {
 	exists, err := doesFileExistInstallDependency(ext.HandlerEnv.DataFolder)
 	if err != nil {
 		return "", err
 	}
 
 	if exists {
-		ctx.Log("event", "removing data dir", "path", ext.HandlerEnv.DataFolder)
-		ctx = log.With(ctx, "path", ext.HandlerEnv.DataFolder)
+		ext.ExtensionLogger.Info("Removing data dir %v", ext.HandlerEnv.DataFolder)
 		if err := installDependency.removeAll(ext.HandlerEnv.DataFolder); err != nil {
 			return "", errors.Wrap(err, "failed to delete data dir")
 		}
-		ctx.Log("event", "removed data dir")
+		ext.ExtensionLogger.Info("removed data dir")
 	}
 
-	ctx.Log("event", "uninstalled")
+	ext.ExtensionLogger.Info("uninstalled")
 	return "", nil
 }

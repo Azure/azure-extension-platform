@@ -3,9 +3,10 @@
 package main
 
 import (
+	"os"
+
 	"github.com/Azure/azure-extension-platform/vmextension"
 	"github.com/go-kit/kit/log"
-	"os"
 )
 
 const (
@@ -13,19 +14,19 @@ const (
 	extensionVersion = "0.0.0.1"
 )
 
-var enableCallbackFunc vmextension.EnableCallbackFunc = func(ctx log.Logger, ext *vmextension.VMExtension) (string, error) {
+var enableCallbackFunc vmextension.EnableCallbackFunc = func(ext *vmextension.VMExtension) (string, error) {
 	// put your extension specific code here
 	// on enable, the extension will call this code
 	return "put your extension code here", nil
 }
 
-var updateCallbackFunc vmextension.CallbackFunc = func(ctx log.Logger, ext *vmextension.VMExtension) error {
+var updateCallbackFunc vmextension.CallbackFunc = func(ext *vmextension.VMExtension) error {
 	// optional
 	// on update, the extension will call this code
 	return nil
 }
 
-var disableCallbackFunc vmextension.CallbackFunc = func(ctx log.Logger, ext *vmextension.VMExtension) error {
+var disableCallbackFunc vmextension.CallbackFunc = func(ext *vmextension.VMExtension) error {
 	// optional
 	// on disable, the extension will call this code
 	return nil
@@ -51,11 +52,10 @@ func getExtensionAndRun() error {
 
 	initilizationInfo.DisableCallback = disableCallbackFunc
 	initilizationInfo.UpdateCallback = updateCallbackFunc
-	ctx := log.With(log.With(logger, "time", log.DefaultTimestampUTC), "version", extensionVersion)
-	vmExt, err := getVMExtensionFuncToCall(ctx, initilizationInfo)
+	vmExt, err := getVMExtensionFuncToCall(initilizationInfo)
 	if err != nil {
 		return err
 	}
-	vmExt.Do(ctx)
+	vmExt.Do()
 	return nil
 }
