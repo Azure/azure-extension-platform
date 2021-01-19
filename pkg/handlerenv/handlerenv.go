@@ -7,4 +7,5 @@ type HandlerEnvironment struct {
 	ConfigFolder  string
 	LogFolder     string
 	DataFolder    string
+	EventsFolder  string
 }

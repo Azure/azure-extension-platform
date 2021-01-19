@@ -3,13 +3,14 @@ package vmextension
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/Azure/azure-extension-platform/pkg/handlerenv"
 	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	"github.com/Azure/azure-extension-platform/pkg/handlerenv"
 )
 
 // agentDir is where the agent is located, a subdirectory of which we use as the data directory
@@ -33,6 +34,7 @@ type HandlerEnvironmentLinux struct {
 		StatusFolder  string `json:"statusFolder"`
 		ConfigFolder  string `json:"configFolder"`
 		LogFolder     string `json:"logFolder"`
+		EventsFolder  string `json:"eventsFolder"`
 	}
 }
 
@@ -97,6 +99,7 @@ func getHandlerEnvironment(name string, version string) (he *handlerenv.HandlerE
 		ConfigFolder:  handlerEnvLinux.HandlerEnvironment.ConfigFolder,
 		LogFolder:     handlerEnvLinux.HandlerEnvironment.LogFolder,
 		DataFolder:    dataFolder,
+		EventsFolder:  handlerEnvLinux.HandlerEnvironment.EventsFolder,
 	}, nil
 }
 

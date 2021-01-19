@@ -2,20 +2,22 @@ package vmextension
 
 import (
 	"fmt"
+	"os"
+	"strings"
+
 	"github.com/Azure/azure-extension-platform/pkg/environmentmanager"
 	"github.com/Azure/azure-extension-platform/pkg/exithelper"
 	"github.com/Azure/azure-extension-platform/pkg/extensionerrors"
+	"github.com/Azure/azure-extension-platform/pkg/extensionevents"
 	"github.com/Azure/azure-extension-platform/pkg/handlerenv"
+	"github.com/Azure/azure-extension-platform/pkg/logging"
 	"github.com/Azure/azure-extension-platform/pkg/seqno"
 	"github.com/Azure/azure-extension-platform/pkg/settings"
 	"github.com/Azure/azure-extension-platform/pkg/status"
-	"github.com/go-kit/kit/log"
 	"github.com/pkg/errors"
-	"os"
-	"strings"
 )
 
-type cmdFunc func(ctx log.Logger, ext *VMExtension) (msg string, err error)
+type cmdFunc func(ext *VMExtension) (msg string, err error)
 
 var errNotFound error = errors.New("NotFound")
 
@@ -40,13 +42,15 @@ type executionInfo struct {
 
 // VMExtension is an abstraction for standard extension operations in an OS agnostic manner
 type VMExtension struct {
-	Name                    string                         // The name of the extension. This will contain 'Windows' or 'Linux'
-	Version                 string                         // The version of the extension
-	RequestedSequenceNumber uint                           // The requested sequence number to run
-	CurrentSequenceNumber   *uint                          // The last run sequence number, null means no existing sequence number was found
-	HandlerEnv              *handlerenv.HandlerEnvironment // Contains information about the folders necessary for the extension
-	Settings                *settings.HandlerSettings      // Contains settings passed to the extension
-	exec                    *executionInfo                 // Internal information necessary for the extension to run
+	Name                    string                                 // The name of the extension. This will contain 'Windows' or 'Linux'
+	Version                 string                                 // The version of the extension
+	RequestedSequenceNumber uint                                   // The requested sequence number to run
+	CurrentSequenceNumber   *uint                                  // The last run sequence number, null means no existing sequence number was found
+	HandlerEnv              *handlerenv.HandlerEnvironment         // Contains information about the folders necessary for the extension
+	Settings                *settings.HandlerSettings              // Contains settings passed to the extension
+	ExtensionEvents         *extensionevents.ExtensionEventManager // Allows extensions to raise events
+	ExtensionLogger         *logging.ExtensionLogger               // Automatically logs to the log directory
+	exec                    *executionInfo                         // Internal information necessary for the extension to run
 }
 
 type prodGetVMExtensionEnvironmentManager struct {
@@ -56,16 +60,16 @@ func (*prodGetVMExtensionEnvironmentManager) GetHandlerEnvironment(name string, 
 	return getHandlerEnvironment(name, version)
 }
 
-func (*prodGetVMExtensionEnvironmentManager) FindSeqNum(ctx log.Logger, configFolder string) (uint, error) {
-	return seqno.FindSeqNum(ctx, configFolder)
+func (*prodGetVMExtensionEnvironmentManager) FindSeqNum(el *logging.ExtensionLogger, configFolder string) (uint, error) {
+	return seqno.FindSeqNum(el, configFolder)
 }
 
-func (*prodGetVMExtensionEnvironmentManager) GetCurrentSequenceNumber(ctx log.Logger, retriever seqno.ISequenceNumberRetriever, name, version string) (uint, error) {
-	return seqno.GetCurrentSequenceNumber(ctx, retriever, name, version)
+func (*prodGetVMExtensionEnvironmentManager) GetCurrentSequenceNumber(el *logging.ExtensionLogger, retriever seqno.ISequenceNumberRetriever, name, version string) (uint, error) {
+	return seqno.GetCurrentSequenceNumber(el, retriever, name, version)
 }
 
-func (*prodGetVMExtensionEnvironmentManager) GetHandlerSettings(ctx log.Logger, he *handlerenv.HandlerEnvironment, seqNo uint) (*settings.HandlerSettings, error) {
-	return settings.GetHandlerSettings(ctx, he, seqNo)
+func (*prodGetVMExtensionEnvironmentManager) GetHandlerSettings(el *logging.ExtensionLogger, he *handlerenv.HandlerEnvironment, seqNo uint) (*settings.HandlerSettings, error) {
+	return settings.GetHandlerSettings(el, he, seqNo)
 }
 
 func (*prodGetVMExtensionEnvironmentManager) SetSequenceNumberInternal(extensionName, extensionVersion string, seqNo uint) error {
@@ -73,23 +77,22 @@ func (*prodGetVMExtensionEnvironmentManager) SetSequenceNumberInternal(extension
 }
 
 // GetVMExtension returns a new VMExtension object
-func GetVMExtension(ctx log.Logger, initInfo *InitializationInfo) (ext *VMExtension, _ error) {
-	return getVMExtensionInternal(ctx, initInfo, &prodGetVMExtensionEnvironmentManager{})
+func GetVMExtension(initInfo *InitializationInfo) (ext *VMExtension, _ error) {
+	return getVMExtensionInternal(initInfo, &prodGetVMExtensionEnvironmentManager{})
 }
 
-// Use this method to mock out the environment part of the VM extension for use with your extension
-func GetVMExtensionForTesting(ctx log.Logger, initInfo *InitializationInfo, manager environmentmanager.IGetVMExtensionEnvironmentManager) (ext *VMExtension, _ error) {
-	return getVMExtensionInternal(ctx, initInfo, manager)
+// GetVMExtensionForTesting mocks out the environment part of the VM extension for use with your extension
+func GetVMExtensionForTesting(initInfo *InitializationInfo, manager environmentmanager.IGetVMExtensionEnvironmentManager) (ext *VMExtension, _ error) {
+	return getVMExtensionInternal(initInfo, manager)
 }
 
 // Internal method that allows mocking for unit tests
-func getVMExtensionInternal(ctx log.Logger, initInfo *InitializationInfo, manager environmentmanager.IGetVMExtensionEnvironmentManager) (ext *VMExtension, _ error) {
+func getVMExtensionInternal(initInfo *InitializationInfo, manager environmentmanager.IGetVMExtensionEnvironmentManager) (ext *VMExtension, _ error) {
 	if initInfo == nil {
 		return nil, extensionerrors.ErrArgCannotBeNull
 	}
 
 	if len(initInfo.Name) < 1 || len(initInfo.Version) < 1 {
-		return nil, extensionerrors.ErrArgCannotBeNullOrEmpty
 		return nil, extensionerrors.ErrArgCannotBeNullOrEmpty
 	}
 
@@ -102,8 +105,12 @@ func getVMExtensionInternal(ctx log.Logger, initInfo *InitializationInfo, manage
 		return nil, err
 	}
 
+	// Create our event manager. This will be disabled if no eventsFolder exists
+	extensionLogger := logging.New(handlerEnv)
+	extensionEvents := extensionevents.New(extensionLogger, handlerEnv)
+
 	// Determine the sequence number requested
-	newSeqNo, err := manager.FindSeqNum(ctx, handlerEnv.ConfigFolder)
+	newSeqNo, err := manager.FindSeqNum(extensionLogger, handlerEnv.ConfigFolder)
 	if err != nil {
 		return nil, errors.Wrap(err, "Failed to find sequence number")
 	}
@@ -111,7 +118,7 @@ func getVMExtensionInternal(ctx log.Logger, initInfo *InitializationInfo, manage
 	// Determine the current sequence number
 	retriever := seqno.ProcSequenceNumberRetriever{}
 	var currentSeqNo = new(uint)
-	retrievedSequenceNumber, err := manager.GetCurrentSequenceNumber(ctx, &retriever, initInfo.Name, initInfo.Version)
+	retrievedSequenceNumber, err := manager.GetCurrentSequenceNumber(extensionLogger, &retriever, initInfo.Name, initInfo.Version)
 	if err != nil {
 		if err == extensionerrors.ErrNoSettingsFiles {
 			// current sequence number could not be found, this is a special error
@@ -142,7 +149,7 @@ func getVMExtensionInternal(ctx log.Logger, initInfo *InitializationInfo, manage
 		cmdDisable = cmd{noop, "Disable", true, 3}
 	}
 
-	settings, err := manager.GetHandlerSettings(ctx, handlerEnv, newSeqNo)
+	settings, err := manager.GetHandlerSettings(extensionLogger, handlerEnv, newSeqNo)
 	if err != nil {
 		return nil, err
 	}
@@ -154,6 +161,8 @@ func getVMExtensionInternal(ctx log.Logger, initInfo *InitializationInfo, manage
 		CurrentSequenceNumber:   currentSeqNo,
 		HandlerEnv:              handlerEnv,
 		Settings:                settings,
+		ExtensionEvents:         extensionEvents,
+		ExtensionLogger:         extensionLogger,
 		exec: &executionInfo{
 			manager:             manager,
 			requiresSeqNoChange: initInfo.RequiresSeqNoChange,
@@ -176,29 +185,27 @@ func getVMExtensionInternal(ctx log.Logger, initInfo *InitializationInfo, manage
 
 // Do is the main worker method of the extension and determines which operation
 // to run, if necessary
-func (ve *VMExtension) Do(ctx log.Logger) {
+func (ve *VMExtension) Do() {
 	// parse command line arguments
 	cmd := ve.parseCmd(os.Args)
-	ctx = log.With(ctx, "operation", strings.ToLower(cmd.name))
-
-	ctx = log.With(ctx, "seq", ve.RequestedSequenceNumber)
+	ve.ExtensionLogger.Info("Running operation %v for seqNo %v", strings.ToLower(cmd.name), ve.RequestedSequenceNumber)
 
 	// remember the squence number
 	err := ve.exec.manager.SetSequenceNumberInternal(ve.Name, ve.Version, ve.RequestedSequenceNumber)
 	if err != nil {
-		ctx.Log("message", "failed to write the new sequence number", "error", err)
+		ve.ExtensionLogger.Error("failed to write the new sequence number: %v", err)
 	}
 
 	// execute the command
-	reportStatus(ctx, ve, status.StatusTransitioning, cmd, "")
-	msg, err := cmd.f(ctx, ve)
+	reportStatus(ve, status.StatusTransitioning, cmd, "")
+	msg, err := cmd.f(ve)
 	if err != nil {
-		ctx.Log("event", "failed to handle", "error", err)
-		reportStatus(ctx, ve, status.StatusError, cmd, err.Error()+msg)
+		ve.ExtensionLogger.Error("failed to handle: %v", err)
+		reportStatus(ve, status.StatusError, cmd, err.Error()+msg)
 		exithelper.Exiter.Exit(cmd.failExitCode)
 	}
 
-	reportStatus(ctx, ve, status.StatusSuccess, cmd, msg)
+	reportStatus(ve, status.StatusSuccess, cmd, msg)
 }
 
 // reportStatus saves operation status to the status file for the extension
@@ -206,15 +213,15 @@ func (ve *VMExtension) Do(ctx log.Logger) {
 // status.
 //
 // If an error occurs reporting the status, it will be logged and returned.
-func reportStatus(ctx log.Logger, ve *VMExtension, t status.StatusType, c cmd, msg string) error {
+func reportStatus(ve *VMExtension, t status.StatusType, c cmd, msg string) error {
 	if !c.shouldReportStatus {
-		ctx.Log("status", "not reported for operation (by design)")
+		ve.ExtensionLogger.Info("status ot reported for operation (by design)")
 		return nil
 	}
 
 	s := status.New(t, c.name, status.StatusMsg(c.name, t, msg))
 	if err := s.Save(ve.HandlerEnv.StatusFolder, ve.RequestedSequenceNumber); err != nil {
-		ctx.Log("event", "failed to save handler status", "error", err)
+		ve.ExtensionLogger.Error("Failed to save handler status: %v", err)
 		return errors.Wrap(err, "failed to save handler status")
 	}
 	return nil
@@ -255,7 +262,7 @@ func (ve *VMExtension) printUsage(args []string) {
 	fmt.Println(ve.Version)
 }
 
-func noop(ctx log.Logger, ext *VMExtension) (string, error) {
-	ctx.Log("event", "noop")
+func noop(ext *VMExtension) (string, error) {
+	ext.ExtensionLogger.Info("noop")
 	return "", nil
 }

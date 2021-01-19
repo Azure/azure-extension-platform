@@ -1,10 +1,10 @@
 package vmextension
 
 import (
-	"github.com/Azure/azure-extension-platform/pkg/extensionerrors"
-	"github.com/go-kit/kit/log"
-	"github.com/stretchr/testify/require"
 	"testing"
+
+	"github.com/Azure/azure-extension-platform/pkg/extensionerrors"
+	"github.com/stretchr/testify/require"
 )
 
 func Test_initializationInfoValidate(t *testing.T) {
@@ -32,6 +32,6 @@ func Test_initializationInfoDefaults(t *testing.T) {
 	require.Equal(t, 3, ii.OtherExitCode)
 }
 
-func testEnableCallback(ctx log.Logger, ext *VMExtension) (string, error) {
+func testEnableCallback(ext *VMExtension) (string, error) {
 	return "blah", nil
 }

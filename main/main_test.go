@@ -3,20 +3,21 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/Azure/azure-extension-platform/pkg/constants"
-	"github.com/Azure/azure-extension-platform/pkg/exithelper"
-	"github.com/Azure/azure-extension-platform/pkg/extensionerrors"
-	"github.com/Azure/azure-extension-platform/pkg/handlerenv"
-	"github.com/Azure/azure-extension-platform/pkg/seqno"
-	"github.com/Azure/azure-extension-platform/pkg/settings"
-	"github.com/Azure/azure-extension-platform/pkg/status"
-	"github.com/Azure/azure-extension-platform/vmextension"
-	"github.com/go-kit/kit/log"
-	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"os"
 	"path"
 	"testing"
+
+	"github.com/Azure/azure-extension-platform/pkg/constants"
+	"github.com/Azure/azure-extension-platform/pkg/exithelper"
+	"github.com/Azure/azure-extension-platform/pkg/extensionerrors"
+	"github.com/Azure/azure-extension-platform/pkg/handlerenv"
+	"github.com/Azure/azure-extension-platform/pkg/logging"
+	"github.com/Azure/azure-extension-platform/pkg/seqno"
+	"github.com/Azure/azure-extension-platform/pkg/settings"
+	"github.com/Azure/azure-extension-platform/pkg/status"
+	"github.com/Azure/azure-extension-platform/vmextension"
+	"github.com/stretchr/testify/assert"
 )
 
 var testdir = path.Join(".", "testenv")
@@ -52,19 +53,19 @@ func (mock *mockVMExtensionEnvironmentManager) GetHandlerEnvironment(name string
 	return mock.handlerEnvironment, nil
 }
 
-func (mock *mockVMExtensionEnvironmentManager) FindSeqNum(ctx log.Logger, configFolder string) (uint, error) {
-	return seqno.FindSeqNum(ctx, configFolder)
+func (mock *mockVMExtensionEnvironmentManager) FindSeqNum(el *logging.ExtensionLogger, configFolder string) (uint, error) {
+	return seqno.FindSeqNum(el, configFolder)
 }
 
-func (mock *mockVMExtensionEnvironmentManager) GetCurrentSequenceNumber(ctx log.Logger, retriever seqno.ISequenceNumberRetriever, name, version string) (uint, error) {
+func (mock *mockVMExtensionEnvironmentManager) GetCurrentSequenceNumber(el *logging.ExtensionLogger, retriever seqno.ISequenceNumberRetriever, name, version string) (uint, error) {
 	if mock.currentSeqNum == nil {
 		return 0, extensionerrors.ErrNoSettingsFiles
 	} else {
 		return *mock.currentSeqNum, nil
 	}
 }
-func (*mockVMExtensionEnvironmentManager) GetHandlerSettings(ctx log.Logger, he *handlerenv.HandlerEnvironment, seqNo uint) (*settings.HandlerSettings, error) {
-	return settings.GetHandlerSettings(ctx, he, seqNo)
+func (*mockVMExtensionEnvironmentManager) GetHandlerSettings(el *logging.ExtensionLogger, he *handlerenv.HandlerEnvironment, seqNo uint) (*settings.HandlerSettings, error) {
+	return settings.GetHandlerSettings(el, he, seqNo)
 }
 func (mock *mockVMExtensionEnvironmentManager) SetSequenceNumberInternal(extensionName, extensionVersion string, seqNo uint) error {
 	if mock.currentSeqNum == nil {
@@ -76,7 +77,7 @@ func (mock *mockVMExtensionEnvironmentManager) SetSequenceNumberInternal(extensi
 
 var enableCallbackCalled = false
 
-var mockEnableCallbackFunc vmextension.EnableCallbackFunc = func(ctx log.Logger, ext *vmextension.VMExtension) (string, error) {
+var mockEnableCallbackFunc vmextension.EnableCallbackFunc = func(ext *vmextension.VMExtension) (string, error) {
 	enableCallbackCalled = true
 	return fmt.Sprintf("enable callback called, settings %v", ext.Settings.PublicSettings), nil
 }
@@ -147,12 +148,12 @@ func initialize(t *testing.T) {
 	enableCallbackCalled = false
 
 	getInitializationInfoFuncToCall = mockInitializationFunc
-	getVMExtensionFuncToCall = func(ctx log.Logger, initInfo *vmextension.InitializationInfo) (ext *vmextension.VMExtension, _ error) {
+	getVMExtensionFuncToCall = func(initInfo *vmextension.InitializationInfo) (ext *vmextension.VMExtension, _ error) {
 		manager := mockVMExtensionEnvironmentManager{
 			currentSeqNum:      nil,
 			handlerEnvironment: &handlerEnv,
 		}
-		return vmextension.GetVMExtensionForTesting(ctx, initInfo, &manager)
+		return vmextension.GetVMExtensionForTesting(initInfo, &manager)
 	}
 
 	exithelper.Exiter = &mockExiter{}
@@ -227,7 +228,7 @@ func TestHigherSequenceNumberIsExecuted(t *testing.T) {
 func TestTransitioningStatus(t *testing.T) {
 	initialize(t)
 	defer cleanupTest()
-	mockEnableCallbackFunc := func(ctx log.Logger, ext *vmextension.VMExtension) (string, error) {
+	mockEnableCallbackFunc := func(ext *vmextension.VMExtension) (string, error) {
 		return "testStatusFile", testStatusFile(ext.HandlerEnv.StatusFolder, ext.RequestedSequenceNumber, status.StatusTransitioning)
 	}
 
@@ -268,12 +269,12 @@ func TestSameSequenceNumberIsExecutedTwiceIfRequiresSeqNoChangeIsFalse(t *testin
 		}, nil
 	}
 	var zero uint = 0
-	getVMExtensionFuncToCall = func(ctx log.Logger, initInfo *vmextension.InitializationInfo) (ext *vmextension.VMExtension, _ error) {
+	getVMExtensionFuncToCall = func(initInfo *vmextension.InitializationInfo) (ext *vmextension.VMExtension, _ error) {
 		manager := mockVMExtensionEnvironmentManager{
 			currentSeqNum:      &zero,
 			handlerEnvironment: &handlerEnv,
 		}
-		return vmextension.GetVMExtensionForTesting(ctx, initInfo, &manager)
+		return vmextension.GetVMExtensionForTesting(initInfo, &manager)
 	}
 	defer cleanupTest()
 	os.Args = []string{"testprogram", "enable"}
@@ -290,12 +291,12 @@ func TestSameSequenceNumberIsExecutedTwiceIfRequiresSeqNoChangeIsFalse(t *testin
 func TestSameSequenceNumberIsNotExecutedTwice(t *testing.T) {
 	initialize(t)
 	var zero uint = 0
-	getVMExtensionFuncToCall = func(ctx log.Logger, initInfo *vmextension.InitializationInfo) (ext *vmextension.VMExtension, _ error) {
+	getVMExtensionFuncToCall = func(initInfo *vmextension.InitializationInfo) (ext *vmextension.VMExtension, _ error) {
 		manager := mockVMExtensionEnvironmentManager{
 			currentSeqNum:      &zero,
 			handlerEnvironment: &handlerEnv,
 		}
-		return vmextension.GetVMExtensionForTesting(ctx, initInfo, &manager)
+		return vmextension.GetVMExtensionForTesting(initInfo, &manager)
 	}
 	defer cleanupTest()
 	os.Args = []string{"testprogram", "enable"}

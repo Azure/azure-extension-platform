@@ -1,8 +1,6 @@
 package seqno
 
 import (
-	"fmt"
-	"github.com/Azure/azure-extension-platform/pkg/extensionerrors"
 	"io/ioutil"
 	"path/filepath"
 	"sort"
@@ -10,7 +8,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/go-kit/kit/log"
+	"github.com/Azure/azure-extension-platform/pkg/extensionerrors"
+	"github.com/Azure/azure-extension-platform/pkg/logging"
 )
 
 type ISequenceNumberRetriever interface {
@@ -25,12 +24,12 @@ func (*ProcSequenceNumberRetriever) GetSequenceNumber(name, version string) (uin
 }
 
 // GetCurrentSequenceNumber returns the current sequence number the extension is using
-func GetCurrentSequenceNumber(ctx log.Logger, retriever ISequenceNumberRetriever, name, version string) (sn uint, _ error) {
+func GetCurrentSequenceNumber(el *logging.ExtensionLogger, retriever ISequenceNumberRetriever, name, version string) (sn uint, _ error) {
 	sequenceNumber, err := retriever.GetSequenceNumber(name, version)
 	if err == extensionerrors.ErrNotFound {
 		// If we can't find the sequence number, then it's possible that the extension
 		// hasn't been installed yet. Go back to 0.
-		ctx.Log("message", "couldn't find sequence number")
+		el.Error("couldn't find sequence number")
 		return 0, nil
 	}
 
@@ -43,7 +42,7 @@ func SetSequenceNumber(extName, extVersion string, seqNo uint) error {
 
 // findSeqnum finds the most reecently used file under the config folder
 // Note that this is different than just choosing the highest number, which may be incorrect
-func FindSeqNum(ctx log.Logger, configFolder string) (uint, error) {
+func FindSeqNum(el *logging.ExtensionLogger, configFolder string) (uint, error) {
 	g, err := filepath.Glob(configFolder + "/*.settings")
 	if err != nil {
 		return 0, err
@@ -72,12 +71,12 @@ func FindSeqNum(ctx log.Logger, configFolder string) (uint, error) {
 	}
 
 	if len(names) == 0 {
-		ctx.Log("message", "findSeqNum failed", "error", fmt.Errorf("Cannot find the seqNo from %s. Not enough files", configFolder))
+		el.Error("Cannot find the seqNo from %s. Not enough files", configFolder)
 		return 0, extensionerrors.ErrNoSettingsFiles
 	} else if len(names) == 1 {
 		i, err := strconv.Atoi(strings.Replace(names[0], ".settings", "", 1))
 		if err != nil {
-			ctx.Log("message", "findSeqNum failed", "error", fmt.Errorf("Can't parse int from filename: %s", names[0]))
+			el.Error("Can't parse int from filename: %s", names[0])
 			return 0, extensionerrors.ErrInvalidSettingsFileName
 		}
 
@@ -90,7 +89,7 @@ func FindSeqNum(ctx log.Logger, configFolder string) (uint, error) {
 			f := filepath.Base(v)
 			i, err := strconv.Atoi(strings.Replace(f, ".settings", "", 1))
 			if err != nil {
-				ctx.Log("message", "findSeqNum failed", "error", fmt.Errorf("Can't parse int from filename: %s", f))
+				el.Error("Can't parse int from filename: %s", f)
 				return 0, extensionerrors.ErrInvalidSettingsFileName
 			}
 			seqs = append(seqs, i)

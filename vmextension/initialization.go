@@ -2,14 +2,13 @@ package vmextension
 
 import (
 	"github.com/Azure/azure-extension-platform/pkg/extensionerrors"
-	"github.com/go-kit/kit/log"
 )
 
 // CallbackFunc is used for a non-Enable operation callback
-type CallbackFunc func(ctx log.Logger, ext *VMExtension) error
+type CallbackFunc func(ext *VMExtension) error
 
 // EnableCallbackFunc is used for Enable operation callbacks
-type EnableCallbackFunc func(ctx log.Logger, ext *VMExtension) (string, error)
+type EnableCallbackFunc func(ext *VMExtension) (string, error)
 
 // InitializationInfo is passed by the extension to specify how the framework should run
 type InitializationInfo struct {
