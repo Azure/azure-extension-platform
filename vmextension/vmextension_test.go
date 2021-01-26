@@ -3,9 +3,11 @@ package vmextension
 import (
 	"encoding/json"
 	"errors"
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"path"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -22,6 +24,12 @@ import (
 var (
 	statusTestDirectory = "./statustest"
 )
+
+type MockExitHelper struct{ exitCode int }
+
+func (meh *MockExitHelper) Exit(exitCode int) {
+	meh.exitCode = exitCode
+}
 
 type mockGetVMExtensionEnvironmentManager struct {
 	seqNo                         uint
@@ -242,48 +250,28 @@ func Test_getVMExtensionNormalOperation(t *testing.T) {
 }
 
 func Test_parseCommandWrongArgsCount(t *testing.T) {
-	if os.Getenv("DIE_PROCESS_DIE") == "1" {
-		mm := createMockVMExtensionEnvironmentManager()
-		ii, _ := GetInitializationInfo("yaba", "5.0", true, testEnableCallback)
-		ext, _ := getVMExtensionInternal(ii, mm)
+	eh := &MockExitHelper{0}
+	mm := createMockVMExtensionEnvironmentManager()
+	ii, _ := GetInitializationInfo("yaba", "5.0", true, testEnableCallback)
+	ext, _ := getVMExtensionInternal(ii, mm)
 
-		args := make([]string, 1)
-		args[0] = "install"
-		ext.parseCmd(args)
-		return
-	}
-
-	// Verify that the process exits
-	cmd := exec.Command(os.Args[0], "-test.run=Test_parseCommandWrongArgsCount")
-	cmd.Env = append(os.Environ(), "DIE_PROCESS_DIE=1")
-	err := cmd.Run()
-	if e, ok := err.(*exec.ExitError); ok && !e.Success() {
-		return
-	}
-	t.Fatalf("process ran with err %v, want exit status 1", err)
+	args := make([]string, 1)
+	args[0] = "install"
+	ext.parseCmd(args, eh)
+	require.Equal(t, 2, eh.exitCode)
 }
 
 func Test_parseCommandUnsupportedOperation(t *testing.T) {
-	if os.Getenv("DIE_PROCESS_DIE") == "1" {
-		mm := createMockVMExtensionEnvironmentManager()
-		ii, _ := GetInitializationInfo("yaba", "5.0", true, testEnableCallback)
-		ext, _ := getVMExtensionInternal(ii, mm)
+	eh := &MockExitHelper{0}
+	mm := createMockVMExtensionEnvironmentManager()
+	ii, _ := GetInitializationInfo("yaba", "5.0", true, testEnableCallback)
+	ext, _ := getVMExtensionInternal(ii, mm)
 
-		args := make([]string, 2)
-		args[0] = "processname_dont_care"
-		args[1] = "flipperdoodle"
-		ext.parseCmd(args)
-		return
-	}
-
-	// Verify that the process exits
-	cmd := exec.Command(os.Args[0], "-test.run=Test_parseCommandUnsupportedOperation")
-	cmd.Env = append(os.Environ(), "DIE_PROCESS_DIE=1")
-	err := cmd.Run()
-	if e, ok := err.(*exec.ExitError); ok && !e.Success() {
-		return
-	}
-	t.Fatalf("process ran with err %v, want exit status 1", err)
+	args := make([]string, 2)
+	args[0] = "processname_dont_care"
+	args[1] = "flipperdoodle"
+	ext.parseCmd(args, eh)
+	require.Equal(t, 2, eh.exitCode)
 }
 
 func Test_parseCommandNormalOperation(t *testing.T) {
@@ -294,7 +282,7 @@ func Test_parseCommandNormalOperation(t *testing.T) {
 	args := make([]string, 2)
 	args[0] = "processname_dont_care"
 	args[1] = "install"
-	cmd := ext.parseCmd(args)
+	cmd := ext.parseCmd(args, nil)
 	require.NotNil(t, cmd)
 }
 
@@ -429,6 +417,115 @@ func Test_doCommandSucceeds(t *testing.T) {
 	os.Args[0] = "dontcare"
 	os.Args[1] = "enable"
 	ext.Do()
+}
+
+func Test_validHandlerEnvironment(t *testing.T) {
+	hes := `[{	
+		"version": 1.0, 	  
+		"handlerEnvironment": { 	  
+		  "logFolder": "mylogFolder", 	  
+		  "configFolder": "myconfigFolder",	  
+		  "statusFolder": "mystatusFolder",	  
+		  "heartbeatFile": "myheartbeatFile",	  
+		  "deploymentid": "mydeploymentid", 	  
+		  "rolename": "myrolename", 	  
+		  "instance": "myinstance", 	  
+		  "hostResolverAddress": "myhostResolverAddress", 	  
+		  "eventsFolder": "" 	  
+		} 	  
+	  }]`
+
+	writeHandlerEnvironment(t, hes)
+	defer deleteHandlerEnvironment()
+
+	em := &prodGetVMExtensionEnvironmentManager{}
+	he, err := em.GetHandlerEnvironment("yaba", "1.0")
+	require.NoError(t, err)
+	require.Equal(t, "mylogFolder", he.LogFolder)
+	require.Equal(t, "myconfigFolder", he.ConfigFolder)
+	require.Equal(t, "mystatusFolder", he.StatusFolder)
+	require.Equal(t, "myheartbeatFile", he.HeartbeatFile)
+	require.Equal(t, "mydeploymentid", he.DeploymentID)
+	require.Equal(t, "myrolename", he.RoleName)
+	require.Equal(t, "myinstance", he.Instance)
+	require.Equal(t, "myhostResolverAddress", he.HostResolverAddress)
+	require.Empty(t, he.EventsFolder)
+}
+
+func Test_multipleHandlerEnvironments(t *testing.T) {
+	hes := `[{	
+		"version": 1.0, 	  
+		"handlerEnvironment": { 	  
+		  "logFolder": "mylogFolder1"	  
+		} 	  
+	  },
+	  {	
+		"version": 2.0, 	  
+		"handlerEnvironment": { 	  
+		  "logFolder": "mylogFolder2"	  
+		} 	  
+	  }]`
+
+	writeHandlerEnvironment(t, hes)
+	defer deleteHandlerEnvironment()
+
+	em := &prodGetVMExtensionEnvironmentManager{}
+	_, err := em.GetHandlerEnvironment("yaba", "1.0")
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "expected 1 config in parsed HandlerEnvironment")
+}
+
+func Test_cannotFindHandlerEnvironment(t *testing.T) {
+	em := &prodGetVMExtensionEnvironmentManager{}
+	_, err := em.GetHandlerEnvironment("yaba", "1.0")
+	require.Error(t, err)
+}
+
+func Test_cannotParseHandlerEnvironment(t *testing.T) {
+	hes := "flarfablarg"
+	writeHandlerEnvironment(t, hes)
+	defer deleteHandlerEnvironment()
+
+	em := &prodGetVMExtensionEnvironmentManager{}
+	_, err := em.GetHandlerEnvironment("yaba", "1.0")
+	require.Error(t, err)
+}
+
+func Test_cannotParseScriptDir(t *testing.T) {
+	// filepath.Abs doesn't validate the path, so the only way to create
+	// an invalid path on Windows is to go over MAX_PATH characters
+	// Making this test Windows only unless there's a different way to get
+	// this to fail on Linux
+	if getOSName() == "Windows" {
+		b := make([]rune, 40000)
+		for i := range b {
+			b[i] = 'a'
+		}
+
+		oldArgs := os.Args
+		defer putBackArgs(oldArgs)
+		os.Args = make([]string, 1)
+		os.Args[0] = string(b)
+
+		em := &prodGetVMExtensionEnvironmentManager{}
+		_, err := em.GetHandlerEnvironment("yaba", "1.0")
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "cannot find base directory of the running process")
+	}
+}
+
+func writeHandlerEnvironment(t *testing.T, rawhe string) {
+	d := []byte(rawhe)
+	dir, _ := filepath.Abs(filepath.Dir(os.Args[0]))
+	fp := path.Join(dir, handlerEnvFileName)
+	err := ioutil.WriteFile(fp, d, 0644)
+	require.NoError(t, err)
+}
+
+func deleteHandlerEnvironment() {
+	dir, _ := filepath.Abs(filepath.Dir(os.Args[0]))
+	fp := path.Join(dir, handlerEnvFileName)
+	os.Remove(fp)
 }
 
 func putBackArgs(args []string) {
