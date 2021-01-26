@@ -1,8 +1,11 @@
 package vmextension
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/Azure/azure-extension-platform/pkg/environmentmanager"
@@ -16,6 +19,10 @@ import (
 	"github.com/Azure/azure-extension-platform/pkg/status"
 	"github.com/pkg/errors"
 )
+
+// HandlerEnvFileName is the file name of the Handler Environment as placed by the
+// Azure Guest Agent.
+const handlerEnvFileName = "HandlerEnvironment.json"
 
 type cmdFunc func(ext *VMExtension) (msg string, err error)
 
@@ -38,6 +45,25 @@ type executionInfo struct {
 	updateCallback      CallbackFunc                                         // A method provided by the extension for Update
 	disableCallback     CallbackFunc                                         // A method provided by the extension for disable
 	manager             environmentmanager.IGetVMExtensionEnvironmentManager // Used by tests to mock the environment
+}
+
+// HandlerEnvironment describes the handler environment configuration presented
+// to the extension handler by the Azure Guest Agent.
+type handlerEnvironmentInternal struct {
+	Version            float64 `json:"version"`
+	Name               string  `json:"name"`
+	HandlerEnvironment struct {
+		HeartbeatFile       string `json:"heartbeatFile"`
+		StatusFolder        string `json:"statusFolder"`
+		ConfigFolder        string `json:"configFolder"`
+		LogFolder           string `json:"logFolder"`
+		EventsFolder        string `json:"eventsFolder"`
+		EventsFolderPreview string `json:"eventsFolder_preview"`
+		DeploymentID        string `json:"deploymentid"`
+		RoleName            string `json:"rolename"`
+		Instance            string `json:"instance"`
+		HostResolverAddress string `json:"hostResolverAddress"`
+	}
 }
 
 // VMExtension is an abstraction for standard extension operations in an OS agnostic manner
@@ -183,11 +209,103 @@ func getVMExtensionInternal(initInfo *InitializationInfo, manager environmentman
 	return ext, nil
 }
 
+// GetHandlerEnv locates the HandlerEnvironment.json file by assuming it lives
+// next to or one level above the extension handler (read: this) executable,
+// reads, parses and returns it.
+func getHandlerEnvironment(name string, version string) (he *handlerenv.HandlerEnvironment, _ error) {
+	contents, _, err := findAndReadFile(handlerEnvFileName)
+	if err != nil {
+		return nil, err
+	}
+
+	handlerEnvInternal, err := parseHandlerEnv(contents)
+	if err != nil {
+		return nil, err
+	}
+
+	// The data directory is a subdirectory of waagent, with the extension name
+	dataFolder := getDataFolder(name, version)
+
+	// TODO: before this API goes public, remove the eventsfolder_preview
+	// This is only used for private preview of the events
+	eventsFolder := handlerEnvInternal.HandlerEnvironment.EventsFolder
+	if eventsFolder == "" {
+		eventsFolder = handlerEnvInternal.HandlerEnvironment.EventsFolderPreview
+	}
+
+	return &handlerenv.HandlerEnvironment{
+		HeartbeatFile:       handlerEnvInternal.HandlerEnvironment.HeartbeatFile,
+		StatusFolder:        handlerEnvInternal.HandlerEnvironment.StatusFolder,
+		ConfigFolder:        handlerEnvInternal.HandlerEnvironment.ConfigFolder,
+		LogFolder:           handlerEnvInternal.HandlerEnvironment.LogFolder,
+		DataFolder:          dataFolder,
+		EventsFolder:        eventsFolder,
+		DeploymentID:        handlerEnvInternal.HandlerEnvironment.DeploymentID,
+		RoleName:            handlerEnvInternal.HandlerEnvironment.RoleName,
+		Instance:            handlerEnvInternal.HandlerEnvironment.Instance,
+		HostResolverAddress: handlerEnvInternal.HandlerEnvironment.HostResolverAddress,
+	}, nil
+}
+
+// ParseHandlerEnv parses the HandlerEnvironment.json format.
+func parseHandlerEnv(b []byte) (*handlerEnvironmentInternal, error) {
+	var hf []handlerEnvironmentInternal
+
+	if err := json.Unmarshal(b, &hf); err != nil {
+		return nil, fmt.Errorf("vmextension: failed to parse handler env: %v", err)
+	}
+	if len(hf) != 1 {
+		return nil, fmt.Errorf("vmextension: expected 1 config in parsed HandlerEnvironment, found: %v", len(hf))
+	}
+	return &hf[0], nil
+}
+
+// findAndReadFile locates the specified file on disk relative to our currently
+// executing process and attempts to read the file
+func findAndReadFile(fileName string) (b []byte, fileLoc string, _ error) {
+	dir, err := scriptDir()
+	if err != nil {
+		return nil, "", fmt.Errorf("vmextension: cannot find base directory of the running process: %v", err)
+	}
+
+	paths := []string{
+		filepath.Join(dir, fileName),       // this level (i.e. executable is in [EXT_NAME]/.)
+		filepath.Join(dir, "..", fileName), // one up (i.e. executable is in [EXT_NAME]/bin/.)
+	}
+
+	for _, p := range paths {
+		o, err := ioutil.ReadFile(p)
+		if err != nil && !os.IsNotExist(err) {
+			return nil, "", fmt.Errorf("vmextension: error examining '%s' at '%s': %v", fileName, p, err)
+		} else if err == nil {
+			fileLoc = p
+			b = o
+			break
+		}
+	}
+
+	if b == nil {
+		return nil, "", errNotFound
+	}
+
+	return b, fileLoc, nil
+}
+
+// scriptDir returns the absolute path of the running process.
+func scriptDir() (string, error) {
+	p, err := filepath.Abs(os.Args[0])
+	if err != nil {
+		return "", err
+	}
+	return filepath.Dir(p), nil
+}
+
 // Do is the main worker method of the extension and determines which operation
 // to run, if necessary
 func (ve *VMExtension) Do() {
 	// parse command line arguments
-	cmd := ve.parseCmd(os.Args)
+	eh := exithelper.Exiter
+	cmd := ve.parseCmd(os.Args, eh)
 	ve.ExtensionLogger.Info("Running operation %v for seqNo %v", strings.ToLower(cmd.name), ve.RequestedSequenceNumber)
 
 	// remember the squence number
@@ -229,11 +347,12 @@ func reportStatus(ve *VMExtension, t status.StatusType, c cmd, msg string) error
 
 // parseCmd looks at os.Args and parses the subcommand. If it is invalid,
 // it prints the usage string and an error message and exits with code 0.
-func (ve *VMExtension) parseCmd(args []string) cmd {
+func (ve *VMExtension) parseCmd(args []string, eh exithelper.IExitHelper) cmd {
 	if len(args) != 2 {
 		ve.printUsage(args)
 		fmt.Println("Incorrect usage.")
-		exithelper.Exiter.Exit(2)
+		eh.Exit(2)
+		return cmd{}
 	}
 
 	op := args[1]
@@ -241,7 +360,7 @@ func (ve *VMExtension) parseCmd(args []string) cmd {
 	if !ok {
 		ve.printUsage(args)
 		fmt.Printf("Incorrect command: %q\n", op)
-		exithelper.Exiter.Exit(2)
+		eh.Exit(2)
 	}
 	return cmd
 }
