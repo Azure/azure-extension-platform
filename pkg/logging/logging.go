@@ -2,6 +2,7 @@ package logging
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"path"
@@ -79,4 +80,25 @@ func (logger *ExtensionLogger) Warn(format string, v ...interface{}) {
 // Info logs an information statement. Format is the same as fmt.Print
 func (logger *ExtensionLogger) Info(format string, v ...interface{}) {
 	logger.infoLogger.Printf(format, v...)
+}
+
+// Error logs an error. Get the message from a stream directly
+func (logger *ExtensionLogger) ErrorFromStream(prefix string, streamReader io.Reader) {
+	logger.errorLogger.Print(prefix)
+	io.Copy(logger.errorLogger.Writer(), streamReader)
+	logger.errorLogger.Writer().Write([]byte(fmt.Sprintln())) // add a newline at the end of the stream contents
+}
+
+// Warn logs a warning. Get the message from a stream directly
+func (logger *ExtensionLogger) WarnFromStream(prefix string, streamReader io.Reader) {
+	logger.warnLogger.Print(prefix)
+	io.Copy(logger.warnLogger.Writer(), streamReader)
+	logger.warnLogger.Writer().Write([]byte(fmt.Sprintln())) // add a newline at the end of the stream contents
+}
+
+// Info logs an information statement. Get the message from a stream directly
+func (logger *ExtensionLogger) InfoFromStream(prefix string, streamReader io.Reader) {
+	logger.infoLogger.Print(prefix)
+	io.Copy(logger.infoLogger.Writer(), streamReader)
+	logger.infoLogger.Writer().Write([]byte(fmt.Sprintln())) // add a newline at the end of the stream contents
 }
