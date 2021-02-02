@@ -35,3 +35,8 @@ func Test_initializationInfoDefaults(t *testing.T) {
 func testEnableCallback(ext *VMExtension) (string, error) {
 	return "blah", nil
 }
+
+func testEnableCallbackReadSettings(ext *VMExtension) (string, error) {
+	_, err := ext.GetSettings()
+	return "trying to read settings", err
+}

@@ -1,7 +1,10 @@
 package extensionevents
 
-import "golang.org/x/sys/windows"
+import (
+	"fmt"
+	"golang.org/x/sys/windows"
+)
 
 func getThreadID() string {
-	return string(windows.GetCurrentThreadId())
+	return fmt.Sprintf("%v", windows.GetCurrentThreadId())
 }
