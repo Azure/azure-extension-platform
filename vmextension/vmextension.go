@@ -163,9 +163,9 @@ func getVMExtensionInternal(initInfo *InitializationInfo, manager environmentman
 	var cmdDisable cmd
 	var cmdUpdate cmd
 	if initInfo.UpdateCallback != nil {
-		cmdUpdate = cmd{update, "Update", true, 3}
+		cmdUpdate = cmd{update, "Update", false, 3}
 	} else {
-		cmdUpdate = cmd{noop, "Update", true, 3}
+		cmdUpdate = cmd{noop, "Update", false, 3}
 	}
 
 	if initInfo.SupportsDisable || initInfo.DisableCallback != nil {
@@ -318,7 +318,7 @@ func (ve *VMExtension) Do() {
 // If an error occurs reporting the status, it will be logged and returned.
 func reportStatus(ve *VMExtension, t status.StatusType, c cmd, msg string) error {
 	if !c.shouldReportStatus {
-		ve.ExtensionLogger.Info("status ot reported for operation (by design)")
+		ve.ExtensionLogger.Info("status not reported for operation (by design)")
 		return nil
 	}
 

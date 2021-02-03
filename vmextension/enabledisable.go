@@ -104,6 +104,12 @@ func doesFileExistDisableDependency(filePath string) (bool, error) {
 }
 
 func disable(ext *VMExtension) (string, error) {
+	disableCmd, exists := ext.exec.cmds["disable"]
+	if ! exists {
+		msg := "disable command not found"
+		ext.ExtensionLogger.Error(msg)
+		return msg, fmt.Errorf(msg)
+	}
 	ext.ExtensionLogger.Info("disable called")
 
 	if ext.exec.supportsDisable {
@@ -113,6 +119,7 @@ func disable(ext *VMExtension) (string, error) {
 		} else {
 			err := setDisabled(ext, true)
 			if err != nil {
+				reportStatus(ext, status.StatusError, disableCmd, "disable failed " + err.Error())
 				return "", err
 			}
 		}
@@ -125,10 +132,12 @@ func disable(ext *VMExtension) (string, error) {
 		err := ext.exec.disableCallback(ext)
 		if err != nil {
 			ext.ExtensionLogger.Error("Disable failed: %v", err)
+			reportStatus(ext, status.StatusError, disableCmd, "disable failed " + err.Error())
 			return "", err
 		}
 	}
 
+	reportStatus(ext, status.StatusSuccess, disableCmd, "")
 	return "", nil
 }
 

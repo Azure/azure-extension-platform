@@ -580,6 +580,13 @@ func getTestHandlerEnvironment() *handlerenv.HandlerEnvironment {
 
 var one uint = 1
 
+var disableCommand = cmd{f: func(ext *VMExtension) (msg string, err error) {
+	return "", nil
+}, failExitCode: 5,
+	name:               "Disable",
+	shouldReportStatus: true,
+}
+
 func createTestVMExtension() *VMExtension {
 	return &VMExtension{
 		Name:                       "yaba",
@@ -595,7 +602,7 @@ func createTestVMExtension() *VMExtension {
 			enableCallback:      testEnableCallback,
 			disableCallback:     testDisableCallbackNormal,
 			updateCallback:      nil,
-			cmds:                nil,
+			cmds:                map[string]cmd{"disable": disableCommand},
 		},
 	}
 }
