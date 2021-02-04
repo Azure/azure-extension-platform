@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"path"
+	"runtime/debug"
 	"strconv"
 	"time"
 
@@ -51,6 +52,10 @@ func New(he *handlerenv.HandlerEnvironment) *ExtensionLogger {
 	}
 }
 
+func GetCallStack() string {
+	return string(debug.Stack())
+}
+
 func newStandardOutput() *ExtensionLogger {
 	return &ExtensionLogger{
 		errorLogger: log.New(os.Stdout, logLevelError, 0),
@@ -70,6 +75,7 @@ func (logger *ExtensionLogger) Close() {
 // Error logs an error. Format is the same as fmt.Print
 func (logger *ExtensionLogger) Error(format string, v ...interface{}) {
 	logger.errorLogger.Printf(format, v...)
+	logger.errorLogger.Printf(GetCallStack())
 }
 
 // Warn logs a warning. Format is the same as fmt.Print
