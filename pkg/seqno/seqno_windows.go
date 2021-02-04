@@ -39,7 +39,7 @@ func getSequenceNumberInternal(name, version string) (uint, error) {
 	var value uint
 	switch valType {
 	case registry.SZ, registry.EXPAND_SZ:
-		stringVal, _,  err := k.GetStringValue(sequenceNumberKeyName)
+		stringVal, _, err := k.GetStringValue(sequenceNumberKeyName)
 		if err != nil {
 			return 0, err
 		}
@@ -49,7 +49,7 @@ func getSequenceNumberInternal(name, version string) (uint, error) {
 		}
 		value = uint(val)
 	case registry.DWORD:
-		val, _,  err := k.GetIntegerValue(sequenceNumberKeyName)
+		val, _, err := k.GetIntegerValue(sequenceNumberKeyName)
 		if err != nil {
 			return 0, err
 		}
