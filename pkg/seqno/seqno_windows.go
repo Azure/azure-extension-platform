@@ -2,6 +2,7 @@ package seqno
 
 import (
 	"fmt"
+	"strconv"
 	"github.com/Azure/azure-extension-platform/pkg/extensionerrors"
 	"golang.org/x/sys/windows/registry"
 )
@@ -25,12 +26,17 @@ func getSequenceNumberInternal(name, version string) (uint, error) {
 	}
 	defer k.Close()
 
-	value, _, err := k.GetIntegerValue(sequenceNumberKeyName)
+	valueString, _, err := k.GetStringValue(sequenceNumberKeyName)
 	if err != nil {
 		if err == registry.ErrNotExist {
 			return 0, extensionerrors.ErrNotFound
 		}
 		return 0, fmt.Errorf("VmExtension: Cannot read sequence registry key due to '%v'", err)
+	}
+
+	value, err := strconv.ParseUint(valueString, 10, 64)
+	if err != nil {
+		return 0, err
 	}
 
 	return uint(value), nil
