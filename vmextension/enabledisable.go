@@ -37,6 +37,12 @@ func enable(ext *VMExtension) (string, error) {
 		reportStatus(ext, status.StatusError, enableCmd, err.Error()+msg)
 		return msg, err
 	}
+
+	if ext.exec.requiresSeqNoChange && ext.CurrentSequenceNumber != nil && requestedSequenceNumber <= *ext.CurrentSequenceNumber {
+		ext.ExtensionLogger.Info("sequence number has not increased. Exiting.")
+		exithelper.Exiter.Exit(0)
+	}
+
 	ext.ExtensionLogger.Info("Running operation %v for seqNo %v", strings.ToLower(enableCmd.name), requestedSequenceNumber)
 	reportStatus(ext, status.StatusTransitioning, enableCmd, "")
 
@@ -45,11 +51,6 @@ func enable(ext *VMExtension) (string, error) {
 		msg := "failed to write new sequence number"
 		ext.ExtensionLogger.Warn("%s: %v", msg, err)
 		// execution is not stopped by design
-	}
-
-	if ext.exec.requiresSeqNoChange && ext.CurrentSequenceNumber != nil && requestedSequenceNumber <= *ext.CurrentSequenceNumber {
-		ext.ExtensionLogger.Info("sequence number has not increased. Exiting.")
-		exithelper.Exiter.Exit(0)
 	}
 
 	if ext.exec.supportsDisable && isDisabled(ext) {

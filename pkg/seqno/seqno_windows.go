@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"github.com/Azure/azure-extension-platform/pkg/extensionerrors"
 	"golang.org/x/sys/windows/registry"
+	"path"
+	"strconv"
 )
 
 const (
@@ -25,12 +27,35 @@ func getSequenceNumberInternal(name, version string) (uint, error) {
 	}
 	defer k.Close()
 
-	value, _, err := k.GetIntegerValue(sequenceNumberKeyName)
+	buff := make([]byte, 32)
+
+	_, valType, err := k.GetValue(sequenceNumberKeyName, buff)
 	if err != nil {
 		if err == registry.ErrNotExist {
 			return 0, extensionerrors.ErrNotFound
 		}
 		return 0, fmt.Errorf("VmExtension: Cannot read sequence registry key due to '%v'", err)
+	}
+	var value uint
+	switch valType {
+	case registry.SZ, registry.EXPAND_SZ:
+		stringVal, _, err := k.GetStringValue(sequenceNumberKeyName)
+		if err != nil {
+			return 0, err
+		}
+		val, err := strconv.ParseUint(stringVal, 10, 64)
+		if err != nil {
+			return 0, err
+		}
+		value = uint(val)
+	case registry.DWORD:
+		val, _, err := k.GetIntegerValue(sequenceNumberKeyName)
+		if err != nil {
+			return 0, err
+		}
+		value = uint(val)
+	default:
+		return 0, fmt.Errorf("value of registry key %s is of unexpected type", path.Join("HKEY_LOCAL_MACHINE", extensionKeyName, sequenceNumberKeyName))
 	}
 
 	return uint(value), nil

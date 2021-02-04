@@ -179,7 +179,7 @@ func getVMExtensionInternal(initInfo *InitializationInfo, manager environmentman
 	}
 
 	ext = &VMExtension{
-		Name:                       initInfo.Name + getOSName(),
+		Name:                       initInfo.Name,
 		Version:                    initInfo.Version,
 		GetRequestedSequenceNumber: newSeqNo,
 		CurrentSequenceNumber:      currentSeqNo,
