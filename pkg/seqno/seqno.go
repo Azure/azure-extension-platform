@@ -43,20 +43,21 @@ func SetSequenceNumber(extName, extVersion string, seqNo uint) error {
 	return setSequenceNumberInternal(extName, extVersion, seqNo)
 }
 
-// findSeqnum finds the most reecently used file under the config folder
+// findSeqnum finds the most recently used file under the config folder
 // Note that this is different than just choosing the highest number, which may be incorrect
 func FindSeqNum(el *logging.ExtensionLogger, configFolder string) (uint, error) {
-	// try getting the sequence number form the environment first
+	// try getting the sequence number from the environment first
 	seqNoString := os.Getenv(configSequenceNumber)
 	if seqNoString == "" {
 		el.Info("could not read environment variable %s for getting sequence number", configSequenceNumber)
-	}
-	seqNo, err := strconv.ParseUint(seqNoString, 10, 64)
-	if err != nil {
-		el.Info("could not sequence number string %s into unsigned integer", seqNoString)
 	} else {
-		el.Info("using sequence number %d from environment variable %s", seqNo, configSequenceNumber)
-		return uint(seqNo), nil
+		seqNo, err := strconv.ParseUint(seqNoString, 10, 64)
+		if err != nil {
+			el.Info("could not read sequence number string %s into unsigned integer", seqNoString)
+		} else {
+			el.Info("using sequence number %d from environment variable %s", seqNo, configSequenceNumber)
+			return uint(seqNo), nil
+		}
 	}
 
 	g, err := filepath.Glob(configFolder + "/*.settings")
