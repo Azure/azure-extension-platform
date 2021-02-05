@@ -67,7 +67,7 @@ func (mm *mockGetVMExtensionEnvironmentManager) GetCurrentSequenceNumber(el *log
 	return mm.currentSeqNo, nil
 }
 
-func (mm *mockGetVMExtensionEnvironmentManager) GetHandlerSettings(el *logging.ExtensionLogger, he *handlerenv.HandlerEnvironment, seqNo uint) (hs *settings.HandlerSettings, _ error) {
+func (mm *mockGetVMExtensionEnvironmentManager) GetHandlerSettings(el *logging.ExtensionLogger, he *handlerenv.HandlerEnvironment) (hs *settings.HandlerSettings, _ error) {
 	if mm.getHandlerSettingsError != nil {
 		return hs, mm.getHandlerSettingsError
 	}
@@ -87,7 +87,7 @@ func Test_reportStatusShouldntReport(t *testing.T) {
 	ext := createTestVMExtension()
 	c := cmd{nil, "Install", false, 99}
 	ext.HandlerEnv.StatusFolder = statusTestDirectory
-	ext.RequestedSequenceNumber = 45
+	ext.GetRequestedSequenceNumber = func() (uint, error) { return 45, nil }
 
 	err := reportStatus(ext, status.StatusSuccess, c, "msg")
 	require.NoError(t, err, "reportStatus failed")
@@ -99,7 +99,7 @@ func Test_reportStatusCouldntSave(t *testing.T) {
 	ext := createTestVMExtension()
 	c := cmd{nil, "Install", true, 99}
 	ext.HandlerEnv.StatusFolder = "./yabamonster"
-	ext.RequestedSequenceNumber = 45
+	ext.GetRequestedSequenceNumber = func() (uint, error) { return 45, nil }
 
 	err := reportStatus(ext, status.StatusSuccess, c, "msg")
 	require.Error(t, err)
@@ -110,7 +110,7 @@ func Test_reportStatusSaved(t *testing.T) {
 
 	c := cmd{nil, "Install", true, 99}
 	ext.HandlerEnv.StatusFolder = statusTestDirectory
-	ext.RequestedSequenceNumber = 45
+	ext.GetRequestedSequenceNumber = func() (uint, error) { return 45, nil }
 
 	createDirsForVMExtension(ext)
 	defer cleanupDirsForVMExtension(ext)
@@ -147,13 +147,28 @@ func Test_getVMExtensionGetHandlerEnvironmentError(t *testing.T) {
 	require.Equal(t, myerr, err)
 }
 
-func Test_getVMExtensionCannotFindSeqNo(t *testing.T) {
+func Test_GetVMExtensionCannotFindSeqNo(t *testing.T) {
 	mm := createMockVMExtensionEnvironmentManager()
 	mm.findSeqNumError = errors.New("the sequence number annoys me")
 	ii, _ := GetInitializationInfo("yaba", "5.0", true, testEnableCallback)
+	ext, err := getVMExtensionInternal(ii, mm)
+	require.NoError(t, err)
+	installCmd, exists := ext.exec.cmds["enable"]
+	require.True(t, exists)
+	_, err = installCmd.f(ext)
+	require.Equal(t, mm.findSeqNumError, err)
+}
 
-	_, err := getVMExtensionInternal(ii, mm)
-	require.Error(t, err)
+func Test_getVMExtensionInstallShouldNotTryToFindSequenceNumber(t *testing.T) {
+	mm := createMockVMExtensionEnvironmentManager()
+	mm.findSeqNumError = errors.New("the sequence number annoys me")
+	ii, _ := GetInitializationInfo("yaba", "5.0", true, testEnableCallback)
+	ext, err := getVMExtensionInternal(ii, mm)
+	require.NoError(t, err)
+	installCmd, exists := ext.exec.cmds["install"]
+	require.True(t, exists)
+	_, err = installCmd.f(ext)
+	require.NoError(t, err)
 }
 
 func Test_getVMExtensionCannotReadCurrentSeqNo(t *testing.T) {
@@ -234,10 +249,27 @@ func Test_getVMExtensionDisableSupport(t *testing.T) {
 func Test_getVMExtensionCannotGetSettings(t *testing.T) {
 	mm := createMockVMExtensionEnvironmentManager()
 	mm.getHandlerSettingsError = errors.New("the settings exist only in a parallel dimension")
+	ii, _ := GetInitializationInfo("yaba", "5.0", true, testEnableCallbackReadSettings)
+
+	ext, err := getVMExtensionInternal(ii, mm)
+	require.NoError(t, err)
+	enableCommand, exists := ext.exec.cmds["enable"]
+	require.True(t, exists)
+	_, err = enableCommand.f(ext)
+	require.Equal(t, mm.getHandlerSettingsError, err)
+}
+
+func Test_getVMExtensionShouldNotReadSettingsForInstall(t *testing.T) {
+	mm := createMockVMExtensionEnvironmentManager()
+	mm.getHandlerSettingsError = errors.New("the settings exist only in a parallel dimension")
 	ii, _ := GetInitializationInfo("yaba", "5.0", true, testEnableCallback)
 
-	_, err := getVMExtensionInternal(ii, mm)
-	require.Equal(t, mm.getHandlerSettingsError, err)
+	ext, err := getVMExtensionInternal(ii, mm)
+	require.NoError(t, err)
+	enableCommand, exists := ext.exec.cmds["install"]
+	require.True(t, exists)
+	_, err = enableCommand.f(ext)
+	require.NoError(t, err)
 }
 
 func Test_getVMExtensionNormalOperation(t *testing.T) {
@@ -548,22 +580,29 @@ func getTestHandlerEnvironment() *handlerenv.HandlerEnvironment {
 
 var one uint = 1
 
+var disableCommand = cmd{f: func(ext *VMExtension) (msg string, err error) {
+	return "", nil
+}, failExitCode: 5,
+	name:               "Disable",
+	shouldReportStatus: true,
+}
+
 func createTestVMExtension() *VMExtension {
 	return &VMExtension{
-		Name:                    "yaba",
-		Version:                 "5.0",
-		RequestedSequenceNumber: 2,
-		CurrentSequenceNumber:   &one,
-		HandlerEnv:              getTestHandlerEnvironment(),
-		Settings:                &settings.HandlerSettings{},
-		ExtensionLogger:         logging.New(nil),
+		Name:                       "yaba",
+		Version:                    "5.0",
+		GetRequestedSequenceNumber: func() (uint, error) { return 2, nil },
+		CurrentSequenceNumber:      &one,
+		HandlerEnv:                 getTestHandlerEnvironment(),
+		GetSettings:                func() (*settings.HandlerSettings, error) { return &settings.HandlerSettings{}, nil },
+		ExtensionLogger:            logging.New(nil),
 		exec: &executionInfo{
 			requiresSeqNoChange: true,
 			supportsDisable:     true,
 			enableCallback:      testEnableCallback,
 			disableCallback:     testDisableCallbackNormal,
 			updateCallback:      nil,
-			cmds:                nil,
+			cmds:                map[string]cmd{"disable": disableCommand},
 		},
 	}
 }

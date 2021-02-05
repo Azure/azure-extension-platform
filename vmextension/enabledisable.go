@@ -1,10 +1,14 @@
 package vmextension
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
+	"strings"
 	"syscall"
+
+	"github.com/Azure/azure-extension-platform/pkg/status"
 
 	"github.com/Azure/azure-extension-platform/pkg/exithelper"
 )
@@ -17,18 +21,45 @@ var (
 
 func enable(ext *VMExtension) (string, error) {
 	// If the sequence number has not changed and we require it to, then exit
-	if ext.exec.requiresSeqNoChange && ext.CurrentSequenceNumber != nil && ext.RequestedSequenceNumber <= *ext.CurrentSequenceNumber {
+	// remember the sequence number
+	// execute the command
+	enableCmd, exists := ext.exec.cmds["enable"]
+	if !exists {
+		msg := "extension does not have an enable command"
+		ext.ExtensionLogger.Error(msg)
+		reportStatus(ext, status.StatusError, enableCmd, msg)
+		return msg, fmt.Errorf(msg)
+	}
+	requestedSequenceNumber, err := ext.GetRequestedSequenceNumber()
+	if err != nil {
+		msg := "could not determine requested sequence number"
+		ext.ExtensionLogger.Error("%s: %v", msg, err)
+		reportStatus(ext, status.StatusError, enableCmd, err.Error()+msg)
+		return msg, err
+	}
+
+	if ext.exec.requiresSeqNoChange && ext.CurrentSequenceNumber != nil && requestedSequenceNumber <= *ext.CurrentSequenceNumber {
 		ext.ExtensionLogger.Info("sequence number has not increased. Exiting.")
 		exithelper.Exiter.Exit(0)
 	}
 
+	ext.ExtensionLogger.Info("Running operation %v for seqNo %v", strings.ToLower(enableCmd.name), requestedSequenceNumber)
+	reportStatus(ext, status.StatusTransitioning, enableCmd, "")
+
+	err = ext.exec.manager.SetSequenceNumberInternal(ext.Name, ext.Version, requestedSequenceNumber)
+	if err != nil {
+		msg := "failed to write new sequence number"
+		ext.ExtensionLogger.Warn("%s: %v", msg, err)
+		// execution is not stopped by design
+	}
+
 	if ext.exec.supportsDisable && isDisabled(ext) {
-		// The sequence number has changed and we're disabled, so reenable the extension
-		ext.ExtensionLogger.Info("Reenabling the extension")
+		// The sequence number has changed and we're disabled, so re-enable the extension
+		ext.ExtensionLogger.Info("re-enabling the extension")
 		err := setDisabled(ext, false)
 		if err != nil {
 			// Note: we don't return here because the least we can do is let the extension do its stuff
-			ext.ExtensionLogger.Error("Could not reenable the extension: %v", err)
+			ext.ExtensionLogger.Error("Could not re-enable the extension: %v", err)
 		}
 	}
 
@@ -36,8 +67,10 @@ func enable(ext *VMExtension) (string, error) {
 	msg, runErr := ext.exec.enableCallback(ext)
 	if runErr != nil {
 		ext.ExtensionLogger.Error("Enable failed: %v", runErr)
+		reportStatus(ext, status.StatusError, enableCmd, runErr.Error()+msg)
 	} else {
 		ext.ExtensionLogger.Info("Enable succeeded")
+		reportStatus(ext, status.StatusSuccess, enableCmd, msg)
 	}
 
 	return msg, runErr
@@ -72,6 +105,12 @@ func doesFileExistDisableDependency(filePath string) (bool, error) {
 }
 
 func disable(ext *VMExtension) (string, error) {
+	disableCmd, exists := ext.exec.cmds["disable"]
+	if ! exists {
+		msg := "disable command not found"
+		ext.ExtensionLogger.Error(msg)
+		return msg, fmt.Errorf(msg)
+	}
 	ext.ExtensionLogger.Info("disable called")
 
 	if ext.exec.supportsDisable {
@@ -81,6 +120,7 @@ func disable(ext *VMExtension) (string, error) {
 		} else {
 			err := setDisabled(ext, true)
 			if err != nil {
+				reportStatus(ext, status.StatusError, disableCmd, "disable failed " + err.Error())
 				return "", err
 			}
 		}
@@ -93,10 +133,12 @@ func disable(ext *VMExtension) (string, error) {
 		err := ext.exec.disableCallback(ext)
 		if err != nil {
 			ext.ExtensionLogger.Error("Disable failed: %v", err)
+			reportStatus(ext, status.StatusError, disableCmd, "disable failed " + err.Error())
 			return "", err
 		}
 	}
 
+	reportStatus(ext, status.StatusSuccess, disableCmd, "")
 	return "", nil
 }
 

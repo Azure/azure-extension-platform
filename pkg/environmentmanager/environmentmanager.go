@@ -12,6 +12,6 @@ type IGetVMExtensionEnvironmentManager interface {
 	GetHandlerEnvironment(name string, version string) (*handlerenv.HandlerEnvironment, error)
 	FindSeqNum(el *logging.ExtensionLogger, configFolder string) (uint, error)
 	GetCurrentSequenceNumber(el *logging.ExtensionLogger, retriever seqno.ISequenceNumberRetriever, name, version string) (uint, error)
-	GetHandlerSettings(el *logging.ExtensionLogger, he *handlerenv.HandlerEnvironment, seqNo uint) (*settings.HandlerSettings, error)
+	GetHandlerSettings(el *logging.ExtensionLogger, he *handlerenv.HandlerEnvironment) (*settings.HandlerSettings, error)
 	SetSequenceNumberInternal(extensionName, extensionVersion string, seqNo uint) error
 }

@@ -64,7 +64,11 @@ func (mock *mockVMExtensionEnvironmentManager) GetCurrentSequenceNumber(el *logg
 		return *mock.currentSeqNum, nil
 	}
 }
-func (*mockVMExtensionEnvironmentManager) GetHandlerSettings(el *logging.ExtensionLogger, he *handlerenv.HandlerEnvironment, seqNo uint) (*settings.HandlerSettings, error) {
+func (mem *mockVMExtensionEnvironmentManager) GetHandlerSettings(el *logging.ExtensionLogger, he *handlerenv.HandlerEnvironment) (*settings.HandlerSettings, error) {
+	seqNo, err := mem.FindSeqNum(el, he.ConfigFolder)
+	if err != nil {
+		return nil, err
+	}
 	return settings.GetHandlerSettings(el, he, seqNo)
 }
 func (mock *mockVMExtensionEnvironmentManager) SetSequenceNumberInternal(extensionName, extensionVersion string, seqNo uint) error {
@@ -79,7 +83,8 @@ var enableCallbackCalled = false
 
 var mockEnableCallbackFunc vmextension.EnableCallbackFunc = func(ext *vmextension.VMExtension) (string, error) {
 	enableCallbackCalled = true
-	return fmt.Sprintf("enable callback called, settings %v", ext.Settings.PublicSettings), nil
+	settings, _ := ext.GetSettings()
+	return fmt.Sprintf("enable callback called, settings %v", settings.PublicSettings), nil
 }
 
 func mockInitializationFunc(name string, version string, requiresSeqNoChange bool, enableCallback vmextension.EnableCallbackFunc) (*vmextension.InitializationInfo, error) {
@@ -229,7 +234,9 @@ func TestTransitioningStatus(t *testing.T) {
 	initialize(t)
 	defer cleanupTest()
 	mockEnableCallbackFunc := func(ext *vmextension.VMExtension) (string, error) {
-		return "testStatusFile", testStatusFile(ext.HandlerEnv.StatusFolder, ext.RequestedSequenceNumber, status.StatusTransitioning)
+		seqNo, err := ext.GetRequestedSequenceNumber()
+		assert.NoError(t, err)
+		return "testStatusFile", testStatusFile(ext.HandlerEnv.StatusFolder, seqNo, status.StatusTransitioning)
 	}
 
 	getInitializationInfoFuncToCall = func(name string, version string, requiresSeqNoChange bool, enableCallback vmextension.EnableCallbackFunc) (*vmextension.InitializationInfo, error) {

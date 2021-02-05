@@ -2,6 +2,7 @@ package extensionevents
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
@@ -46,7 +47,7 @@ func (eem *ExtensionEventManager) logEvent(taskName string, eventLevel string, m
 	}
 
 	timestamp := time.Now().UTC().Format(time.RFC3339)
-	pid := string(os.Getpid())
+	pid := fmt.Sprintf("%v", os.Getpid())
 	tid := getThreadID()
 
 	extensionEvent := extensionEvent{
