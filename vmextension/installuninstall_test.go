@@ -2,16 +2,14 @@ package vmextension
 
 import (
 	"fmt"
+	"io/ioutil"
+	"log"
 	"os"
+	"path"
 	"testing"
 
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
-)
-
-var (
-	updateNormalCallbackCalled bool
-	updateErrorCallbackCalled  bool
 )
 
 type evilInstallDependencies struct {
@@ -41,18 +39,138 @@ func Test_updateCallback(t *testing.T) {
 	defer cleanupDirsForVMExtension(ext)
 
 	// Callback succeeds
-	updateNormalCallbackCalled = false
-	updateErrorCallbackCalled = false
-	ext.exec.updateCallback = testUpdateCallbackNormal
+	normalCallbackCalled = false
+	errorCallbackCalled = false
+	ext.exec.updateCallback = testCallbackNormal
 	_, err := update(ext)
 	require.NoError(t, err, "Update callback failed")
-	require.True(t, updateNormalCallbackCalled)
+	require.True(t, normalCallbackCalled)
 
-	// Callback returns an error
-	ext.exec.disableCallback = testUpdateCallbackError
-	_, err = disable(ext)
-	require.Error(t, err, "oh no. The world is ending, but styling prevents me from using end punctuation or caps")
-	require.True(t, updateErrorCallbackCalled)
+	// Callback returns an error, but it isn't propagated
+	ext.exec.updateCallback = testCallbackError
+	_, err = update(ext)
+	require.NoError(t, err)
+	require.True(t, errorCallbackCalled)
+}
+
+func Test_installCallback(t *testing.T) {
+	ext := createTestVMExtension()
+	createDirsForVMExtension(ext)
+	defer cleanupDirsForVMExtension(ext)
+
+	// Callback succeeds
+	normalCallbackCalled = false
+	errorCallbackCalled = false
+	ext.exec.installCallback = testCallbackNormal
+	_, err := install(ext)
+	require.NoError(t, err, "Install callback failed")
+	require.True(t, normalCallbackCalled)
+
+	// Callback returns an error, but it isn't propagated
+	ext.exec.installCallback = testCallbackError
+	_, err = install(ext)
+	require.NoError(t, err)
+	require.True(t, errorCallbackCalled)
+}
+
+func Test_uninstallCallback(t *testing.T) {
+	ext := createTestVMExtension()
+	createDirsForVMExtension(ext)
+	defer cleanupDirsForVMExtension(ext)
+
+	// Callback succeeds
+	normalCallbackCalled = false
+	errorCallbackCalled = false
+	ext.exec.uninstallCallback = testCallbackNormal
+	_, err := uninstall(ext)
+	require.NoError(t, err, "Uninstall callback failed")
+	require.True(t, normalCallbackCalled)
+
+	// Callback returns an error, but it isn't propagated
+	ext.exec.uninstallCallback = testCallbackError
+	_, err = uninstall(ext)
+	require.NoError(t, err)
+	require.True(t, errorCallbackCalled)
+}
+
+func Test_resetStateCallback(t *testing.T) {
+	ext := createTestVMExtension()
+	createDirsForVMExtension(ext)
+	defer cleanupDirsForVMExtension(ext)
+
+	// Callback succeeds
+	normalCallbackCalled = false
+	errorCallbackCalled = false
+	ext.exec.resetStateCallBack = testCallbackNormal
+	_, err := resetState(ext)
+	require.NoError(t, err, "Uninstall callback failed")
+	require.True(t, normalCallbackCalled)
+
+	// Callback returns an error, but it isn't propagated
+	ext.exec.resetStateCallBack = testCallbackError
+	_, err = resetState(ext)
+	require.NoError(t, err)
+	require.True(t, errorCallbackCalled)
+}
+
+func Test_resetStateRemoveFiles(t *testing.T) {
+	ext := createTestVMExtension()
+	createDirsForVMExtension(ext)
+	defer cleanupDirsForVMExtension(ext)
+
+	// Create a file that we'll delete in resetState
+	filePath := path.Join(ext.HandlerEnv.DataFolder, "flarple.txt")
+	emptyFile, err := os.Create(filePath)
+	require.NoError(t, err)
+	log.Println(emptyFile)
+	emptyFile.Close()
+
+	// Call resetState and verify the file is deleted
+	ext.exec.supportsResetState = true
+	_, err = resetState(ext)
+	require.NoError(t, err)
+
+	files, _ := ioutil.ReadDir(ext.HandlerEnv.DataFolder)
+	for _, _ = range files {
+		require.Fail(t, "Data directory file was not deleted")
+	}
+}
+
+func Test_resetStateCannotOpenDirectory(t *testing.T) {
+	ext := createTestVMExtension()
+
+	// ResetState will encounter an error deleting the directory, but won't propagate it
+	ext.exec.supportsResetState = true
+	_, err := resetState(ext)
+	require.NoError(t, err)
+}
+
+func Test_resetStateCannotRemoveFile(t *testing.T) {
+	ext := createTestVMExtension()
+	createDirsForVMExtension(ext)
+	defer cleanupDirsForVMExtension(ext)
+
+	// Create a file that we'll try to delete in resetState
+	filePath := path.Join(ext.HandlerEnv.DataFolder, "blarp.txt")
+	emptyFile, err := os.Create(filePath)
+	require.NoError(t, err)
+	log.Println(emptyFile)
+	defer emptyFile.Close()
+
+	// Call resetState, which will fail to delete the file because it's opened
+	// but the error won't propagate
+	ext.exec.supportsResetState = true
+	_, err = resetState(ext)
+	require.NoError(t, err)
+}
+
+func Test_resetStateEmptyDataDirectory(t *testing.T) {
+	ext := createTestVMExtension()
+	ext.HandlerEnv.DataFolder = ""
+
+	ext.exec.supportsResetState = true
+	_, err := resetState(ext)
+	require.NoError(t, err)
 }
 
 func Test_installAlreadyExists(t *testing.T) {
@@ -155,12 +273,12 @@ func Test_uninstallFileExistFails(t *testing.T) {
 	require.False(t, installDependency.(*evilInstallDependencies).removeAllCalled)
 }
 
-func testUpdateCallbackNormal(ext *VMExtension) error {
-	updateNormalCallbackCalled = true
+func testCallbackNormal(ext *VMExtension) error {
+	normalCallbackCalled = true
 	return nil
 }
 
-func testUpdateCallbackError(ext *VMExtension) error {
-	updateErrorCallbackCalled = true
+func testCallbackError(ext *VMExtension) error {
+	errorCallbackCalled = true
 	return fmt.Errorf("oh no. The world is ending, but styling prevents me from using end punctuation or caps")
 }

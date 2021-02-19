@@ -2,6 +2,7 @@ package vmextension
 
 import (
 	"os"
+	"path/filepath"
 
 	"github.com/pkg/errors"
 )
@@ -43,6 +44,50 @@ func doesFileExistInstallDependency(filePath string) (bool, error) {
 	return true, nil
 }
 
+func resetState(ext *VMExtension) (string, error) {
+	ext.ExtensionLogger.Info("resetState called")
+
+	// Remove all files in the data directory
+	err := removeDirectoryContents(ext.HandlerEnv.DataFolder)
+	if err != nil {
+		ext.ExtensionLogger.Error("Removing data directory contents failed: %v", err)
+	}
+
+	// Call the callback if we have one
+	if ext.exec.resetStateCallBack != nil {
+		err := ext.exec.resetStateCallBack(ext)
+		if err != nil {
+			ext.ExtensionLogger.Error("ResetState failed: %v", err)
+		}
+	}
+
+	return "", nil
+}
+
+func removeDirectoryContents(dir string) error {
+	if dir == "" {
+		return nil
+	}
+
+	d, err := os.Open(dir)
+	if err != nil {
+		return err
+	}
+	defer d.Close()
+
+	// This is best effort. Readdirnames will return the directories it managed
+	// to read if there is an error
+	names, _ := d.Readdirnames(-1)
+	for _, name := range names {
+		err = os.RemoveAll(filepath.Join(dir, name))
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func update(ext *VMExtension) (string, error) {
 	ext.ExtensionLogger.Info("update called")
 
@@ -73,6 +118,14 @@ func install(ext *VMExtension) (string, error) {
 		ext.ExtensionLogger.Info("Created data dir %s", ext.HandlerEnv.DataFolder)
 	}
 
+	// Call the callback if we have one
+	if ext.exec.installCallback != nil {
+		err := ext.exec.installCallback(ext)
+		if err != nil {
+			ext.ExtensionLogger.Error("Install failed: %v", err)
+		}
+	}
+
 	ext.ExtensionLogger.Info("installed")
 	return "", nil
 }
@@ -89,6 +142,14 @@ func uninstall(ext *VMExtension) (string, error) {
 			return "", errors.Wrap(err, "failed to delete data dir")
 		}
 		ext.ExtensionLogger.Info("removed data dir")
+	}
+
+	// Call the callback if we have one
+	if ext.exec.uninstallCallback != nil {
+		err := ext.exec.uninstallCallback(ext)
+		if err != nil {
+			ext.ExtensionLogger.Error("Uninstall failed: %v", err)
+		}
 	}
 
 	ext.ExtensionLogger.Info("uninstalled")

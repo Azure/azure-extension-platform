@@ -3,6 +3,10 @@ package vmextension
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"os"
+	"path/filepath"
+
 	"github.com/Azure/azure-extension-platform/pkg/environmentmanager"
 	"github.com/Azure/azure-extension-platform/pkg/exithelper"
 	"github.com/Azure/azure-extension-platform/pkg/extensionerrors"
@@ -13,9 +17,6 @@ import (
 	"github.com/Azure/azure-extension-platform/pkg/settings"
 	"github.com/Azure/azure-extension-platform/pkg/status"
 	"github.com/pkg/errors"
-	"io/ioutil"
-	"os"
-	"path/filepath"
 )
 
 // HandlerEnvFileName is the file name of the Handler Environment as placed by the
@@ -39,9 +40,13 @@ type executionInfo struct {
 	cmds                map[string]cmd                                       // Execution commands keyed by operation
 	requiresSeqNoChange bool                                                 // True if Enable will only execute if the sequence number changes
 	supportsDisable     bool                                                 // Whether to run extension agnostic disable code
+	supportsResetState  bool                                                 // Whether to run the extension agnostic ResetState code
 	enableCallback      EnableCallbackFunc                                   // A method provided by the extension for Enable
 	updateCallback      CallbackFunc                                         // A method provided by the extension for Update
-	disableCallback     CallbackFunc                                         // A method provided by the extension for disable
+	disableCallback     CallbackFunc                                         // A method provided by the extension for Disable
+	resetStateCallBack  CallbackFunc                                         // A method provided by the extension for ResetState
+	installCallback     CallbackFunc                                         // A method provided by the extension for Update
+	uninstallCallback   CallbackFunc                                         // A method provided by the extension for Uninstall
 	manager             environmentmanager.IGetVMExtensionEnvironmentManager // Used by tests to mock the environment
 }
 
@@ -162,6 +167,7 @@ func getVMExtensionInternal(initInfo *InitializationInfo, manager environmentman
 	// Only support Update and Disable if we need to
 	var cmdDisable cmd
 	var cmdUpdate cmd
+	var cmdResetState cmd
 	if initInfo.UpdateCallback != nil {
 		cmdUpdate = cmd{update, "Update", false, 3}
 	} else {
@@ -172,6 +178,12 @@ func getVMExtensionInternal(initInfo *InitializationInfo, manager environmentman
 		cmdDisable = cmd{disable, "Disable", true, 3}
 	} else {
 		cmdDisable = cmd{noop, "Disable", true, 3}
+	}
+
+	if initInfo.SupportsDisable || initInfo.ResetStateCallback != nil {
+		cmdResetState = cmd{resetState, "ResetState", false, 3}
+	} else {
+		cmdResetState = cmd{noop, "ResetState", false, 3}
 	}
 
 	settings := func() (*settings.HandlerSettings, error) {
@@ -191,15 +203,20 @@ func getVMExtensionInternal(initInfo *InitializationInfo, manager environmentman
 			manager:             manager,
 			requiresSeqNoChange: initInfo.RequiresSeqNoChange,
 			supportsDisable:     initInfo.SupportsDisable,
+			supportsResetState:  initInfo.SupportsResetState,
 			enableCallback:      initInfo.EnableCallback,
 			disableCallback:     initInfo.DisableCallback,
 			updateCallback:      initInfo.UpdateCallback,
+			resetStateCallBack:  initInfo.ResetStateCallback,
+			installCallback:     initInfo.InstallCallback,
+			uninstallCallback:   initInfo.UninstallCallback,
 			cmds: map[string]cmd{
-				"install":   cmdInstall,
-				"uninstall": cmdUninstall,
-				"enable":    cmdEnable,
-				"update":    cmdUpdate,
-				"disable":   cmdDisable,
+				"install":    cmdInstall,
+				"uninstall":  cmdUninstall,
+				"enable":     cmdEnable,
+				"update":     cmdUpdate,
+				"disable":    cmdDisable,
+				"resetstate": cmdResetState,
 			},
 		},
 	}
