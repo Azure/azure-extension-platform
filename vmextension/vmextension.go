@@ -180,7 +180,7 @@ func getVMExtensionInternal(initInfo *InitializationInfo, manager environmentman
 		cmdDisable = cmd{noop, "Disable", true, 3}
 	}
 
-	if initInfo.SupportsDisable || initInfo.ResetStateCallback != nil {
+	if initInfo.SupportsResetState || initInfo.ResetStateCallback != nil {
 		cmdResetState = cmd{resetState, "ResetState", false, 3}
 	} else {
 		cmdResetState = cmd{noop, "ResetState", false, 3}

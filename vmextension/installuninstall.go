@@ -2,7 +2,6 @@ package vmextension
 
 import (
 	"os"
-	"path/filepath"
 
 	"github.com/pkg/errors"
 )
@@ -69,20 +68,9 @@ func removeDirectoryContents(dir string) error {
 		return nil
 	}
 
-	d, err := os.Open(dir)
+	err := os.RemoveAll(dir)
 	if err != nil {
 		return err
-	}
-	defer d.Close()
-
-	// This is best effort. Readdirnames will return the directories it managed
-	// to read if there is an error
-	names, _ := d.Readdirnames(-1)
-	for _, name := range names {
-		err = os.RemoveAll(filepath.Join(dir, name))
-		if err != nil {
-			return err
-		}
 	}
 
 	return nil
