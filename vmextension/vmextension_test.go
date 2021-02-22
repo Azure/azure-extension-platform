@@ -189,15 +189,15 @@ func Test_getVMExtensionUpdateSupport(t *testing.T) {
 	require.NotNil(t, ext)
 
 	// Verify this is a noop
-	updateNormalCallbackCalled = false
+	normalCallbackCalled = false
 	cmd := ext.exec.cmds["update"]
 	require.NotNil(t, cmd)
 	_, err = cmd.f(ext)
 	require.NoError(t, err, "updateCallback failed")
-	require.False(t, updateNormalCallbackCalled)
+	require.False(t, normalCallbackCalled)
 
 	// Update enabled
-	ii.UpdateCallback = testUpdateCallbackNormal
+	ii.UpdateCallback = testCallbackNormal
 	ext, err = getVMExtensionInternal(ii, mm)
 	require.NoError(t, err, "getVMExtensionInternal failed")
 	require.NotNil(t, ext)
@@ -207,7 +207,7 @@ func Test_getVMExtensionUpdateSupport(t *testing.T) {
 	require.NotNil(t, cmd)
 	_, err = cmd.f(ext)
 	require.NoError(t, err, "updateCallback failed")
-	require.True(t, updateNormalCallbackCalled)
+	require.True(t, normalCallbackCalled)
 }
 
 func Test_getVMExtensionDisableSupport(t *testing.T) {
