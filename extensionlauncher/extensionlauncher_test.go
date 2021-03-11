@@ -23,7 +23,7 @@ var handlerEnv *handlerenv.HandlerEnvironment
 var el *logging.ExtensionLogger
 
 func testInit(t *testing.T) {
-	testD, err := filepath.Abs(".\\testdir")
+	testD, err := filepath.Abs("testdir")
 	assert.NoError(t, err, "should be able to get absolute path")
 	testDir = testD
 	err = os.MkdirAll(testDir, constants.FilePermissions_UserOnly_ReadWriteExecute)

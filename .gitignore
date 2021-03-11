@@ -9,3 +9,4 @@ main/testenv/
 pkg/commandhandler/testdir/
 pkg/lockedfile/testdir/
 vmextension/testdir/
+/extension-launcher

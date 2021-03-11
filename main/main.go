@@ -13,7 +13,7 @@ var eh = exithelper.Exiter
 func main (){
 	handlerEnv, err := handlerenv.GetHandlerEnvironment(extensionName, extensionVersion)
 	if err != nil {
-		el.Error("could not retrieve handler environment %s", err.Error)
+		el.Error("could not retrieve handler environment %s", err.Error())
 		eh.Exit(exithelper.EnvironmentError)
 	}
 	extName, extVersion, exeName, operation, err := extensionlauncher.ParseArgs()

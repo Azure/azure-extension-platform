@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/pkg/errors"
 	"io"
+	"os/exec"
 	"syscall"
 )
 
@@ -22,9 +23,6 @@ func execDontWait(cmd, workdir string) (int, error) {
 }
 
 func execCommon(cmd, workdir string, stdout, stderr io.WriteCloser, execFunctionToCall func(*exec.Cmd)(error)) (int, error) {
-	defer stdout.Close()
-	defer stderr.Close()
-
 	c := exec.Command("/bin/sh", "-c", cmd)
 	c.Dir = workdir
 	c.Stdout = stdout
