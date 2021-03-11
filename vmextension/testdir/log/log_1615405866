@@ -1,0 +1,293 @@
+Info 2021/03/10 19:51:06 Disabling extension
+Info 2021/03/10 19:51:06 Disabled extension
+Info 2021/03/10 19:51:06 Running operation enable for seqNo 5
+Info 2021/03/10 19:51:06 re-enabling the extension
+Info 2021/03/10 19:51:06 Un-disabling extension
+Error 2021/03/10 19:51:06 Could not re-enable the extension: NotFound
+Error 2021/03/10 19:51:06 goroutine 43 [running]:
+runtime/debug.Stack(0xc0001accd0, 0x52affa, 0x25)
+	C:/Program Files/Go/src/runtime/debug/stack.go:24 +0xa5
+github.com/Azure/azure-extension-platform/pkg/logging.GetCallStack(...)
+	C:/Users/bhbrahma/go/src/github.com/Azure/azure-extension-platform/pkg/logging/logging.go:65
+github.com/Azure/azure-extension-platform/pkg/logging.(*ExtensionLogger).Error(0xc000005cc0, 0x52affa, 0x25, 0xc0001cbc60, 0x1, 0x1)
+	C:/Users/bhbrahma/go/src/github.com/Azure/azure-extension-platform/pkg/logging/logging.go:87 +0x76
+github.com/Azure/azure-extension-platform/vmextension.setDisabled(0xc00004b620, 0x526600, 0x19, 0x0)
+	C:/Users/bhbrahma/go/src/github.com/Azure/azure-extension-platform/vmextension/enabledisable.go:196 +0x40f
+github.com/Azure/azure-extension-platform/vmextension.enable(0xc00004b620, 0xc0001c2a80, 0x0, 0x0, 0xc0001cbed0)
+	C:/Users/bhbrahma/go/src/github.com/Azure/azure-extension-platform/vmextension/enabledisable.go:59 +0x5be
+github.com/Azure/azure-extension-platform/vmextension.Test_reenableExtensionFails(0xc0001c2a80)
+	C:/Users/bhbrahma/go/src/github.com/Azure/azure-extension-platform/vmextension/vmextension_test.go:377 +0x25d
+testing.tRunner(0xc0001c2a80, 0x535760)
+	C:/Program Files/Go/src/testing/testing.go:1123 +0xef
+created by testing.(*T).Run
+	C:/Program Files/Go/src/testing/testing.go:1168 +0x2b3
+Error 2021/03/10 19:51:06 Could not re-enable the extension: NotFound
+Error 2021/03/10 19:51:06 goroutine 43 [running]:
+runtime/debug.Stack(0xc0001accd0, 0x52affa, 0x25)
+	C:/Program Files/Go/src/runtime/debug/stack.go:24 +0xa5
+github.com/Azure/azure-extension-platform/pkg/logging.GetCallStack(...)
+	C:/Users/bhbrahma/go/src/github.com/Azure/azure-extension-platform/pkg/logging/logging.go:65
+github.com/Azure/azure-extension-platform/pkg/logging.(*ExtensionLogger).Error(0xc000005cc0, 0x52affa, 0x25, 0xc0001cbd98, 0x1, 0x1)
+	C:/Users/bhbrahma/go/src/github.com/Azure/azure-extension-platform/pkg/logging/logging.go:87 +0x76
+github.com/Azure/azure-extension-platform/vmextension.enable(0xc00004b620, 0xc0001c2a80, 0x0, 0x0, 0xc0001cbed0)
+	C:/Users/bhbrahma/go/src/github.com/Azure/azure-extension-platform/vmextension/enabledisable.go:62 +0x637
+github.com/Azure/azure-extension-platform/vmextension.Test_reenableExtensionFails(0xc0001c2a80)
+	C:/Users/bhbrahma/go/src/github.com/Azure/azure-extension-platform/vmextension/vmextension_test.go:377 +0x25d
+testing.tRunner(0xc0001c2a80, 0x535760)
+	C:/Program Files/Go/src/testing/testing.go:1123 +0xef
+created by testing.(*T).Run
+	C:/Program Files/Go/src/testing/testing.go:1168 +0x2b3
+Info 2021/03/10 19:51:06 Enable succeeded
+Info 2021/03/10 19:51:06 Un-disabling extension
+Info 2021/03/10 19:51:06 Re-enabled extension
+Info 2021/03/10 19:51:06 Running operation enable for seqNo 5
+Error 2021/03/10 19:51:06 Failed to save handler status: status: failed to create temporary file: open testdir\status\5.status790850604: The system cannot find the path specified.
+Error 2021/03/10 19:51:06 goroutine 44 [running]:
+runtime/debug.Stack(0xc0001ace60, 0x5298e5, 0x21)
+	C:/Program Files/Go/src/runtime/debug/stack.go:24 +0xa5
+github.com/Azure/azure-extension-platform/pkg/logging.GetCallStack(...)
+	C:/Users/bhbrahma/go/src/github.com/Azure/azure-extension-platform/pkg/logging/logging.go:65
+github.com/Azure/azure-extension-platform/pkg/logging.(*ExtensionLogger).Error(0xc000005da0, 0x5298e5, 0x21, 0xc000157cd8, 0x1, 0x1)
+	C:/Users/bhbrahma/go/src/github.com/Azure/azure-extension-platform/pkg/logging/logging.go:87 +0x76
+github.com/Azure/azure-extension-platform/vmextension.reportStatus(0xc00004b7a0, 0x520dd1, 0xd, 0x535830, 0xc0001f04a0, 0x6, 0x1, 0x3, 0x0, 0x0, ...)
+	C:/Users/bhbrahma/go/src/github.com/Azure/azure-extension-platform/vmextension/vmextension.go:275 +0x1b5
+github.com/Azure/azure-extension-platform/vmextension.enable(0xc00004b7a0, 0x56ca20, 0xc0001ecb60, 0xc00004b7a0, 0x0)
+	C:/Users/bhbrahma/go/src/github.com/Azure/azure-extension-platform/vmextension/enabledisable.go:47 +0x29d
+github.com/Azure/azure-extension-platform/vmextension.Test_enableCallbackFails(0xc0001c2c00)
+	C:/Users/bhbrahma/go/src/github.com/Azure/azure-extension-platform/vmextension/vmextension_test.go:387 +0x113
+testing.tRunner(0xc0001c2c00, 0x5356a8)
+	C:/Program Files/Go/src/testing/testing.go:1123 +0xef
+created by testing.(*T).Run
+	C:/Program Files/Go/src/testing/testing.go:1168 +0x2b3
+Error 2021/03/10 19:51:06 Enable failed: The process must run as Administrator
+Error 2021/03/10 19:51:06 goroutine 44 [running]:
+runtime/debug.Stack(0xc0001ace60, 0x522362, 0x11)
+	C:/Program Files/Go/src/runtime/debug/stack.go:24 +0xa5
+github.com/Azure/azure-extension-platform/pkg/logging.GetCallStack(...)
+	C:/Users/bhbrahma/go/src/github.com/Azure/azure-extension-platform/pkg/logging/logging.go:65
+github.com/Azure/azure-extension-platform/pkg/logging.(*ExtensionLogger).Error(0xc000005da0, 0x522362, 0x11, 0xc000157df0, 0x1, 0x1)
+	C:/Users/bhbrahma/go/src/github.com/Azure/azure-extension-platform/pkg/logging/logging.go:87 +0x76
+github.com/Azure/azure-extension-platform/vmextension.enable(0xc00004b7a0, 0x56ca20, 0xc0001ecb60, 0xc00004b7a0, 0x0)
+	C:/Users/bhbrahma/go/src/github.com/Azure/azure-extension-platform/vmextension/enabledisable.go:69 +0x3d7
+github.com/Azure/azure-extension-platform/vmextension.Test_enableCallbackFails(0xc0001c2c00)
+	C:/Users/bhbrahma/go/src/github.com/Azure/azure-extension-platform/vmextension/vmextension_test.go:387 +0x113
+testing.tRunner(0xc0001c2c00, 0x5356a8)
+	C:/Program Files/Go/src/testing/testing.go:1123 +0xef
+created by testing.(*T).Run
+	C:/Program Files/Go/src/testing/testing.go:1168 +0x2b3
+Error 2021/03/10 19:51:06 Failed to save handler status: status: failed to create temporary file: open testdir\status\5.status693206427: The system cannot find the path specified.
+Error 2021/03/10 19:51:06 goroutine 44 [running]:
+runtime/debug.Stack(0xc0001ace60, 0x5298e5, 0x21)
+	C:/Program Files/Go/src/runtime/debug/stack.go:24 +0xa5
+github.com/Azure/azure-extension-platform/pkg/logging.GetCallStack(...)
+	C:/Users/bhbrahma/go/src/github.com/Azure/azure-extension-platform/pkg/logging/logging.go:65
+github.com/Azure/azure-extension-platform/pkg/logging.(*ExtensionLogger).Error(0xc000005da0, 0x5298e5, 0x21, 0xc000157cd8, 0x1, 0x1)
+	C:/Users/bhbrahma/go/src/github.com/Azure/azure-extension-platform/pkg/logging/logging.go:87 +0x76
+github.com/Azure/azure-extension-platform/vmextension.reportStatus(0xc00004b7a0, 0x51e598, 0x5, 0x535830, 0xc0001f04a0, 0x6, 0x1, 0x3, 0x52b044, 0x25, ...)
+	C:/Users/bhbrahma/go/src/github.com/Azure/azure-extension-platform/vmextension/vmextension.go:275 +0x1b5
+github.com/Azure/azure-extension-platform/vmextension.enable(0xc00004b7a0, 0x56ca20, 0xc0001ecb60, 0xc00004b7a0, 0x0)
+	C:/Users/bhbrahma/go/src/github.com/Azure/azure-extension-platform/vmextension/enabledisable.go:70 +0x477
+github.com/Azure/azure-extension-platform/vmextension.Test_enableCallbackFails(0xc0001c2c00)
+	C:/Users/bhbrahma/go/src/github.com/Azure/azure-extension-platform/vmextension/vmextension_test.go:387 +0x113
+testing.tRunner(0xc0001c2c00, 0x5356a8)
+	C:/Program Files/Go/src/testing/testing.go:1123 +0xef
+created by testing.(*T).Run
+	C:/Program Files/Go/src/testing/testing.go:1168 +0x2b3
+Info 2021/03/10 19:51:06 Running operation enable for seqNo 5
+Error 2021/03/10 19:51:06 Failed to save handler status: status: failed to create temporary file: open testdir\status\5.status297866814: The system cannot find the path specified.
+Error 2021/03/10 19:51:06 goroutine 45 [running]:
+runtime/debug.Stack(0xc0001acff0, 0x5298e5, 0x21)
+	C:/Program Files/Go/src/runtime/debug/stack.go:24 +0xa5
+github.com/Azure/azure-extension-platform/pkg/logging.GetCallStack(...)
+	C:/Users/bhbrahma/go/src/github.com/Azure/azure-extension-platform/pkg/logging/logging.go:65
+github.com/Azure/azure-extension-platform/pkg/logging.(*ExtensionLogger).Error(0xc000005ee0, 0x5298e5, 0x21, 0xc000157cb8, 0x1, 0x1)
+	C:/Users/bhbrahma/go/src/github.com/Azure/azure-extension-platform/pkg/logging/logging.go:87 +0x76
+github.com/Azure/azure-extension-platform/vmextension.reportStatus(0xc00004b920, 0x520dd1, 0xd, 0x535830, 0xc0001f0680, 0x6, 0x1, 0x3, 0x0, 0x0, ...)
+	C:/Users/bhbrahma/go/src/github.com/Azure/azure-extension-platform/vmextension/vmextension.go:275 +0x1b5
+github.com/Azure/azure-extension-platform/vmextension.enable(0xc00004b920, 0x56ca20, 0xc0001ecbd0, 0xc00004b920, 0x0)
+	C:/Users/bhbrahma/go/src/github.com/Azure/azure-extension-platform/vmextension/enabledisable.go:47 +0x29d
+github.com/Azure/azure-extension-platform/vmextension.Test_enableCallbackSucceeds(0xc0001c2d80)
+	C:/Users/bhbrahma/go/src/github.com/Azure/azure-extension-platform/vmextension/vmextension_test.go:396 +0x125
+testing.tRunner(0xc0001c2d80, 0x5356b0)
+	C:/Program Files/Go/src/testing/testing.go:1123 +0xef
+created by testing.(*T).Run
+	C:/Program Files/Go/src/testing/testing.go:1168 +0x2b3
+Info 2021/03/10 19:51:06 Enable succeeded
+Error 2021/03/10 19:51:06 Failed to save handler status: status: failed to create temporary file: open testdir\status\5.status042794629: The system cannot find the path specified.
+Error 2021/03/10 19:51:06 goroutine 45 [running]:
+runtime/debug.Stack(0xc0001acff0, 0x5298e5, 0x21)
+	C:/Program Files/Go/src/runtime/debug/stack.go:24 +0xa5
+github.com/Azure/azure-extension-platform/pkg/logging.GetCallStack(...)
+	C:/Users/bhbrahma/go/src/github.com/Azure/azure-extension-platform/pkg/logging/logging.go:65
+github.com/Azure/azure-extension-platform/pkg/logging.(*ExtensionLogger).Error(0xc000005ee0, 0x5298e5, 0x21, 0xc000157cb8, 0x1, 0x1)
+	C:/Users/bhbrahma/go/src/github.com/Azure/azure-extension-platform/pkg/logging/logging.go:87 +0x76
+github.com/Azure/azure-extension-platform/vmextension.reportStatus(0xc00004b920, 0x51ed08, 0x7, 0x535830, 0xc0001f0680, 0x6, 0x1, 0x3, 0x51e277, 0x4, ...)
+	C:/Users/bhbrahma/go/src/github.com/Azure/azure-extension-platform/vmextension/vmextension.go:275 +0x1b5
+github.com/Azure/azure-extension-platform/vmextension.enable(0xc00004b920, 0x56ca20, 0xc0001ecbd0, 0xc00004b920, 0x0)
+	C:/Users/bhbrahma/go/src/github.com/Azure/azure-extension-platform/vmextension/enabledisable.go:73 +0x56c
+github.com/Azure/azure-extension-platform/vmextension.Test_enableCallbackSucceeds(0xc0001c2d80)
+	C:/Users/bhbrahma/go/src/github.com/Azure/azure-extension-platform/vmextension/vmextension_test.go:396 +0x125
+testing.tRunner(0xc0001c2d80, 0x5356b0)
+	C:/Program Files/Go/src/testing/testing.go:1123 +0xef
+created by testing.(*T).Run
+	C:/Program Files/Go/src/testing/testing.go:1168 +0x2b3
+Info 2021/03/10 19:51:06 Running operation enable for seqNo 5
+Error 2021/03/10 19:51:06 Failed to save handler status: status: failed to create temporary file: open testdir\status\5.status545636896: The system cannot find the path specified.
+Error 2021/03/10 19:51:06 goroutine 46 [running]:
+runtime/debug.Stack(0xc0001ad180, 0x5298e5, 0x21)
+	C:/Program Files/Go/src/runtime/debug/stack.go:24 +0xa5
+github.com/Azure/azure-extension-platform/pkg/logging.GetCallStack(...)
+	C:/Users/bhbrahma/go/src/github.com/Azure/azure-extension-platform/pkg/logging/logging.go:65
+github.com/Azure/azure-extension-platform/pkg/logging.(*ExtensionLogger).Error(0xc00021e020, 0x5298e5, 0x21, 0xc000157c10, 0x1, 0x1)
+	C:/Users/bhbrahma/go/src/github.com/Azure/azure-extension-platform/pkg/logging/logging.go:87 +0x76
+github.com/Azure/azure-extension-platform/vmextension.reportStatus(0xc00004baa0, 0x520dd1, 0xd, 0x535830, 0xc0001f0870, 0x6, 0x1, 0x3, 0x0, 0x0, ...)
+	C:/Users/bhbrahma/go/src/github.com/Azure/azure-extension-platform/vmextension/vmextension.go:275 +0x1b5
+github.com/Azure/azure-extension-platform/vmextension.enable(0xc00004baa0, 0xc00021e060, 0x2, 0x2, 0x568d40)
+	C:/Users/bhbrahma/go/src/github.com/Azure/azure-extension-platform/vmextension/enabledisable.go:47 +0x29d
+github.com/Azure/azure-extension-platform/vmextension.(*VMExtension).Do(0xc00004baa0)
+	C:/Users/bhbrahma/go/src/github.com/Azure/azure-extension-platform/vmextension/vmextension.go:250 +0xc7
+github.com/Azure/azure-extension-platform/vmextension.Test_doFailToWriteSequenceNumber(0xc0001c2f00)
+	C:/Users/bhbrahma/go/src/github.com/Azure/azure-extension-platform/vmextension/vmextension_test.go:413 +0x249
+testing.tRunner(0xc0001c2f00, 0x5356a0)
+	C:/Program Files/Go/src/testing/testing.go:1123 +0xef
+created by testing.(*T).Run
+	C:/Program Files/Go/src/testing/testing.go:1168 +0x2b3
+Warning 2021/03/10 19:51:06 failed to write new sequence number: The process must run as Administrator
+Info 2021/03/10 19:51:06 Enable succeeded
+Error 2021/03/10 19:51:06 Failed to save handler status: status: failed to create temporary file: open testdir\status\5.status807439103: The system cannot find the path specified.
+Error 2021/03/10 19:51:06 goroutine 46 [running]:
+runtime/debug.Stack(0xc0001ad180, 0x5298e5, 0x21)
+	C:/Program Files/Go/src/runtime/debug/stack.go:24 +0xa5
+github.com/Azure/azure-extension-platform/pkg/logging.GetCallStack(...)
+	C:/Users/bhbrahma/go/src/github.com/Azure/azure-extension-platform/pkg/logging/logging.go:65
+github.com/Azure/azure-extension-platform/pkg/logging.(*ExtensionLogger).Error(0xc00021e020, 0x5298e5, 0x21, 0xc000157c10, 0x1, 0x1)
+	C:/Users/bhbrahma/go/src/github.com/Azure/azure-extension-platform/pkg/logging/logging.go:87 +0x76
+github.com/Azure/azure-extension-platform/vmextension.reportStatus(0xc00004baa0, 0x51ed08, 0x7, 0x535830, 0xc0001f0870, 0x6, 0x1, 0x3, 0x51e277, 0x4, ...)
+	C:/Users/bhbrahma/go/src/github.com/Azure/azure-extension-platform/vmextension/vmextension.go:275 +0x1b5
+github.com/Azure/azure-extension-platform/vmextension.enable(0xc00004baa0, 0xc00021e060, 0x2, 0x2, 0x568d40)
+	C:/Users/bhbrahma/go/src/github.com/Azure/azure-extension-platform/vmextension/enabledisable.go:73 +0x56c
+github.com/Azure/azure-extension-platform/vmextension.(*VMExtension).Do(0xc00004baa0)
+	C:/Users/bhbrahma/go/src/github.com/Azure/azure-extension-platform/vmextension/vmextension.go:250 +0xc7
+github.com/Azure/azure-extension-platform/vmextension.Test_doFailToWriteSequenceNumber(0xc0001c2f00)
+	C:/Users/bhbrahma/go/src/github.com/Azure/azure-extension-platform/vmextension/vmextension_test.go:413 +0x249
+testing.tRunner(0xc0001c2f00, 0x5356a0)
+	C:/Program Files/Go/src/testing/testing.go:1123 +0xef
+created by testing.(*T).Run
+	C:/Program Files/Go/src/testing/testing.go:1168 +0x2b3
+Info 2021/03/10 19:51:06 Running operation enable for seqNo 5
+Error 2021/03/10 19:51:06 Failed to save handler status: status: failed to create temporary file: open testdir\status\5.status158977031: The system cannot find the path specified.
+Error 2021/03/10 19:51:06 goroutine 19 [running]:
+runtime/debug.Stack(0xc0000e63c0, 0x5298e5, 0x21)
+	C:/Program Files/Go/src/runtime/debug/stack.go:24 +0xa5
+github.com/Azure/azure-extension-platform/pkg/logging.GetCallStack(...)
+	C:/Users/bhbrahma/go/src/github.com/Azure/azure-extension-platform/pkg/logging/logging.go:65
+github.com/Azure/azure-extension-platform/pkg/logging.(*ExtensionLogger).Error(0xc00008eca0, 0x5298e5, 0x21, 0xc000137bd0, 0x1, 0x1)
+	C:/Users/bhbrahma/go/src/github.com/Azure/azure-extension-platform/pkg/logging/logging.go:87 +0x76
+github.com/Azure/azure-extension-platform/vmextension.reportStatus(0xc0000d4420, 0x520dd1, 0xd, 0x535830, 0xc000095240, 0x6, 0x1, 0x3, 0x0, 0x0, ...)
+	C:/Users/bhbrahma/go/src/github.com/Azure/azure-extension-platform/vmextension/vmextension.go:275 +0x1b5
+github.com/Azure/azure-extension-platform/vmextension.enable(0xc0000d4420, 0xc00008ece0, 0x2, 0x2, 0x568d40)
+	C:/Users/bhbrahma/go/src/github.com/Azure/azure-extension-platform/vmextension/enabledisable.go:47 +0x29d
+github.com/Azure/azure-extension-platform/vmextension.(*VMExtension).Do(0xc0000d4420)
+	C:/Users/bhbrahma/go/src/github.com/Azure/azure-extension-platform/vmextension/vmextension.go:250 +0xc7
+github.com/Azure/azure-extension-platform/vmextension.Test_doCommandFails(0xc000084480)
+	C:/Users/bhbrahma/go/src/github.com/Azure/azure-extension-platform/vmextension/vmextension_test.go:427 +0x489
+testing.tRunner(0xc000084480, 0x535690)
+	C:/Program Files/Go/src/testing/testing.go:1123 +0xef
+created by testing.(*T).Run
+	C:/Program Files/Go/src/testing/testing.go:1168 +0x2b3
+Error 2021/03/10 19:51:06 Enable failed: The process must run as Administrator
+Error 2021/03/10 19:51:06 goroutine 19 [running]:
+runtime/debug.Stack(0xc0000e63c0, 0x522362, 0x11)
+	C:/Program Files/Go/src/runtime/debug/stack.go:24 +0xa5
+github.com/Azure/azure-extension-platform/pkg/logging.GetCallStack(...)
+	C:/Users/bhbrahma/go/src/github.com/Azure/azure-extension-platform/pkg/logging/logging.go:65
+github.com/Azure/azure-extension-platform/pkg/logging.(*ExtensionLogger).Error(0xc00008eca0, 0x522362, 0x11, 0xc000137ce8, 0x1, 0x1)
+	C:/Users/bhbrahma/go/src/github.com/Azure/azure-extension-platform/pkg/logging/logging.go:87 +0x76
+github.com/Azure/azure-extension-platform/vmextension.enable(0xc0000d4420, 0xc00008ece0, 0x2, 0x2, 0x568d40)
+	C:/Users/bhbrahma/go/src/github.com/Azure/azure-extension-platform/vmextension/enabledisable.go:69 +0x3d7
+github.com/Azure/azure-extension-platform/vmextension.(*VMExtension).Do(0xc0000d4420)
+	C:/Users/bhbrahma/go/src/github.com/Azure/azure-extension-platform/vmextension/vmextension.go:250 +0xc7
+github.com/Azure/azure-extension-platform/vmextension.Test_doCommandFails(0xc000084480)
+	C:/Users/bhbrahma/go/src/github.com/Azure/azure-extension-platform/vmextension/vmextension_test.go:427 +0x489
+testing.tRunner(0xc000084480, 0x535690)
+	C:/Program Files/Go/src/testing/testing.go:1123 +0xef
+created by testing.(*T).Run
+	C:/Program Files/Go/src/testing/testing.go:1168 +0x2b3
+Error 2021/03/10 19:51:06 Failed to save handler status: status: failed to create temporary file: open testdir\status\5.status565888954: The system cannot find the path specified.
+Error 2021/03/10 19:51:06 goroutine 19 [running]:
+runtime/debug.Stack(0xc0000e63c0, 0x5298e5, 0x21)
+	C:/Program Files/Go/src/runtime/debug/stack.go:24 +0xa5
+github.com/Azure/azure-extension-platform/pkg/logging.GetCallStack(...)
+	C:/Users/bhbrahma/go/src/github.com/Azure/azure-extension-platform/pkg/logging/logging.go:65
+github.com/Azure/azure-extension-platform/pkg/logging.(*ExtensionLogger).Error(0xc00008eca0, 0x5298e5, 0x21, 0xc000137bd0, 0x1, 0x1)
+	C:/Users/bhbrahma/go/src/github.com/Azure/azure-extension-platform/pkg/logging/logging.go:87 +0x76
+github.com/Azure/azure-extension-platform/vmextension.reportStatus(0xc0000d4420, 0x51e598, 0x5, 0x535830, 0xc000095240, 0x6, 0x1, 0x3, 0x52b044, 0x25, ...)
+	C:/Users/bhbrahma/go/src/github.com/Azure/azure-extension-platform/vmextension/vmextension.go:275 +0x1b5
+github.com/Azure/azure-extension-platform/vmextension.enable(0xc0000d4420, 0xc00008ece0, 0x2, 0x2, 0x568d40)
+	C:/Users/bhbrahma/go/src/github.com/Azure/azure-extension-platform/vmextension/enabledisable.go:70 +0x477
+github.com/Azure/azure-extension-platform/vmextension.(*VMExtension).Do(0xc0000d4420)
+	C:/Users/bhbrahma/go/src/github.com/Azure/azure-extension-platform/vmextension/vmextension.go:250 +0xc7
+github.com/Azure/azure-extension-platform/vmextension.Test_doCommandFails(0xc000084480)
+	C:/Users/bhbrahma/go/src/github.com/Azure/azure-extension-platform/vmextension/vmextension_test.go:427 +0x489
+testing.tRunner(0xc000084480, 0x535690)
+	C:/Program Files/Go/src/testing/testing.go:1123 +0xef
+created by testing.(*T).Run
+	C:/Program Files/Go/src/testing/testing.go:1168 +0x2b3
+Error 2021/03/10 19:51:06 failed to handle: The process must run as Administrator
+Error 2021/03/10 19:51:06 goroutine 19 [running]:
+runtime/debug.Stack(0xc0000e63c0, 0x523df5, 0x14)
+	C:/Program Files/Go/src/runtime/debug/stack.go:24 +0xa5
+github.com/Azure/azure-extension-platform/pkg/logging.GetCallStack(...)
+	C:/Users/bhbrahma/go/src/github.com/Azure/azure-extension-platform/pkg/logging/logging.go:65
+github.com/Azure/azure-extension-platform/pkg/logging.(*ExtensionLogger).Error(0xc00008eca0, 0x523df5, 0x14, 0xc000137e20, 0x1, 0x1)
+	C:/Users/bhbrahma/go/src/github.com/Azure/azure-extension-platform/pkg/logging/logging.go:87 +0x76
+github.com/Azure/azure-extension-platform/vmextension.(*VMExtension).Do(0xc0000d4420)
+	C:/Users/bhbrahma/go/src/github.com/Azure/azure-extension-platform/vmextension/vmextension.go:252 +0x138
+github.com/Azure/azure-extension-platform/vmextension.Test_doCommandFails(0xc000084480)
+	C:/Users/bhbrahma/go/src/github.com/Azure/azure-extension-platform/vmextension/vmextension_test.go:427 +0x489
+testing.tRunner(0xc000084480, 0x535690)
+	C:/Program Files/Go/src/testing/testing.go:1123 +0xef
+created by testing.(*T).Run
+	C:/Program Files/Go/src/testing/testing.go:1168 +0x2b3
+Info 2021/03/10 19:51:06 Running operation enable for seqNo 5
+Error 2021/03/10 19:51:06 Failed to save handler status: status: failed to create temporary file: open testdir\status\5.status780225106: The system cannot find the path specified.
+Error 2021/03/10 19:51:06 goroutine 48 [running]:
+runtime/debug.Stack(0xc0001ad360, 0x5298e5, 0x21)
+	C:/Program Files/Go/src/runtime/debug/stack.go:24 +0xa5
+github.com/Azure/azure-extension-platform/pkg/logging.GetCallStack(...)
+	C:/Users/bhbrahma/go/src/github.com/Azure/azure-extension-platform/pkg/logging/logging.go:65
+github.com/Azure/azure-extension-platform/pkg/logging.(*ExtensionLogger).Error(0xc00021e240, 0x5298e5, 0x21, 0xc000157c10, 0x1, 0x1)
+	C:/Users/bhbrahma/go/src/github.com/Azure/azure-extension-platform/pkg/logging/logging.go:87 +0x76
+github.com/Azure/azure-extension-platform/vmextension.reportStatus(0xc00004bc20, 0x520dd1, 0xd, 0x535830, 0xc0001f0c40, 0x6, 0x1, 0x3, 0x0, 0x0, ...)
+	C:/Users/bhbrahma/go/src/github.com/Azure/azure-extension-platform/vmextension/vmextension.go:275 +0x1b5
+github.com/Azure/azure-extension-platform/vmextension.enable(0xc00004bc20, 0xc00021e280, 0x2, 0x2, 0x568d40)
+	C:/Users/bhbrahma/go/src/github.com/Azure/azure-extension-platform/vmextension/enabledisable.go:47 +0x29d
+github.com/Azure/azure-extension-platform/vmextension.(*VMExtension).Do(0xc00004bc20)
+	C:/Users/bhbrahma/go/src/github.com/Azure/azure-extension-platform/vmextension/vmextension.go:250 +0xc7
+github.com/Azure/azure-extension-platform/vmextension.Test_doCommandSucceeds(0xc0001c3200)
+	C:/Users/bhbrahma/go/src/github.com/Azure/azure-extension-platform/vmextension/vmextension_test.go:451 +0x229
+testing.tRunner(0xc0001c3200, 0x535698)
+	C:/Program Files/Go/src/testing/testing.go:1123 +0xef
+created by testing.(*T).Run
+	C:/Program Files/Go/src/testing/testing.go:1168 +0x2b3
+Info 2021/03/10 19:51:06 Enable succeeded
+Error 2021/03/10 19:51:06 Failed to save handler status: status: failed to create temporary file: open testdir\status\5.status961472905: The system cannot find the path specified.
+Error 2021/03/10 19:51:06 goroutine 48 [running]:
+runtime/debug.Stack(0xc0001ad360, 0x5298e5, 0x21)
+	C:/Program Files/Go/src/runtime/debug/stack.go:24 +0xa5
+github.com/Azure/azure-extension-platform/pkg/logging.GetCallStack(...)
+	C:/Users/bhbrahma/go/src/github.com/Azure/azure-extension-platform/pkg/logging/logging.go:65
+github.com/Azure/azure-extension-platform/pkg/logging.(*ExtensionLogger).Error(0xc00021e240, 0x5298e5, 0x21, 0xc000157c10, 0x1, 0x1)
+	C:/Users/bhbrahma/go/src/github.com/Azure/azure-extension-platform/pkg/logging/logging.go:87 +0x76
+github.com/Azure/azure-extension-platform/vmextension.reportStatus(0xc00004bc20, 0x51ed08, 0x7, 0x535830, 0xc0001f0c40, 0x6, 0x1, 0x3, 0x51e277, 0x4, ...)
+	C:/Users/bhbrahma/go/src/github.com/Azure/azure-extension-platform/vmextension/vmextension.go:275 +0x1b5
+github.com/Azure/azure-extension-platform/vmextension.enable(0xc00004bc20, 0xc00021e280, 0x2, 0x2, 0x568d40)
+	C:/Users/bhbrahma/go/src/github.com/Azure/azure-extension-platform/vmextension/enabledisable.go:73 +0x56c
+github.com/Azure/azure-extension-platform/vmextension.(*VMExtension).Do(0xc00004bc20)
+	C:/Users/bhbrahma/go/src/github.com/Azure/azure-extension-platform/vmextension/vmextension.go:250 +0xc7
+github.com/Azure/azure-extension-platform/vmextension.Test_doCommandSucceeds(0xc0001c3200)
+	C:/Users/bhbrahma/go/src/github.com/Azure/azure-extension-platform/vmextension/vmextension_test.go:451 +0x229
+testing.tRunner(0xc0001c3200, 0x535698)
+	C:/Program Files/Go/src/testing/testing.go:1123 +0xef
+created by testing.(*T).Run
+	C:/Program Files/Go/src/testing/testing.go:1168 +0x2b3

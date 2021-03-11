@@ -3,6 +3,7 @@
 package main
 
 import (
+	"github.com/Azure/azure-extension-platform/pkg/exithelper"
 	"os"
 
 	"github.com/Azure/azure-extension-platform/vmextension"
@@ -40,7 +41,7 @@ var logger = log.NewSyncLogger(log.NewLogfmtLogger(os.Stdout))
 func main() {
 	err := getExtensionAndRun()
 	if err != nil {
-		os.Exit(2)
+		os.Exit(exithelper.EnvironmentError)
 	}
 }
 

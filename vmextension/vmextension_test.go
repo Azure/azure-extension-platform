@@ -85,7 +85,7 @@ func (mm *mockGetVMExtensionEnvironmentManager) SetSequenceNumberInternal(extens
 
 func Test_reportStatusShouldntReport(t *testing.T) {
 	ext := createTestVMExtension()
-	c := cmd{nil, "Install", false, 99}
+	c := cmd{nil, InstallOperation.ToPascalCaseName(), false, 99}
 	ext.HandlerEnv.StatusFolder = statusTestDirectory
 	ext.GetRequestedSequenceNumber = func() (uint, error) { return 45, nil }
 
@@ -97,7 +97,7 @@ func Test_reportStatusShouldntReport(t *testing.T) {
 
 func Test_reportStatusCouldntSave(t *testing.T) {
 	ext := createTestVMExtension()
-	c := cmd{nil, "Install", true, 99}
+	c := cmd{nil, InstallOperation.ToPascalCaseName(), true, 99}
 	ext.HandlerEnv.StatusFolder = "./yabamonster"
 	ext.GetRequestedSequenceNumber = func() (uint, error) { return 45, nil }
 
@@ -108,7 +108,7 @@ func Test_reportStatusCouldntSave(t *testing.T) {
 func Test_reportStatusSaved(t *testing.T) {
 	ext := createTestVMExtension()
 
-	c := cmd{nil, "Install", true, 99}
+	c := cmd{nil, InstallOperation.ToPascalCaseName(), true, 99}
 	ext.HandlerEnv.StatusFolder = statusTestDirectory
 	ext.GetRequestedSequenceNumber = func() (uint, error) { return 45, nil }
 
@@ -153,7 +153,7 @@ func Test_GetVMExtensionCannotFindSeqNo(t *testing.T) {
 	ii, _ := GetInitializationInfo("yaba", "5.0", true, testEnableCallback)
 	ext, err := getVMExtensionInternal(ii, mm)
 	require.NoError(t, err)
-	installCmd, exists := ext.exec.cmds["enable"]
+	installCmd, exists := ext.exec.cmds[EnableOperation.ToCommandName()]
 	require.True(t, exists)
 	_, err = installCmd.f(ext)
 	require.Equal(t, mm.findSeqNumError, err)
@@ -165,7 +165,7 @@ func Test_getVMExtensionInstallShouldNotTryToFindSequenceNumber(t *testing.T) {
 	ii, _ := GetInitializationInfo("yaba", "5.0", true, testEnableCallback)
 	ext, err := getVMExtensionInternal(ii, mm)
 	require.NoError(t, err)
-	installCmd, exists := ext.exec.cmds["install"]
+	installCmd, exists := ext.exec.cmds[InstallOperation.ToCommandName()]
 	require.True(t, exists)
 	_, err = installCmd.f(ext)
 	require.NoError(t, err)
@@ -190,7 +190,7 @@ func Test_getVMExtensionUpdateSupport(t *testing.T) {
 
 	// Verify this is a noop
 	normalCallbackCalled = false
-	cmd := ext.exec.cmds["update"]
+	cmd := ext.exec.cmds[UpdateOperation.ToCommandName()]
 	require.NotNil(t, cmd)
 	_, err = cmd.f(ext)
 	require.NoError(t, err, "updateCallback failed")
@@ -203,7 +203,7 @@ func Test_getVMExtensionUpdateSupport(t *testing.T) {
 	require.NotNil(t, ext)
 
 	// Verify this is not a noop
-	cmd = ext.exec.cmds["update"]
+	cmd = ext.exec.cmds[UpdateOperation.ToCommandName()]
 	require.NotNil(t, cmd)
 	_, err = cmd.f(ext)
 	require.NoError(t, err, "updateCallback failed")
@@ -225,7 +225,7 @@ func Test_getVMExtensionDisableSupport(t *testing.T) {
 	// Verify this is a noop
 	err = setDisabled(ext, false)
 	require.NoError(t, err, "setDisabled failed")
-	cmd := ext.exec.cmds["disable"]
+	cmd := ext.exec.cmds[DisableOperation.ToCommandName()]
 	require.NotNil(t, cmd)
 	_, err = cmd.f(ext)
 	require.NoError(t, err, "disable cmd failed")
@@ -238,7 +238,7 @@ func Test_getVMExtensionDisableSupport(t *testing.T) {
 	require.NotNil(t, ext)
 
 	// Verify this is not a noop
-	cmd = ext.exec.cmds["disable"]
+	cmd = ext.exec.cmds[DisableOperation.ToCommandName()]
 	require.NotNil(t, cmd)
 	_, err = cmd.f(ext)
 	defer setDisabled(ext, false)
@@ -253,7 +253,7 @@ func Test_getVMExtensionCannotGetSettings(t *testing.T) {
 
 	ext, err := getVMExtensionInternal(ii, mm)
 	require.NoError(t, err)
-	enableCommand, exists := ext.exec.cmds["enable"]
+	enableCommand, exists := ext.exec.cmds[EnableOperation.ToCommandName()]
 	require.True(t, exists)
 	_, err = enableCommand.f(ext)
 	require.Equal(t, mm.getHandlerSettingsError, err)
@@ -266,7 +266,7 @@ func Test_getVMExtensionShouldNotReadSettingsForInstall(t *testing.T) {
 
 	ext, err := getVMExtensionInternal(ii, mm)
 	require.NoError(t, err)
-	enableCommand, exists := ext.exec.cmds["install"]
+	enableCommand, exists := ext.exec.cmds[InstallOperation.ToCommandName()]
 	require.True(t, exists)
 	_, err = enableCommand.f(ext)
 	require.NoError(t, err)
@@ -288,7 +288,7 @@ func Test_parseCommandWrongArgsCount(t *testing.T) {
 	ext, _ := getVMExtensionInternal(ii, mm)
 
 	args := make([]string, 1)
-	args[0] = "install"
+	args[0] = InstallOperation.ToCommandName()
 	ext.parseCmd(args, eh)
 	require.Equal(t, 2, eh.exitCode)
 }
@@ -313,7 +313,7 @@ func Test_parseCommandNormalOperation(t *testing.T) {
 
 	args := make([]string, 2)
 	args[0] = "processname_dont_care"
-	args[1] = "install"
+	args[1] = InstallOperation.ToCommandName()
 	cmd := ext.parseCmd(args, nil)
 	require.NotNil(t, cmd)
 }
@@ -409,7 +409,7 @@ func Test_doFailToWriteSequenceNumber(t *testing.T) {
 	defer putBackArgs(oldArgs)
 	os.Args = make([]string, 2)
 	os.Args[0] = "dontcare"
-	os.Args[1] = "enable"
+	os.Args[1] = EnableOperation.ToCommandName()
 	ext.Do()
 }
 
@@ -423,7 +423,7 @@ func Test_doCommandFails(t *testing.T) {
 		defer putBackArgs(oldArgs)
 		os.Args = make([]string, 2)
 		os.Args[0] = "dontcare"
-		os.Args[1] = "enable"
+		os.Args[1] = EnableOperation.ToCommandName()
 		ext.Do()
 		return
 	}
@@ -447,7 +447,7 @@ func Test_doCommandSucceeds(t *testing.T) {
 	defer putBackArgs(oldArgs)
 	os.Args = make([]string, 2)
 	os.Args[0] = "dontcare"
-	os.Args[1] = "enable"
+	os.Args[1] = EnableOperation.ToCommandName()
 	ext.Do()
 }
 
@@ -583,7 +583,7 @@ var one uint = 1
 var disableCommand = cmd{f: func(ext *VMExtension) (msg string, err error) {
 	return "", nil
 }, failExitCode: 5,
-	name:               "Disable",
+	name:               DisableOperation.ToPascalCaseName(),
 	shouldReportStatus: true,
 }
 
@@ -602,7 +602,7 @@ func createTestVMExtension() *VMExtension {
 			enableCallback:      testEnableCallback,
 			disableCallback:     testDisableCallbackNormal,
 			updateCallback:      nil,
-			cmds:                map[string]cmd{"disable": disableCommand},
+			cmds:                map[string]cmd{DisableOperation.ToCommandName(): disableCommand},
 		},
 	}
 }

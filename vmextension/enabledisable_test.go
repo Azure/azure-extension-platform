@@ -2,6 +2,7 @@ package vmextension
 
 import (
 	"fmt"
+	"github.com/Azure/azure-extension-platform/pkg/extensionerrors"
 	"os"
 	"testing"
 
@@ -16,11 +17,11 @@ var (
 type evilDisableDependencies struct{}
 
 func (evilDisableDependencies) writeFile(filename string, data []byte, perm os.FileMode) error {
-	return errNotFound
+	return extensionerrors.ErrNotFound
 }
 
 func (evilDisableDependencies) remove(name string) error {
-	return errNotFound
+	return extensionerrors.ErrNotFound
 }
 
 func Test_disableCallback(t *testing.T) {
@@ -111,7 +112,7 @@ func Test_cannotSetDisabled(t *testing.T) {
 	defer resetDependencies()
 
 	_, err := disable(ext)
-	require.Equal(t, errNotFound, err)
+	require.Equal(t, extensionerrors.ErrNotFound, err)
 }
 
 func Test_cannotReenable(t *testing.T) {
@@ -131,7 +132,7 @@ func Test_cannotReenable(t *testing.T) {
 
 	// Attempt to reenable the extension
 	err = setDisabled(ext, false)
-	require.Error(t, err, errNotFound)
+	require.Error(t, err, extensionerrors.ErrNotFound)
 }
 
 func resetDependencies() {

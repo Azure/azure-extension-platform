@@ -19,10 +19,10 @@ type ISequenceNumberRetriever interface {
 	GetSequenceNumber(name, version string) (uint, error)
 }
 
-type ProcSequenceNumberRetriever struct {
+type ProdSequenceNumberRetriever struct {
 }
 
-func (*ProcSequenceNumberRetriever) GetSequenceNumber(name, version string) (uint, error) {
+func (*ProdSequenceNumberRetriever) GetSequenceNumber(name, version string) (uint, error) {
 	return getSequenceNumberInternal(name, version)
 }
 
