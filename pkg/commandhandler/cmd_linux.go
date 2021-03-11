@@ -10,14 +10,14 @@ import (
 func execWait(cmd, workdir string, stdout, stderr io.WriteCloser) (int, error) {
 	defer stdout.Close()
 	defer stderr.Close()
-	return execCommon(cmd, workdir, stdout, stderr, func(c *interface{}) error {
+	return execCommon(cmd, workdir, stdout, stderr, func(c *exec.Cmd) error {
 		return c.Run()
 	})
 }
 
-func execDontWait(cmd, workdir string, stdout, stderr io.WriteCloser) (int, error) {
-	return execCommon(cmd, workdir, stdout, stderr, func(cmd *exec.Cmd) error {
-		return cmd.Start()
+func execDontWait(cmd, workdir string) (int, error) {
+	return execCommon(cmd, workdir, nil, nil, func(c *exec.Cmd) error {
+		return c.Start()
 	})
 }
 
