@@ -18,6 +18,7 @@ func execWait(cmd, workdir string, stdout, stderr io.WriteCloser) (int, error) {
 }
 
 func execDontWait(cmd, workdir string) (int, error) {
+	// passing '&' as a trailing parameter to /bin/sh in addition (*exec.Command).Start() to will double fork and prevent zombie processes
 	return execCommon(workdir, os.Stdout, os.Stderr, func(c *exec.Cmd) error {
 		return c.Start()
 	}, cmd, "&")
