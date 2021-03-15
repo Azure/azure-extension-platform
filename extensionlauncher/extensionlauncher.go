@@ -74,7 +74,7 @@ func writeTransitioningStatus(extensionName, extensionVersion, operation string,
 				el.Warn("could not write transitioning status for extension %s version %s", extensionName, extensionVersion)
 			}
 		} else if fileInfo != nil {
-			el.Info("status file already exists, will not create new status file with transitioning status")
+			el.Info("%d.status file already exists, will not create new status file with transitioning status", currentSequenceNumber)
 		}
 	}
 }
