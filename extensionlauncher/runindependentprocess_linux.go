@@ -9,6 +9,6 @@ import (
 var commandHandlerToUse = commandhandler.New()
 
 func RunExecutableAsIndependentProcess(exeName, args, workingDir, logDir string, el *logging.ExtensionLogger){
-	commandToExecute := fmt.Sprintf("%s %s &", exeName, args)
+	commandToExecute := fmt.Sprintf("%s %s", exeName, args)
 	commandHandlerToUse.Execute(commandToExecute, workingDir, logDir, false, el)
 }

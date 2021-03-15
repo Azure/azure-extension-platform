@@ -1,3 +1,6 @@
 package constants
 
-const NewLineCharacter = "\n"
+const (
+	NewLineCharacter = "\n"
+)
+

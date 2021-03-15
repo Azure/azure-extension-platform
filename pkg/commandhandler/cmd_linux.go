@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/pkg/errors"
 	"io"
+	"os"
 	"os/exec"
 	"syscall"
 )
@@ -11,24 +12,25 @@ import (
 func execWait(cmd, workdir string, stdout, stderr io.WriteCloser) (int, error) {
 	defer stdout.Close()
 	defer stderr.Close()
-	return execCommon(cmd, workdir, stdout, stderr, func(c *exec.Cmd) error {
-		return c.Run()
-	})
+	return execCommon(workdir, stdout, stderr, func(cmd *exec.Cmd) error {
+		return cmd.Run()
+	}, cmd)
 }
 
 func execDontWait(cmd, workdir string) (int, error) {
-	return execCommon(cmd, workdir, nil, nil, func(c *exec.Cmd) error {
-		return c.Start()
-	})
+	return execCommon(workdir, os.Stdout, os.Stderr, func(cmd *exec.Cmd) error {
+		return cmd.Start()
+	}, cmd, "&")
 }
 
-func execCommon(cmd, workdir string, stdout, stderr io.WriteCloser, execFunctionToCall func(*exec.Cmd)(error)) (int, error) {
-	c := exec.Command("/bin/sh", "-c", cmd)
+func execCommon(workdir string, stdout, stderr io.WriteCloser, execMethodToCall func(*exec.Cmd) error, args ...string) (int, error) {
+	args = append([]string{"-c"}, args...)
+	c := exec.Command("/bin/sh", args...)
 	c.Dir = workdir
 	c.Stdout = stdout
 	c.Stderr = stderr
 
-	err := execFunctionToCall(c)
+	err := execMethodToCall(c)
 	exitErr, ok := err.(*exec.ExitError)
 	if ok {
 		if status, ok := exitErr.Sys().(syscall.WaitStatus); ok {

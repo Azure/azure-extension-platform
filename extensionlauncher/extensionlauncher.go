@@ -57,7 +57,7 @@ func writeTransitioningStatus(extensionName, extensionVersion, operation string,
 		// update logger as soon as we get HandlerEnvironment
 	if operation == vmextension.EnableOperation.ToCommandName(){
 		// we write transitioning status only for Enable command
-		currentSequenceNumber, err := seqno.GetCurrentSequenceNumber(el, &seqno.ProdSequenceNumberRetriever{}, extensionName, extensionVersion)
+		currentSequenceNumber, err := seqno.FindSeqNum(el, handlerEnv.ConfigFolder)
 		if err != nil {
 			el.Error("could not retrieve the current sequence number %s", err.Error())
 			eh.Exit(exithelper.EnvironmentError)

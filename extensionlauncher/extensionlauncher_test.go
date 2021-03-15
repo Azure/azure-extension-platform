@@ -17,7 +17,7 @@ import (
 	"time"
 )
 
-var testDir, statusFolder, logFolder string
+var testDir, statusFolder, logFolder, configFolder string
 var handlerEnv *handlerenv.HandlerEnvironment
 
 var el *logging.ExtensionLogger
@@ -35,17 +35,27 @@ func testInit(t *testing.T) {
 	logFolder = path.Join(testDir, "log")
 	err = os.MkdirAll(logFolder, constants.FilePermissions_UserOnly_ReadWriteExecute)
 	assert.NoError(t, err, "should be able to create log folder")
+	configFolder = path.Join(testDir, "config")
+	err = os.MkdirAll(configFolder, constants.FilePermissions_UserOnly_ReadWriteExecute)
+	assert.NoError(t, err, "should be able to create config folder")
 	handlerEnv = &handlerenv.HandlerEnvironment{
 		StatusFolder: statusFolder,
 		LogFolder:    logFolder,
+		ConfigFolder: configFolder,
 	}
 	el = logging.New(handlerEnv)
+
+	// write dummy config file
+	configFilePath := path.Join(handlerEnv.ConfigFolder, "0.settings")
+	configFileContents := ""
+	err = ioutil.WriteFile(configFilePath, []byte(configFileContents), constants.FilePermissions_UserOnly_ReadWrite)
+	assert.NoError(t, err, "should be able to write config file")
 }
 
 func testCleanup() {
 	el.Close()
 	// give it time to cleanup the stdout and stderr files
-	time.Sleep(1*time.Second)
+	time.Sleep(1 * time.Second)
 	err := os.RemoveAll(testDir)
 	if err != nil {
 		el.Warn("could not remove testdir %s", err.Error())
@@ -55,6 +65,7 @@ func testCleanup() {
 func TestWriteTransitioningStatus(t *testing.T) {
 	testInit(t)
 	defer testCleanup()
+
 	writeTransitioningStatusAndStartExtensionAsASeparateProcess("testExtension", "1.0.0.0", "cmd", "enable", handlerEnv, el)
 	statusFile := path.Join(statusFolder, "0.status")
 	_, err := os.Stat(statusFolder)
@@ -86,8 +97,8 @@ func TestExistingStatusFileIsNotOverwritten(t *testing.T) {
 	assert.NoError(t, err, "should be able to read log folder")
 
 	var logFileFound = false
-	for _, dirContent := range dirInfo{
-		if strings.Contains(dirContent.Name(), "log_") && !dirContent.IsDir(){
+	for _, dirContent := range dirInfo {
+		if strings.Contains(dirContent.Name(), "log_") && !dirContent.IsDir() {
 			logFileFound = true
 			logFileContent, err := ioutil.ReadFile(path.Join(logFolder, dirContent.Name()))
 			assert.NoError(t, err, "should be able to read log file")
