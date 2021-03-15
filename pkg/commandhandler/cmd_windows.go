@@ -28,7 +28,6 @@ func execCommon(cmd, workdir string, stdout, stderr io.WriteCloser, execFunction
 	c.Stdout = stdout
 	c.Stderr = stderr
 	// don't pass the args in exec.Command because
-	// comments from the exec.Command source file)
 	// On Windows, processes receive the whole command line as a single string
 	// and do their own parsing. Command combines and quotes Args into a command
 	// line string with an algorithm compatible with applications using
