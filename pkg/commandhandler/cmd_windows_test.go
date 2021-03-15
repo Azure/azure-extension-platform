@@ -17,7 +17,7 @@ const (
 func TestQuotedCommandWorksCorrectly(t *testing.T){
 	defer cleanupTest()
 	cmd := New()
-	retCode, err := cmd.Execute("dir \"C:\\Program Files\"", workingDir, true, extensionLogger)
+	retCode, err := cmd.Execute("dir \"C:\\Program Files\"", workingDir, workingDir, true, extensionLogger)
 	assert.NoError(t, err, "command execution should succeed")
 	assert.Zero(t, retCode, "return code should be 0")
 	fileInfo, err := os.Stat(path.Join(workingDir, "stderr"))
@@ -32,7 +32,7 @@ func TestQuotedCommandWorksCorrectly(t *testing.T){
 func TestQuotedCommandWorksCorrectly2(t *testing.T){
 	defer cleanupTest()
 	cmd := New()
-	retCode, err := cmd.Execute("echo \"Hello World\"", workingDir, true, extensionLogger)
+	retCode, err := cmd.Execute("echo \"Hello World\"", workingDir, workingDir, true, extensionLogger)
 	assert.NoError(t, err, "command execution should succeed")
 	assert.Equal(t, 0, retCode, "return code should be 0")
 	fileInfo, err := ioutil.ReadFile(path.Join(workingDir, "stdout"))
@@ -44,7 +44,7 @@ func TestDoesntWaitForCompletion(t *testing.T){
 	defer cleanupTest()
 	cmd := New()
 	startTime := time.Now()
-	_, err := cmd.Execute("powershell.exe -command \"Start-Sleep -Seconds 5; 'sleep complete' | out-file testDoesntWait.txt\"", workingDir, false, extensionLogger)
+	_, err := cmd.Execute("powershell.exe -command \"Start-Sleep -Seconds 5; 'sleep complete' | out-file testDoesntWait.txt\"", workingDir, workingDir, false, extensionLogger)
 	assert.NoError(t, err, "should be able to execute command")
 	endTime := time.Now()
 	duration := endTime.Sub(startTime)
