@@ -3,7 +3,6 @@ package extensionlauncher
 import (
 	"fmt"
 	"github.com/stretchr/testify/assert"
-	"io/ioutil"
 	"os"
 	"path"
 	"testing"
@@ -17,16 +16,13 @@ func TestRunExecutableAsIndependentProcess(t *testing.T) {
 	filePath := path.Join(testDir, fileName)
 	message := "sleep complete"
 	startTime := time.Now()
-	RunExecutableAsIndependentProcess("bash", fmt.Sprintf("-c \"sleep 5s; echo '%s' > '%s'\"", message, filePath), testDir, testDir, el)
+	runExecutableAsIndependentProcess("bash", fmt.Sprintf("-c \"sleep 5s; echo '%s' > '%s'\"", message, filePath), testDir, testDir, el)
 	endTime := time.Now()
 	duration := endTime.Sub(startTime)
-	assert.Less(t, duration, time.Second, "the call to RunExecutableAsIndependentProcess should not block current execution")
+	assert.Less(t, duration, time.Second, "the call to runExecutableAsIndependentProcess should not block current execution")
 
 	// wait for the process to complete and check if the file was written
-	time.Sleep(time.Second * 7)
-	fileContents, err := ioutil.ReadFile(filePath)
-	assert.NoError(t, err, "the %s file should exist and be readable", fileName)
-	assert.Contains(t, string(fileContents), message, "the contents of file %s should contain the message %s", fileName, message)
+	testContentsOfFile(t, filePath, message)
 }
 
 func TestEnvironmentVariablesAreProperlyPassed(t *testing.T){
@@ -38,10 +34,8 @@ func TestEnvironmentVariablesAreProperlyPassed(t *testing.T){
 	assert.NoError(t, err, "should be able to set environment variable")
 	fileName := "envVariables.txt"
 	filePath := path.Join(testDir, fileName)
-	RunExecutableAsIndependentProcess("bash", fmt.Sprintf("-c \"printenv > '%s'\"", filePath), testDir, testDir, el)
-	time.Sleep(2 *time.Second)
-	fileContents, err := ioutil.ReadFile(filePath)
-	assert.NoError(t, err, "the %s file should exist and be readable", fileName)
-	assert.Contains(t, string(fileContents), testEnvKey, "the contents of file %s should contain the environment variable key %s", fileName, testEnvKey)
-	assert.Contains(t, string(fileContents), currentTime, "the contents of file %s should contain the environment variable value %s", fileName, currentTime)
+	runExecutableAsIndependentProcess("bash", fmt.Sprintf("-c \"printenv > '%s'\"", filePath), testDir, testDir, el)
+	testContentsOfFile(t, filePath, testEnvKey)
+	testContentsOfFile(t, filePath, currentTime)
 }
+

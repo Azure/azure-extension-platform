@@ -77,7 +77,7 @@ func TestWriteTransitioningStatus(t *testing.T) {
 	assert.NoError(t, err, "should be able to deserialize status file")
 	assert.Equal(t, 1, len(statusReport), "there should be 1 status item in the status report")
 	assert.Equal(t, status.StatusTransitioning, statusReport[0].Status.Status, "status should be transitioning")
-	assert.True(t, vmextension.EnableOperation.ToPascalCaseName() == statusReport[0].Status.Operation, "operation should be enable")
+	assert.True(t, vmextension.EnableOperation.ToStatusName() == statusReport[0].Status.Operation, "operation should be enable")
 }
 
 func TestExistingStatusFileIsNotOverwritten(t *testing.T) {
@@ -107,3 +107,21 @@ func TestExistingStatusFileIsNotOverwritten(t *testing.T) {
 	}
 	assert.True(t, logFileFound, "log file should be found")
 }
+
+func testContentsOfFile(t *testing.T, fileFullPath, expectedContents string){
+	var fileFound =  false
+	for i:= 1; i <10; i++{
+		// test 10 times whether the file exists
+		fileContentBytes, err := ioutil.ReadFile(fileFullPath)
+		if err != nil {
+			time.Sleep(time.Second)
+			continue
+		}
+		fileFound = true
+		assert.Contains(t, string(fileContentBytes), expectedContents, "file %s should contain the string %s", fileFullPath, expectedContents)
+	}
+	if !fileFound{
+		assert.Fail(t, "could not find the file %s", fileFullPath)
+	}
+}
+

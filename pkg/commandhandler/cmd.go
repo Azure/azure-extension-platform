@@ -27,12 +27,6 @@ func (commandHandler *CommandHandler) Execute(command string, workingDir, logDir
 var execWaitFunctionToCall func(cmd string, workingDir string, stdout, stderr io.WriteCloser) (int, error) = execWait
 var execDontWaitFunctionToCall func(cmd string, workingDir string) (int, error) = execDontWait
 
-// execCmdInDir executes the given command in given directory and saves output
-// to ./stdout and ./stderr files (truncates files if exists, creates them if not
-// with 0600/-rw------- permissions).
-//
-// Ideally, we execute commands only once per sequence number in custom-script-extension,
-// and save their output under /var/lib/waagent/<dir>/download/<seqnum>/*.
 func execCmdInDir(cmd, workingDir, logDir string, waitForCompletion bool, el *logging.ExtensionLogger) (int, error) {
 	var exitCode int
 	var execErr error

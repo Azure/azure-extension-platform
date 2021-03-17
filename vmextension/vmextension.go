@@ -30,31 +30,49 @@ const (
 	UpdateOperation     OperationName = "update"
 	DisableOperation    OperationName = "disable"
 	ResetStateOperation OperationName = "resetstate"
+	invalid             OperationName = "invalid"
 )
 
-func (operationName OperationName) ToCommandName() string {
+func (operationName OperationName) ToString() string {
 	return string(operationName)
 }
 
-func (operationName OperationName) ToPascalCaseName() string {
+func (operationName OperationName) ToStatusName() string {
 	return strings.Title(string(operationName))
 }
 
 type cmdFunc func(ext *VMExtension) (msg string, err error)
 
-
+func OperationNameFromString(operation string) (OperationName, error) {
+	switch operation {
+	case InstallOperation.ToString():
+		return InstallOperation, nil
+	case UninstallOperation.ToString():
+		return UninstallOperation, nil
+	case EnableOperation.ToString():
+		return EnableOperation, nil
+	case UpdateOperation.ToString():
+		return UpdateOperation, nil
+	case DisableOperation.ToString():
+		return DisableOperation, nil
+	case ResetStateOperation.ToString():
+		return ResetStateOperation, nil
+	default:
+		return invalid, extensionerrors.ErrInvalidOperationName
+	}
+}
 
 // cmd is an internal structure that specifies how an operation should run
 type cmd struct {
-	f                  cmdFunc // associated function
-	name               string  // human readable string
-	shouldReportStatus bool    // determines if running this should log to a .status file
-	failExitCode       int     // exitCode to use when commands fail
+	f                  cmdFunc       // associated function
+	operation          OperationName // human readable string
+	shouldReportStatus bool          // determines if running this should log to a .status file
+	failExitCode       int           // exitCode to use when commands fail
 }
 
 // executionInfo contains internal information necessary for the extension to execute
 type executionInfo struct {
-	cmds                map[string]cmd                                       // Execution commands keyed by operation
+	cmds                map[OperationName]cmd                                // Execution commands keyed by operation
 	requiresSeqNoChange bool                                                 // True if Enable will only execute if the sequence number changes
 	supportsDisable     bool                                                 // Whether to run extension agnostic disable code
 	supportsResetState  bool                                                 // Whether to run the extension agnostic ResetState code
@@ -177,30 +195,30 @@ func getVMExtensionInternal(initInfo *InitializationInfo, manager environmentman
 		*currentSeqNo = retrievedSequenceNumber
 	}
 
-	cmdInstall := cmd{install, InstallOperation.ToPascalCaseName(), false, initInfo.InstallExitCode}
-	cmdEnable := cmd{enable, EnableOperation.ToPascalCaseName(), true, initInfo.OtherExitCode}
-	cmdUninstall := cmd{uninstall, UninstallOperation.ToPascalCaseName(), false, initInfo.OtherExitCode}
+	cmdInstall := cmd{install, InstallOperation, false, initInfo.InstallExitCode}
+	cmdEnable := cmd{enable, EnableOperation, true, initInfo.OtherExitCode}
+	cmdUninstall := cmd{uninstall, UninstallOperation, false, initInfo.OtherExitCode}
 
 	// Only support Update and Disable if we need to
 	var cmdDisable cmd
 	var cmdUpdate cmd
 	var cmdResetState cmd
 	if initInfo.UpdateCallback != nil {
-		cmdUpdate = cmd{update, UpdateOperation.ToPascalCaseName(), false, 3}
+		cmdUpdate = cmd{update, UpdateOperation, false, 3}
 	} else {
-		cmdUpdate = cmd{noop, UpdateOperation.ToPascalCaseName(), false, 3}
+		cmdUpdate = cmd{noop, UpdateOperation, false, 3}
 	}
 
 	if initInfo.SupportsDisable || initInfo.DisableCallback != nil {
-		cmdDisable = cmd{disable, DisableOperation.ToPascalCaseName(), true, 3}
+		cmdDisable = cmd{disable, DisableOperation, true, 3}
 	} else {
-		cmdDisable = cmd{noop, DisableOperation.ToPascalCaseName(), true, 3}
+		cmdDisable = cmd{noop, DisableOperation, true, 3}
 	}
 
 	if initInfo.SupportsResetState || initInfo.ResetStateCallback != nil {
-		cmdResetState = cmd{resetState, ResetStateOperation.ToPascalCaseName(), false, 3}
+		cmdResetState = cmd{resetState, ResetStateOperation, false, 3}
 	} else {
-		cmdResetState = cmd{noop, ResetStateOperation.ToPascalCaseName(), false, 3}
+		cmdResetState = cmd{noop, ResetStateOperation, false, 3}
 	}
 
 	settings := func() (*settings.HandlerSettings, error) {
@@ -227,13 +245,13 @@ func getVMExtensionInternal(initInfo *InitializationInfo, manager environmentman
 			resetStateCallBack:  initInfo.ResetStateCallback,
 			installCallback:     initInfo.InstallCallback,
 			uninstallCallback:   initInfo.UninstallCallback,
-			cmds: map[string]cmd{
-				InstallOperation.ToCommandName():    cmdInstall,
-				UninstallOperation.ToCommandName():  cmdUninstall,
-				EnableOperation.ToCommandName():     cmdEnable,
-				UpdateOperation.ToCommandName():     cmdUpdate,
-				DisableOperation.ToCommandName():    cmdDisable,
-				ResetStateOperation.ToCommandName(): cmdResetState,
+			cmds: map[OperationName]cmd{
+				InstallOperation:    cmdInstall,
+				UninstallOperation:  cmdUninstall,
+				EnableOperation:     cmdEnable,
+				UpdateOperation:     cmdUpdate,
+				DisableOperation:    cmdDisable,
+				ResetStateOperation: cmdResetState,
 			},
 		},
 	}
@@ -270,7 +288,7 @@ func reportStatus(ve *VMExtension, t status.StatusType, c cmd, msg string) error
 		return err
 	}
 
-	s := status.New(t, c.name, status.StatusMsg(c.name, t, msg))
+	s := status.New(t, c.operation.ToStatusName(), status.StatusMsg(c.operation.ToStatusName(), t, msg))
 	if err := s.Save(ve.HandlerEnv.StatusFolder, requestedSequenceNumber); err != nil {
 		ve.ExtensionLogger.Error("Failed to save handler status: %v", err)
 		return errors.Wrap(err, "failed to save handler status")
@@ -289,7 +307,8 @@ func (ve *VMExtension) parseCmd(args []string, eh exithelper.IExitHelper) cmd {
 	}
 
 	op := args[1]
-	cmd, ok := ve.exec.cmds[op]
+	operation, _ := OperationNameFromString(op)
+	cmd, ok := ve.exec.cmds[operation]
 	if !ok {
 		ve.printUsage(args)
 		fmt.Printf("Incorrect command: %q\n", op)
@@ -304,7 +323,7 @@ func (ve *VMExtension) printUsage(args []string) {
 	fmt.Printf("Usage: %s ", os.Args[0])
 	i := 0
 	for k := range ve.exec.cmds {
-		fmt.Printf(k)
+		fmt.Printf(k.ToString())
 		if i != len(ve.exec.cmds)-1 {
 			fmt.Printf("|")
 		}

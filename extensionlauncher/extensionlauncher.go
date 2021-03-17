@@ -21,7 +21,7 @@ func Run(handlerEnv *handlerenv.HandlerEnvironment, el *logging.ExtensionLogger,
 	writeTransitioningStatusAndStartExtensionAsASeparateProcess(extensionName, extensionVersion, exeName, operation, handlerEnv, el)
 }
 
-func ParseArgs()(extensionName, extensionVersion, exeName, operation string, err error){
+func ParseArgs() (extensionName, extensionVersion, exeName, operation string, err error) {
 	flag.StringVar(&extensionName, "extensionname", "", "name of the extension")
 	flag.StringVar(&extensionVersion, "extensionversion", "", "version of the extension")
 	flag.StringVar(&exeName, "exename", "", "the name of the extension executable file")
@@ -42,20 +42,18 @@ func ParseArgs()(extensionName, extensionVersion, exeName, operation string, err
 	return
 }
 
-
-func writeTransitioningStatusAndStartExtensionAsASeparateProcess(extensionName, extensionVersion, exeName, operation string, handlerEnv *handlerenv.HandlerEnvironment, el *logging.ExtensionLogger){
+func writeTransitioningStatusAndStartExtensionAsASeparateProcess(extensionName, extensionVersion, exeName, operation string, handlerEnv *handlerenv.HandlerEnvironment, el *logging.ExtensionLogger) {
 	writeTransitioningStatus(extensionName, extensionVersion, operation, handlerEnv, el)
 	workingDir, err := utils.GetCurrentProcessWorkingDir()
 	if err != nil {
 		el.Error("could not get current working directory %s", err.Error())
 		eh.Exit(exithelper.EnvironmentError)
 	}
-	RunExecutableAsIndependentProcess(exeName, operation, workingDir, handlerEnv.LogFolder, el)
+	runExecutableAsIndependentProcess(exeName, operation, workingDir, handlerEnv.LogFolder, el)
 }
 
-func writeTransitioningStatus(extensionName, extensionVersion, operation string, handlerEnv *handlerenv.HandlerEnvironment, el *logging.ExtensionLogger){
-		// update logger as soon as we get HandlerEnvironment
-	if operation == vmextension.EnableOperation.ToCommandName(){
+func writeTransitioningStatus(extensionName, extensionVersion, operation string, handlerEnv *handlerenv.HandlerEnvironment, el *logging.ExtensionLogger) {
+	if operation == vmextension.EnableOperation.ToString() {
 		// we write transitioning status only for Enable command
 		currentSequenceNumber, err := seqno.FindSeqNum(el, handlerEnv.ConfigFolder)
 		if err != nil {
@@ -63,11 +61,11 @@ func writeTransitioningStatus(extensionName, extensionVersion, operation string,
 			eh.Exit(exithelper.EnvironmentError)
 		}
 		// if status file exists, no need to overwrite it
-		statusFilePath := path.Join(handlerEnv.StatusFolder, fmt.Sprintf("%d.status",currentSequenceNumber))
+		statusFilePath := path.Join(handlerEnv.StatusFolder, fmt.Sprintf("%d.status", currentSequenceNumber))
 
 		fileInfo, statErr := os.Stat(statusFilePath)
 		if os.IsNotExist(statErr) {
-			statusReport := status.New(status.StatusTransitioning, vmextension.EnableOperation.ToPascalCaseName(), fmt.Sprintf("extension %s version %s started execution", extensionName, extensionVersion))
+			statusReport := status.New(status.StatusTransitioning, vmextension.EnableOperation.ToStatusName(), fmt.Sprintf("extension %s version %s started execution", extensionName, extensionVersion))
 			err := statusReport.Save(handlerEnv.StatusFolder, currentSequenceNumber)
 			if err != nil {
 				// don't exit
@@ -75,6 +73,8 @@ func writeTransitioningStatus(extensionName, extensionVersion, operation string,
 			}
 		} else if fileInfo != nil {
 			el.Info("%d.status file already exists, will not create new status file with transitioning status", currentSequenceNumber)
+		} else if err != nil {
+			el.Warn("could not determine the existence or absence of status file, will continue without writing placeholder status file")
 		}
 	}
 }

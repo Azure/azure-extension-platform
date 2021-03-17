@@ -37,4 +37,6 @@ var (
 	ErrNoSettingsFiles = errors.New("No .settings files exist")
 
 	ErrNotFound = errors.New("NotFound")
+
+	ErrInvalidOperationName = errors.New("operation name is invalid")
 )
