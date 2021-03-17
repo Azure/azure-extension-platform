@@ -4,3 +4,9 @@ pkg/settings/config/
 pkg/status/statustest/7.status
 .vscode/
 /pkg/internal/crypto/testoutput/
+extensionlauncher/testdir/
+main/testenv/
+pkg/commandhandler/testdir/
+pkg/lockedfile/testdir/
+vmextension/testdir/
+/extension-launcher

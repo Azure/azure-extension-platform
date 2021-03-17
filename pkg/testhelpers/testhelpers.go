@@ -1,6 +1,7 @@
 package testhelpers
 
 import (
+	"github.com/Azure/azure-extension-platform/pkg/constants"
 	"github.com/stretchr/testify/require"
 	"os"
 	"path"
@@ -9,7 +10,7 @@ import (
 
 func CleanupTestDirectory(t *testing.T, testDirectory string) {
 	// Create the directory if it doesn't already exist
-	_ = os.Mkdir(testDirectory, os.ModePerm)
+	_ = os.Mkdir(testDirectory, constants.FilePermissions_UserOnly_ReadWriteExecute)
 
 	// Open the directory and read all its files.
 	dirRead, err := os.Open(testDirectory)

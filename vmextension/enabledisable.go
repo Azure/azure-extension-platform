@@ -5,7 +5,6 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
-	"strings"
 	"syscall"
 
 	"github.com/Azure/azure-extension-platform/pkg/status"
@@ -43,7 +42,7 @@ func enable(ext *VMExtension) (string, error) {
 		exithelper.Exiter.Exit(0)
 	}
 
-	ext.ExtensionLogger.Info("Running operation %v for seqNo %v", strings.ToLower(enableCmd.name), requestedSequenceNumber)
+	ext.ExtensionLogger.Info("Running operation %v for seqNo %v", enableCmd.operation.ToString(), requestedSequenceNumber)
 	reportStatus(ext, status.StatusTransitioning, enableCmd, "")
 
 	err = ext.exec.manager.SetSequenceNumberInternal(ext.Name, ext.Version, requestedSequenceNumber)

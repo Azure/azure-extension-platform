@@ -1,11 +1,9 @@
 package vmextension
 
 import (
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
-	"path/filepath"
+	"strings"
 
 	"github.com/Azure/azure-extension-platform/pkg/environmentmanager"
 	"github.com/Azure/azure-extension-platform/pkg/exithelper"
@@ -23,21 +21,58 @@ import (
 // Azure Guest Agent.
 const handlerEnvFileName = "HandlerEnvironment.json"
 
+type OperationName string
+
+const (
+	InstallOperation    OperationName = "install"
+	UninstallOperation  OperationName = "uninstall"
+	EnableOperation     OperationName = "enable"
+	UpdateOperation     OperationName = "update"
+	DisableOperation    OperationName = "disable"
+	ResetStateOperation OperationName = "resetstate"
+	invalid             OperationName = "invalid"
+)
+
+func (operationName OperationName) ToString() string {
+	return string(operationName)
+}
+
+func (operationName OperationName) ToStatusName() string {
+	return strings.Title(string(operationName))
+}
+
 type cmdFunc func(ext *VMExtension) (msg string, err error)
 
-var errNotFound error = errors.New("NotFound")
+func OperationNameFromString(operation string) (OperationName, error) {
+	switch operation {
+	case InstallOperation.ToString():
+		return InstallOperation, nil
+	case UninstallOperation.ToString():
+		return UninstallOperation, nil
+	case EnableOperation.ToString():
+		return EnableOperation, nil
+	case UpdateOperation.ToString():
+		return UpdateOperation, nil
+	case DisableOperation.ToString():
+		return DisableOperation, nil
+	case ResetStateOperation.ToString():
+		return ResetStateOperation, nil
+	default:
+		return invalid, extensionerrors.ErrInvalidOperationName
+	}
+}
 
 // cmd is an internal structure that specifies how an operation should run
 type cmd struct {
-	f                  cmdFunc // associated function
-	name               string  // human readable string
-	shouldReportStatus bool    // determines if running this should log to a .status file
-	failExitCode       int     // exitCode to use when commands fail
+	f                  cmdFunc       // associated function
+	operation          OperationName // human readable string
+	shouldReportStatus bool          // determines if running this should log to a .status file
+	failExitCode       int           // exitCode to use when commands fail
 }
 
 // executionInfo contains internal information necessary for the extension to execute
 type executionInfo struct {
-	cmds                map[string]cmd                                       // Execution commands keyed by operation
+	cmds                map[OperationName]cmd                                // Execution commands keyed by operation
 	requiresSeqNoChange bool                                                 // True if Enable will only execute if the sequence number changes
 	supportsDisable     bool                                                 // Whether to run extension agnostic disable code
 	supportsResetState  bool                                                 // Whether to run the extension agnostic ResetState code
@@ -86,7 +121,7 @@ type prodGetVMExtensionEnvironmentManager struct {
 }
 
 func (*prodGetVMExtensionEnvironmentManager) GetHandlerEnvironment(name string, version string) (*handlerenv.HandlerEnvironment, error) {
-	return getHandlerEnvironment(name, version)
+	return handlerenv.GetHandlerEnvironment(name, version)
 }
 
 func (*prodGetVMExtensionEnvironmentManager) FindSeqNum(el *logging.ExtensionLogger, configFolder string) (uint, error) {
@@ -146,7 +181,7 @@ func getVMExtensionInternal(initInfo *InitializationInfo, manager environmentman
 	newSeqNo := func() (uint, error) { return manager.FindSeqNum(extensionLogger, handlerEnv.ConfigFolder) }
 
 	// Determine the current sequence number
-	retriever := seqno.ProcSequenceNumberRetriever{}
+	retriever := seqno.ProdSequenceNumberRetriever{}
 	var currentSeqNo = new(uint)
 	retrievedSequenceNumber, err := manager.GetCurrentSequenceNumber(extensionLogger, &retriever, initInfo.Name, initInfo.Version)
 	if err != nil {
@@ -160,30 +195,30 @@ func getVMExtensionInternal(initInfo *InitializationInfo, manager environmentman
 		*currentSeqNo = retrievedSequenceNumber
 	}
 
-	cmdInstall := cmd{install, "Install", false, initInfo.InstallExitCode}
-	cmdEnable := cmd{enable, "Enable", true, initInfo.OtherExitCode}
-	cmdUninstall := cmd{uninstall, "Uninstall", false, initInfo.OtherExitCode}
+	cmdInstall := cmd{install, InstallOperation, false, initInfo.InstallExitCode}
+	cmdEnable := cmd{enable, EnableOperation, true, initInfo.OtherExitCode}
+	cmdUninstall := cmd{uninstall, UninstallOperation, false, initInfo.OtherExitCode}
 
 	// Only support Update and Disable if we need to
 	var cmdDisable cmd
 	var cmdUpdate cmd
 	var cmdResetState cmd
 	if initInfo.UpdateCallback != nil {
-		cmdUpdate = cmd{update, "Update", false, 3}
+		cmdUpdate = cmd{update, UpdateOperation, false, 3}
 	} else {
-		cmdUpdate = cmd{noop, "Update", false, 3}
+		cmdUpdate = cmd{noop, UpdateOperation, false, 3}
 	}
 
 	if initInfo.SupportsDisable || initInfo.DisableCallback != nil {
-		cmdDisable = cmd{disable, "Disable", true, 3}
+		cmdDisable = cmd{disable, DisableOperation, true, 3}
 	} else {
-		cmdDisable = cmd{noop, "Disable", true, 3}
+		cmdDisable = cmd{noop, DisableOperation, true, 3}
 	}
 
 	if initInfo.SupportsResetState || initInfo.ResetStateCallback != nil {
-		cmdResetState = cmd{resetState, "ResetState", false, 3}
+		cmdResetState = cmd{resetState, ResetStateOperation, false, 3}
 	} else {
-		cmdResetState = cmd{noop, "ResetState", false, 3}
+		cmdResetState = cmd{noop, ResetStateOperation, false, 3}
 	}
 
 	settings := func() (*settings.HandlerSettings, error) {
@@ -210,109 +245,18 @@ func getVMExtensionInternal(initInfo *InitializationInfo, manager environmentman
 			resetStateCallBack:  initInfo.ResetStateCallback,
 			installCallback:     initInfo.InstallCallback,
 			uninstallCallback:   initInfo.UninstallCallback,
-			cmds: map[string]cmd{
-				"install":    cmdInstall,
-				"uninstall":  cmdUninstall,
-				"enable":     cmdEnable,
-				"update":     cmdUpdate,
-				"disable":    cmdDisable,
-				"resetstate": cmdResetState,
+			cmds: map[OperationName]cmd{
+				InstallOperation:    cmdInstall,
+				UninstallOperation:  cmdUninstall,
+				EnableOperation:     cmdEnable,
+				UpdateOperation:     cmdUpdate,
+				DisableOperation:    cmdDisable,
+				ResetStateOperation: cmdResetState,
 			},
 		},
 	}
 
 	return ext, nil
-}
-
-// GetHandlerEnv locates the HandlerEnvironment.json file by assuming it lives
-// next to or one level above the extension handler (read: this) executable,
-// reads, parses and returns it.
-func getHandlerEnvironment(name string, version string) (he *handlerenv.HandlerEnvironment, _ error) {
-	contents, _, err := findAndReadFile(handlerEnvFileName)
-	if err != nil {
-		return nil, err
-	}
-
-	handlerEnvInternal, err := parseHandlerEnv(contents)
-	if err != nil {
-		return nil, err
-	}
-
-	// The data directory is a subdirectory of waagent, with the extension name
-	dataFolder := getDataFolder(name, version)
-
-	// TODO: before this API goes public, remove the eventsfolder_preview
-	// This is only used for private preview of the events
-	eventsFolder := handlerEnvInternal.HandlerEnvironment.EventsFolder
-	if eventsFolder == "" {
-		eventsFolder = handlerEnvInternal.HandlerEnvironment.EventsFolderPreview
-	}
-
-	return &handlerenv.HandlerEnvironment{
-		HeartbeatFile:       handlerEnvInternal.HandlerEnvironment.HeartbeatFile,
-		StatusFolder:        handlerEnvInternal.HandlerEnvironment.StatusFolder,
-		ConfigFolder:        handlerEnvInternal.HandlerEnvironment.ConfigFolder,
-		LogFolder:           handlerEnvInternal.HandlerEnvironment.LogFolder,
-		DataFolder:          dataFolder,
-		EventsFolder:        eventsFolder,
-		DeploymentID:        handlerEnvInternal.HandlerEnvironment.DeploymentID,
-		RoleName:            handlerEnvInternal.HandlerEnvironment.RoleName,
-		Instance:            handlerEnvInternal.HandlerEnvironment.Instance,
-		HostResolverAddress: handlerEnvInternal.HandlerEnvironment.HostResolverAddress,
-	}, nil
-}
-
-// ParseHandlerEnv parses the HandlerEnvironment.json format.
-func parseHandlerEnv(b []byte) (*handlerEnvironmentInternal, error) {
-	var hf []handlerEnvironmentInternal
-
-	if err := json.Unmarshal(b, &hf); err != nil {
-		return nil, fmt.Errorf("vmextension: failed to parse handler env: %v", err)
-	}
-	if len(hf) != 1 {
-		return nil, fmt.Errorf("vmextension: expected 1 config in parsed HandlerEnvironment, found: %v", len(hf))
-	}
-	return &hf[0], nil
-}
-
-// findAndReadFile locates the specified file on disk relative to our currently
-// executing process and attempts to read the file
-func findAndReadFile(fileName string) (b []byte, fileLoc string, _ error) {
-	dir, err := scriptDir()
-	if err != nil {
-		return nil, "", fmt.Errorf("vmextension: cannot find base directory of the running process: %v", err)
-	}
-
-	paths := []string{
-		filepath.Join(dir, fileName),       // this level (i.e. executable is in [EXT_NAME]/.)
-		filepath.Join(dir, "..", fileName), // one up (i.e. executable is in [EXT_NAME]/bin/.)
-	}
-
-	for _, p := range paths {
-		o, err := ioutil.ReadFile(p)
-		if err != nil && !os.IsNotExist(err) {
-			return nil, "", fmt.Errorf("vmextension: error examining '%s' at '%s': %v", fileName, p, err)
-		} else if err == nil {
-			fileLoc = p
-			b = o
-			break
-		}
-	}
-
-	if b == nil {
-		return nil, "", errNotFound
-	}
-
-	return b, fileLoc, nil
-}
-
-// scriptDir returns the absolute path of the running process.
-func scriptDir() (string, error) {
-	p, err := filepath.Abs(os.Args[0])
-	if err != nil {
-		return "", err
-	}
-	return filepath.Dir(p), nil
 }
 
 // Do is the main worker method of the extension and determines which operation
@@ -344,7 +288,7 @@ func reportStatus(ve *VMExtension, t status.StatusType, c cmd, msg string) error
 		return err
 	}
 
-	s := status.New(t, c.name, status.StatusMsg(c.name, t, msg))
+	s := status.New(t, c.operation.ToStatusName(), status.StatusMsg(c.operation.ToStatusName(), t, msg))
 	if err := s.Save(ve.HandlerEnv.StatusFolder, requestedSequenceNumber); err != nil {
 		ve.ExtensionLogger.Error("Failed to save handler status: %v", err)
 		return errors.Wrap(err, "failed to save handler status")
@@ -363,7 +307,8 @@ func (ve *VMExtension) parseCmd(args []string, eh exithelper.IExitHelper) cmd {
 	}
 
 	op := args[1]
-	cmd, ok := ve.exec.cmds[op]
+	operation, _ := OperationNameFromString(op)
+	cmd, ok := ve.exec.cmds[operation]
 	if !ok {
 		ve.printUsage(args)
 		fmt.Printf("Incorrect command: %q\n", op)
@@ -378,7 +323,7 @@ func (ve *VMExtension) printUsage(args []string) {
 	fmt.Printf("Usage: %s ", os.Args[0])
 	i := 0
 	for k := range ve.exec.cmds {
-		fmt.Printf(k)
+		fmt.Printf(k.ToString())
 		if i != len(ve.exec.cmds)-1 {
 			fmt.Printf("|")
 		}

@@ -9,6 +9,13 @@ import (
 	"time"
 )
 
+const (
+	// extension needn't write status files for other operations
+	EnableStatus = "Enable"
+	UpdateStatus = "Update"
+	DisableStatus = "Disable"
+)
+
 type CmdFunc func() (message string, err error)
 
 type Cmd struct {
