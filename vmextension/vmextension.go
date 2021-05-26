@@ -185,7 +185,7 @@ func getVMExtensionInternal(initInfo *InitializationInfo, manager environmentman
 	var currentSeqNo = new(uint)
 	retrievedSequenceNumber, err := manager.GetCurrentSequenceNumber(extensionLogger, &retriever, initInfo.Name, initInfo.Version)
 	if err != nil {
-		if err == extensionerrors.ErrNoSettingsFiles {
+		if err == extensionerrors.ErrNoSettingsFiles || err == extensionerrors.ErrNoMrseqFile {
 			// current sequence number could not be found, this is a special error
 			currentSeqNo = nil
 		} else {
