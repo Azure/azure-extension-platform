@@ -15,7 +15,7 @@ func getSequenceNumberInternal(name, version string) (uint, error) {
 	mrseqStr, err := ioutil.ReadFile(mostRecentSequenceFileName)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return 0, nil
+			return 0, extensionerrors.ErrNoMrseqFile
 		}
 		return 0, fmt.Errorf("failed to read mrseq file : %s", err)
 	}

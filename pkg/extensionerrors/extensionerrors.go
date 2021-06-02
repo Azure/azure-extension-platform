@@ -36,6 +36,9 @@ var (
 	// ErrNoSettingsFiles is returned if no .settings file are found
 	ErrNoSettingsFiles = errors.New("No .settings files exist")
 
+	// ErrNoMrseqFile is returned if no mrseq file are found
+	ErrNoMrseqFile = errors.New("No mrseq file exist")
+
 	ErrNotFound = errors.New("NotFound")
 
 	ErrInvalidOperationName = errors.New("operation name is invalid")
