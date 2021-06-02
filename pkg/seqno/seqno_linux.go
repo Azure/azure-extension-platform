@@ -2,10 +2,12 @@ package seqno
 
 import (
 	"fmt"
-	"github.com/Azure/azure-extension-platform/pkg/constants"
 	"io/ioutil"
 	"os"
 	"strconv"
+
+	"github.com/Azure/azure-extension-platform/pkg/constants"
+	"github.com/Azure/azure-extension-platform/pkg/extensionerrors"
 )
 
 var mostRecentSequenceFileName = "mrseq"
