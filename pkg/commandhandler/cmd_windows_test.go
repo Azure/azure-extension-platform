@@ -1,6 +1,7 @@
 package commandhandler
 
 import (
+	"fmt"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"os"
@@ -51,3 +52,32 @@ func TestDoesntWaitForCompletion(t *testing.T){
 	assert.Less(t, duration, time.Second, "execute shouldn't block")
 }
 
+func TestCommandWithEnvironmentVariable(t *testing.T){
+	defer cleanupTest()
+	cmd := New()
+	params := "{\"FOO\": \"Hello World\"}"
+	retCode, err := cmd.ExecuteWithEnvVariable("echo %CustomAction_FOO%", workingDir, workingDir, true, extensionLogger, params)
+
+	assert.Contains(t, os.Environ(), "CustomAction_FOO=Hello World")
+	assert.NoError(t, err, "command execution should succeed")
+	assert.Equal(t, 0, retCode, "return code should be 0")
+	fileInfo, err := ioutil.ReadFile(path.Join(workingDir, "stdout"))
+	assert.NoError(t, err, "stdout file should be read")
+	assert.Contains(t, string(fileInfo), "Hello World", "stdout message should be as expected")
+}
+
+func TestCommandWithCLParameters(t *testing.T){
+	defer cleanupTest()
+	cmd := New()
+	params := "[{\"name\": \"FOO\",\"value\": \"Hello World\"}]"
+	for _,i := range(os.Environ()) {
+		fmt.Println(i)
+	}
+	retCode, err := cmd.ExecuteWithEnvVariable("echo %CustomAction_FOO%", workingDir, workingDir, true, extensionLogger, params)
+	assert.Contains(t, os.Environ(), "CustomAction_FOO=\"Hello World\"")
+	assert.NoError(t, err, "command execution should succeed")
+	assert.Equal(t, 0, retCode, "return code should be 0")
+	fileInfo, err := ioutil.ReadFile(path.Join(workingDir, "stdout"))
+	assert.NoError(t, err, "stdout file should be read")
+	assert.Contains(t, string(fileInfo), "\"Hello World\"", "stdout message should be as expected")
+}
