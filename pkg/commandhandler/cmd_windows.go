@@ -70,21 +70,21 @@ func execCommon(cmd, workdir string, stdout, stderr io.WriteCloser, execFunction
 }
 
 func execCommonWithParams(cmd, workdir string, stdout, stderr io.WriteCloser, execFunctionToCall func(*exec.Cmd) error, params string) (int, error) {
-	var parameters []ActionParameter
+	var parameters map[string]interface{}
 	json.Unmarshal([]byte(params), &parameters)
 
 	c := exec.Command("cmd")
 	c.Dir = workdir
 	c.Stdout = stdout
 	c.Stderr = stderr
+	c.Env = os.Environ()
 
 	var commandLineParams = []string{}
-	for _, p := range parameters {
+	for name, value := range parameters {
 		///Would this be cleaner with os.Setenv?
-		envVar := string("CustomAction_"+p.ParameterName+"="+p.ParameterValue)
-		c.Env = append(os.Environ(), envVar)
-		commandLineParams = append(commandLineParams, string(" --"+p.ParameterName+" "+p.ParameterValue))
-		os.Setenv(string("CustomAction_"+p.ParameterName), string(p.ParameterValue))
+		envVar := string("CustomAction_"+name+"="+value.(string))
+		fmt.Println(name, value.(string))
+		c.Env = append(c.Env, envVar)
 	}
 
 

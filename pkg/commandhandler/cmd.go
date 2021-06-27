@@ -23,12 +23,6 @@ func (commandHandler *CommandHandler) ExecuteWithEnvVariable(command string, wor
 type CommandHandler struct {
 }
 
-//Would this be a problem down the road if we change action parameter struct in VMApp-Ext?
-type ActionParameter struct {
-	ParameterName  string `json:"name"`
-	ParameterValue string `json:"value"`
-}
-
 func New() *CommandHandler {
 	return &CommandHandler{}
 }

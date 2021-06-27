@@ -53,12 +53,11 @@ func TestDoesntWaitForCompletion(t *testing.T){
 }
 
 func TestCommandWithEnvironmentVariable(t *testing.T){
-	defer cleanupTest()
+	//defer cleanupTest()
 	cmd := New()
 	params := "{\"FOO\": \"Hello World\"}"
-	retCode, err := cmd.ExecuteWithEnvVariable("echo %CustomAction_FOO%", workingDir, workingDir, true, extensionLogger, params)
+	retCode, err := cmd.ExecuteWithEnvVariable("echo %CustomAction_FOO% \n", workingDir, workingDir, true, extensionLogger, params)
 
-	assert.Contains(t, os.Environ(), "CustomAction_FOO=Hello World")
 	assert.NoError(t, err, "command execution should succeed")
 	assert.Equal(t, 0, retCode, "return code should be 0")
 	fileInfo, err := ioutil.ReadFile(path.Join(workingDir, "stdout"))
