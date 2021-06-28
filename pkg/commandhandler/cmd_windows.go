@@ -7,7 +7,6 @@ import (
 	"io"
 	"os"
 	"os/exec"
-	"strings"
 	"syscall"
 )
 
@@ -72,22 +71,16 @@ func execCommon(cmd, workdir string, stdout, stderr io.WriteCloser, execFunction
 func execCommonWithParams(cmd, workdir string, stdout, stderr io.WriteCloser, execFunctionToCall func(*exec.Cmd) error, params string) (int, error) {
 	var parameters map[string]interface{}
 	json.Unmarshal([]byte(params), &parameters)
-
 	c := exec.Command("cmd")
 	c.Dir = workdir
 	c.Stdout = stdout
 	c.Stderr = stderr
 	c.Env = os.Environ()
 
-	var commandLineParams = []string{}
 	for name, value := range parameters {
-		///Would this be cleaner with os.Setenv?
 		envVar := string("CustomAction_"+name+"="+value.(string))
-		fmt.Println(name, value.(string))
 		c.Env = append(c.Env, envVar)
 	}
-
-
 
 	// don't pass the args in exec.Command because
 	// On Windows, processes receive the whole command line as a single string
@@ -98,7 +91,7 @@ func execCommonWithParams(cmd, workdir string, stdout, stderr io.WriteCloser, ex
 	// unquoting algorithm. In these or other similar cases, you can do the
 	// quoting yourself and provide the full command line in SysProcAttr.CmdLine,
 	// leaving Args empty.
-	c.SysProcAttr = &syscall.SysProcAttr{CmdLine:"/C " + cmd + strings.Join(commandLineParams, "")}
+	c.SysProcAttr = &syscall.SysProcAttr{CmdLine:"/C " + cmd}
 
 	err := execFunctionToCall(c)
 	exitErr, ok := err.(*exec.ExitError)

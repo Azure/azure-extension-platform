@@ -65,12 +65,6 @@ func execCommonWithParams(workdir string, stdout, stderr io.WriteCloser, execMet
 	var parameters map[string]interface{}
 	json.Unmarshal([]byte(params), &parameters)
 
-	//exports := []string{}
-	//for name, value := range parameters {
-	//	exports = append(exports, string("export "+name+"="+value.(string)+";"))
-	//}
-	//exports = append(exports, "-c")
-	fmt.Println(parameters)
 	args = append([]string{"-c"}, args...)
 	c := exec.Command("/bin/sh", args...)
 	c.Dir = workdir
@@ -79,11 +73,7 @@ func execCommonWithParams(workdir string, stdout, stderr io.WriteCloser, execMet
 	c.Env = os.Environ()
 
 	for  name, value := range parameters {
-		///Would this be cleaner with os.Setenv?
-		//envVar := string("CustomAction_"+p.ParameterName+"="+p.ParameterValue)
-		//c.Env = append(os.Environ(), envVar)
 		envVar := string("CustomAction_"+name+"="+value.(string))
-		fmt.Println(name, value.(string))
 		c.Env = append(c.Env, envVar)
 	}
 

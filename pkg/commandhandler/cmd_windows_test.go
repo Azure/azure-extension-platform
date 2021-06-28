@@ -1,7 +1,6 @@
 package commandhandler
 
 import (
-	"fmt"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"os"
@@ -53,9 +52,9 @@ func TestDoesntWaitForCompletion(t *testing.T){
 }
 
 func TestCommandWithEnvironmentVariable(t *testing.T){
-	//defer cleanupTest()
+	defer cleanupTest()
 	cmd := New()
-	params := "{\"FOO\": \"Hello World\"}"
+	params := `{"FOO": "Hello World"}`
 	retCode, err := cmd.ExecuteWithEnvVariable("echo %CustomAction_FOO% \n", workingDir, workingDir, true, extensionLogger, params)
 
 	assert.NoError(t, err, "command execution should succeed")
@@ -65,18 +64,41 @@ func TestCommandWithEnvironmentVariable(t *testing.T){
 	assert.Contains(t, string(fileInfo), "Hello World", "stdout message should be as expected")
 }
 
-func TestCommandWithCLParameters(t *testing.T){
+func TestCommandWithEnvironmentVariableQuotes(t *testing.T){
 	defer cleanupTest()
 	cmd := New()
-	params := "[{\"name\": \"FOO\",\"value\": \"Hello World\"}]"
-	for _,i := range(os.Environ()) {
-		fmt.Println(i)
-	}
-	retCode, err := cmd.ExecuteWithEnvVariable("echo %CustomAction_FOO%", workingDir, workingDir, true, extensionLogger, params)
-	assert.Contains(t, os.Environ(), "CustomAction_FOO=\"Hello World\"")
+	params := `{"FOO": "\"Hello World\""}`
+	retCode, err := cmd.ExecuteWithEnvVariable("echo %CustomAction_FOO% \n", workingDir, workingDir, true, extensionLogger, params)
+
 	assert.NoError(t, err, "command execution should succeed")
 	assert.Equal(t, 0, retCode, "return code should be 0")
 	fileInfo, err := ioutil.ReadFile(path.Join(workingDir, "stdout"))
 	assert.NoError(t, err, "stdout file should be read")
 	assert.Contains(t, string(fileInfo), "\"Hello World\"", "stdout message should be as expected")
+}
+
+func TestCommandWithEnvironmentVariable2(t *testing.T){
+	defer cleanupTest()
+	cmd := New()
+	params := `{"FOO": "bizz", "BAR": "buzz"}`
+	retCode, err := cmd.ExecuteWithEnvVariable("set", workingDir, workingDir, true, extensionLogger, params)
+
+	assert.NoError(t, err, "command execution should succeed")
+	assert.Equal(t, 0, retCode, "return code should be 0")
+	fileInfo, err := ioutil.ReadFile(path.Join(workingDir, "stdout"))
+	assert.NoError(t, err, "stdout file should be read")
+	assert.Contains(t, string(fileInfo), "CustomAction_FOO=bizz", "stdout message should contain environment variable")
+	assert.Contains(t, string(fileInfo), "CustomAction_BAR=buzz", "stdout message should contain environment variable")
+}
+
+func TestDoesntWaitForCompletionEnvironmentVariable(t *testing.T){
+	defer cleanupTest()
+	cmd := New()
+	startTime := time.Now()
+	params := `{"TEST_FILE": "testDoesntWait.txt"}`
+	_, err := cmd.ExecuteWithEnvVariable("powershell.exe -command \"Start-Sleep -Seconds 5; 'sleep complete' | out-file %CustomAction_TEST_FILE%\"", workingDir, workingDir, false, extensionLogger, params)
+	assert.NoError(t, err, "should be able to execute command")
+	endTime := time.Now()
+	duration := endTime.Sub(startTime)
+	assert.Less(t, duration, time.Second, "execute shouldn't block")
 }
