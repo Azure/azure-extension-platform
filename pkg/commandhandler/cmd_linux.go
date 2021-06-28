@@ -3,6 +3,7 @@ package commandhandler
 import (
 	"fmt"
 	"github.com/pkg/errors"
+	"encoding/json"
 	"io"
 	"os"
 	"os/exec"
@@ -32,7 +33,7 @@ func execDontWait(cmd, workdir string) (int, error) {
 	}, cmd, "&")
 }
 
-func execDontWaitWithParams(cmd, workdir string, stdout, stderr io.WriteCloser, params string) (int, error) {
+func execDontWaitWithParams(cmd, workdir string, params string) (int, error) {
 	return execCommonWithParams(workdir, os.Stdout, os.Stderr, func(c *exec.Cmd) error {
 		return c.Start()
 	}, params, cmd, "&")
@@ -64,12 +65,12 @@ func execCommonWithParams(workdir string, stdout, stderr io.WriteCloser, execMet
 	var parameters map[string]interface{}
 	json.Unmarshal([]byte(params), &parameters)
 
-	exports := ""
-	for _, p := range parameters {
-		exports = append(exports, string("export "+p.ParameterName+"="+p.ParameterValue)+";")
-	}
-	exports = append(exports, []string{"-c"})
-	fmt.Print(exports)
+	//exports := []string{}
+	//for name, value := range parameters {
+	//	exports = append(exports, string("export "+name+"="+value.(string)+";"))
+	//}
+	//exports = append(exports, "-c")
+	fmt.Println(parameters)
 	args = append([]string{"-c"}, args...)
 	c := exec.Command("/bin/sh", args...)
 	c.Dir = workdir
@@ -77,7 +78,7 @@ func execCommonWithParams(workdir string, stdout, stderr io.WriteCloser, execMet
 	c.Stderr = stderr
 	c.Env = os.Environ()
 
-	for _, p := range parameters {
+	for  name, value := range parameters {
 		///Would this be cleaner with os.Setenv?
 		//envVar := string("CustomAction_"+p.ParameterName+"="+p.ParameterValue)
 		//c.Env = append(os.Environ(), envVar)

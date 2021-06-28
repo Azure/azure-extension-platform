@@ -29,13 +29,39 @@ func TestEchoCommand2(t *testing.T) {
 func TestCommandWithEnvironmentVariable(t *testing.T){
 	defer cleanupTest()
 	cmd := New()
-	params := "[{\"name\": \"BAR\",\"value\": \"Hello World\"}]"
+	params := `{"BAR": "Hello World"}`
 	retCode, err := cmd.ExecuteWithEnvVariable("echo $CustomAction_BAR", workingDir, workingDir, true, extensionLogger, params)
 
-	assert.Contains(t, os.Environ(), "CustomAction_BAR=Hello World")
 	assert.NoError(t, err, "command execution should succeed")
 	assert.Equal(t, 0, retCode, "return code should be 0")
 	fileInfo, err := ioutil.ReadFile(path.Join(workingDir, "stdout"))
 	assert.NoError(t, err, "stdout file should be read")
 	assert.Contains(t, string(fileInfo), "Hello World", "stdout message should be as expected")
+}
+
+func TestCommandWithEnvironmentVariableQuotes(t *testing.T){
+	defer cleanupTest()
+	cmd := New()
+	params := `{"BAR": "\"Hello World\""}`
+	retCode, err := cmd.ExecuteWithEnvVariable("echo $CustomAction_BAR", workingDir, workingDir, true, extensionLogger, params)
+
+	assert.NoError(t, err, "command execution should succeed")
+	assert.Equal(t, 0, retCode, "return code should be 0")
+	fileInfo, err := ioutil.ReadFile(path.Join(workingDir, "stdout"))
+	assert.NoError(t, err, "stdout file should be read")
+	assert.Contains(t, string(fileInfo), "\"Hello World\"", "stdout message should be as expected")
+}
+
+func TestCommandWithEnvironmentVariable2(t *testing.T){
+	defer cleanupTest()
+	cmd := New()
+	params := `{"FOO": "bizz", "BAR": "buzz"}`
+	retCode, err := cmd.ExecuteWithEnvVariable("printenv", workingDir, workingDir, true, extensionLogger, params)
+
+	assert.NoError(t, err, "command execution should succeed")
+	assert.Equal(t, 0, retCode, "return code should be 0")
+	fileInfo, err := ioutil.ReadFile(path.Join(workingDir, "stdout"))
+	assert.NoError(t, err, "stdout file should be read")
+	assert.Contains(t, string(fileInfo), "CustomAction_FOO=bizz", "stdout message should be as expected")
+	assert.Contains(t, string(fileInfo), "CustomAction_BAR=buzz", "stdout message should be as expected")
 }
