@@ -55,7 +55,7 @@ func TestCommandWithEnvironmentVariable(t *testing.T){
 	defer cleanupTest()
 	cmd := New()
 	params := `{"FOO": "Hello World"}`
-	retCode, err := cmd.ExecuteWithEnvVariable("echo %CustomAction_FOO% \n", workingDir, workingDir, true, extensionLogger, params)
+	retCode, err := cmd.ExecuteWithEnvVariables("echo %CustomAction_FOO% \n", workingDir, workingDir, true, extensionLogger, params)
 
 	assert.NoError(t, err, "command execution should succeed")
 	assert.Equal(t, 0, retCode, "return code should be 0")
@@ -68,7 +68,7 @@ func TestCommandWithEnvironmentVariableQuotes(t *testing.T){
 	defer cleanupTest()
 	cmd := New()
 	params := `{"FOO": "\"Hello World\""}`
-	retCode, err := cmd.ExecuteWithEnvVariable("echo %CustomAction_FOO% \n", workingDir, workingDir, true, extensionLogger, params)
+	retCode, err := cmd.ExecuteWithEnvVariables("echo %CustomAction_FOO% \n", workingDir, workingDir, true, extensionLogger, params)
 
 	assert.NoError(t, err, "command execution should succeed")
 	assert.Equal(t, 0, retCode, "return code should be 0")
@@ -81,7 +81,7 @@ func TestCommandWithEnvironmentVariable2(t *testing.T){
 	defer cleanupTest()
 	cmd := New()
 	params := `{"FOO": "bizz", "BAR": "buzz"}`
-	retCode, err := cmd.ExecuteWithEnvVariable("set", workingDir, workingDir, true, extensionLogger, params)
+	retCode, err := cmd.ExecuteWithEnvVariables("set", workingDir, workingDir, true, extensionLogger, params)
 
 	assert.NoError(t, err, "command execution should succeed")
 	assert.Equal(t, 0, retCode, "return code should be 0")
@@ -96,7 +96,7 @@ func TestDoesntWaitForCompletionEnvironmentVariable(t *testing.T){
 	cmd := New()
 	startTime := time.Now()
 	params := `{"TEST_FILE": "testDoesntWait.txt"}`
-	_, err := cmd.ExecuteWithEnvVariable("powershell.exe -command \"Start-Sleep -Seconds 5; 'sleep complete' | out-file %CustomAction_TEST_FILE%\"", workingDir, workingDir, false, extensionLogger, params)
+	_, err := cmd.ExecuteWithEnvVariables("powershell.exe -command \"Start-Sleep -Seconds 5; 'sleep complete' | out-file %CustomAction_TEST_FILE%\"", workingDir, workingDir, false, extensionLogger, params)
 	assert.NoError(t, err, "should be able to execute command")
 	endTime := time.Now()
 	duration := endTime.Sub(startTime)

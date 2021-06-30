@@ -30,7 +30,7 @@ func TestCommandWithEnvironmentVariable(t *testing.T){
 	defer cleanupTest()
 	cmd := New()
 	params := `{"BAR": "Hello World"}`
-	retCode, err := cmd.ExecuteWithEnvVariable("echo $CustomAction_BAR", workingDir, workingDir, true, extensionLogger, params)
+	retCode, err := cmd.ExecuteWithEnvVariables("echo $CustomAction_BAR", workingDir, workingDir, true, extensionLogger, params)
 
 	assert.NoError(t, err, "command execution should succeed")
 	assert.Equal(t, 0, retCode, "return code should be 0")
@@ -43,7 +43,7 @@ func TestCommandWithEnvironmentVariableQuotes(t *testing.T){
 	defer cleanupTest()
 	cmd := New()
 	params := `{"BAR": "\"Hello World\""}`
-	retCode, err := cmd.ExecuteWithEnvVariable("echo $CustomAction_BAR", workingDir, workingDir, true, extensionLogger, params)
+	retCode, err := cmd.ExecuteWithEnvVariables("echo $CustomAction_BAR", workingDir, workingDir, true, extensionLogger, params)
 
 	assert.NoError(t, err, "command execution should succeed")
 	assert.Equal(t, 0, retCode, "return code should be 0")
@@ -56,7 +56,7 @@ func TestCommandWithEnvironmentVariable2(t *testing.T){
 	defer cleanupTest()
 	cmd := New()
 	params := `{"FOO": "bizz", "BAR": "buzz"}`
-	retCode, err := cmd.ExecuteWithEnvVariable("printenv", workingDir, workingDir, true, extensionLogger, params)
+	retCode, err := cmd.ExecuteWithEnvVariables("printenv", workingDir, workingDir, true, extensionLogger, params)
 
 	assert.NoError(t, err, "command execution should succeed")
 	assert.Equal(t, 0, retCode, "return code should be 0")
