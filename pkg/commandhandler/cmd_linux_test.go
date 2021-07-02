@@ -29,8 +29,9 @@ func TestEchoCommand2(t *testing.T) {
 func TestCommandWithEnvironmentVariable(t *testing.T){
 	defer cleanupTest()
 	cmd := New()
-	params := `{"BAR": "Hello World"}`
-	retCode, err := cmd.ExecuteWithEnvVariables("echo $CustomAction_BAR", workingDir, workingDir, true, extensionLogger, params)
+	var params map[string]interface{}
+	json.Unmarshal([]byte(`{"BAR": "Hello World"}`), &params)
+	retCode, err := cmd.ExecuteWithEnvVariables("echo $CustomAction_BAR", workingDir, workingDir, true, extensionLogger, &params)
 
 	assert.NoError(t, err, "command execution should succeed")
 	assert.Equal(t, 0, retCode, "return code should be 0")
@@ -42,8 +43,9 @@ func TestCommandWithEnvironmentVariable(t *testing.T){
 func TestCommandWithEnvironmentVariableQuotes(t *testing.T){
 	defer cleanupTest()
 	cmd := New()
-	params := `{"BAR": "\"Hello World\""}`
-	retCode, err := cmd.ExecuteWithEnvVariables("echo $CustomAction_BAR", workingDir, workingDir, true, extensionLogger, params)
+	var params map[string]interface{}
+	json.Unmarshal([]byte(`{"BAR": "\"Hello World\""}`), &params)
+	retCode, err := cmd.ExecuteWithEnvVariables("echo $CustomAction_BAR", workingDir, workingDir, true, extensionLogger, &params)
 
 	assert.NoError(t, err, "command execution should succeed")
 	assert.Equal(t, 0, retCode, "return code should be 0")
@@ -52,11 +54,12 @@ func TestCommandWithEnvironmentVariableQuotes(t *testing.T){
 	assert.Contains(t, string(fileInfo), "\"Hello World\"", "stdout message should be as expected")
 }
 
-func TestCommandWithEnvironmentVariable2(t *testing.T){
+func TestCommandWithTwoEnvironmentVariables(t *testing.T){
 	defer cleanupTest()
 	cmd := New()
-	params := `{"FOO": "bizz", "BAR": "buzz"}`
-	retCode, err := cmd.ExecuteWithEnvVariables("printenv", workingDir, workingDir, true, extensionLogger, params)
+	var params map[string]interface{}
+	json.Unmarshal([]byte(`{"FOO": "bizz", "BAR": "buzz"}`), &params)
+	retCode, err := cmd.ExecuteWithEnvVariables("printenv", workingDir, workingDir, true, extensionLogger, &params)
 
 	assert.NoError(t, err, "command execution should succeed")
 	assert.Equal(t, 0, retCode, "return code should be 0")

@@ -3,7 +3,6 @@ package commandhandler
 import (
 	"fmt"
 	"github.com/pkg/errors"
-	"encoding/json"
 	"io"
 	"os"
 	"os/exec"
@@ -15,7 +14,7 @@ func execWait(cmd, workdir string, stdout, stderr io.WriteCloser) (int, error) {
 	defer stderr.Close()
 	return execCommonWithEnvVariables(workdir, stdout, stderr, func(c *exec.Cmd) error {
 		return c.Run()
-	}, "", cmd)
+	}, nil, cmd)
 }
 
 func execWaitWithEnvVariables(cmd, workdir string, stdout, stderr io.WriteCloser, params string) (int, error) {
@@ -30,7 +29,7 @@ func execDontWait(cmd, workdir string) (int, error) {
 	// passing '&' as a trailing parameter to /bin/sh in addition (*exec.Command).Start() to will double fork and prevent zombie processes
 	return execCommonWithEnvVariables(workdir, os.Stdout, os.Stderr, func(c *exec.Cmd) error {
 		return c.Start()
-	}, "", cmd, "&")
+	}, nil, cmd, "&")
 }
 
 func execDontWaitWithEnvVariables(cmd, workdir string, params string) (int, error) {
@@ -39,7 +38,7 @@ func execDontWaitWithEnvVariables(cmd, workdir string, params string) (int, erro
 	}, params, cmd, "&")
 }
 
-func execCommonWithEnvVariables(workdir string, stdout, stderr io.WriteCloser, execMethodToCall func(*exec.Cmd) error, params string, args ...string) (int, error) {
+func execCommonWithEnvVariables(workdir string, stdout, stderr io.WriteCloser, execMethodToCall func(*exec.Cmd) error, params map[string]interface{}, args ...string) (int, error) {
 
 	args = append([]string{"-c"}, args...)
 	c := exec.Command("/bin/sh", args...)
@@ -48,12 +47,7 @@ func execCommonWithEnvVariables(workdir string, stdout, stderr io.WriteCloser, e
 	c.Stderr = stderr
 	c.Env = os.Environ()
 
-	if len(params) > 0 {
-		var parameters map[string]interface{}
-		err := json.Unmarshal([]byte(params), &parameters)
-		if err != nil {
-			return 1, errors.Wrapf(err, "failed to deserialize parameters")
-		}
+	if params != nil && len(params) > 0 {
 		for name, value := range parameters {
 			envVar := string("CustomAction_"+name+"="+value.(string))
 			c.Env = append(c.Env, envVar)

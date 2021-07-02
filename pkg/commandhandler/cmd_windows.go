@@ -1,7 +1,6 @@
 package commandhandler
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/pkg/errors"
 	"io"
@@ -15,10 +14,10 @@ func execWait(cmd, workdir string, stdout, stderr io.WriteCloser) (int, error) {
 	defer stderr.Close()
 	return execCommonWithEnvVariables(cmd ,workdir, stdout, stderr, func(c *exec.Cmd) error {
 		return c.Run()
-	}, "")
+	}, nil)
 }
 
-func execWaitWithEnvVariables(cmd, workdir string, stdout, stderr io.WriteCloser, params string) (int, error) {
+func execWaitWithEnvVariables(cmd, workdir string, stdout, stderr io.WriteCloser, params *map[string]interface{}) (int, error) {
 	defer stdout.Close()
 	defer stderr.Close()
 	return execCommonWithEnvVariables(cmd ,workdir, stdout, stderr, func(c *exec.Cmd) error {
@@ -29,17 +28,17 @@ func execWaitWithEnvVariables(cmd, workdir string, stdout, stderr io.WriteCloser
 func execDontWait(cmd, workdir string) (int, error) {
 	return execCommonWithEnvVariables(cmd, workdir, nil, nil, func(c *exec.Cmd) error {
 		return c.Start()
-	}, "")
+	}, nil)
 }
 
-func execDontWaitWithEnvVariables(cmd, workdir string, params string) (int, error) {
+func execDontWaitWithEnvVariables(cmd, workdir string, params *map[string]interface{}) (int, error) {
 	return execCommonWithEnvVariables(cmd, workdir, nil, nil, func(c *exec.Cmd) error {
 		return c.Start()
 	}, params)
 }
 
 
-func execCommonWithEnvVariables(cmd, workdir string, stdout, stderr io.WriteCloser, execFunctionToCall func(*exec.Cmd) error, params string) (int, error) {
+func execCommonWithEnvVariables(cmd, workdir string, stdout, stderr io.WriteCloser, execFunctionToCall func(*exec.Cmd) error, params *map[string]interface{}) (int, error) {
 
 	c := exec.Command("cmd")
 	c.Dir = workdir
@@ -47,18 +46,15 @@ func execCommonWithEnvVariables(cmd, workdir string, stdout, stderr io.WriteClos
 	c.Stderr = stderr
 	c.Env = os.Environ()
 
-	if len(params) > 0 {
-		var parameters map[string]interface{}
-		err := json.Unmarshal([]byte(params), &parameters)
-		if err != nil {
-			return 1, errors.Wrapf(err, "failed to deserialize parameters")
-		}
-		for name, value := range parameters {
-			envVar := string("CustomAction_"+name+"="+value.(string))
-			c.Env = append(c.Env, envVar)
-		}
-	}
+	//if params!= nil && len(*params) > 0 {
+	//
+	//	for name, value := range *params {
+	//		envVar := string("CustomAction_"+name+"="+value.(string))
+	//		c.Env = append(c.Env, envVar)
+	//	}
+	//}
 
+	addEnvVariables(params, c)
 
 	// don't pass the args in exec.Command because
 	// On Windows, processes receive the whole command line as a single string
