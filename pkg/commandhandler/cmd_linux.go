@@ -38,7 +38,7 @@ func execDontWaitWithEnvVariables(cmd, workdir string, params string) (int, erro
 	}, params, cmd, "&")
 }
 
-func execCommonWithEnvVariables(workdir string, stdout, stderr io.WriteCloser, execMethodToCall func(*exec.Cmd) error, params map[string]interface{}, args ...string) (int, error) {
+func execCommonWithEnvVariables(workdir string, stdout, stderr io.WriteCloser, execMethodToCall func(*exec.Cmd) error, params *map[string]interface{}, args ...string) (int, error) {
 
 	args = append([]string{"-c"}, args...)
 	c := exec.Command("/bin/sh", args...)
