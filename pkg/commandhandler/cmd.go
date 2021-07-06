@@ -17,7 +17,7 @@ type ICommandHandlerWithEnvVariables interface {
 	ExecuteWithEnvVariable(command string, workingDir, logDir string, waitForCompletion bool, el *logging.ExtensionLogger, params *map[string]interface{}) (returnCode int, err error)
 }
 
-func (commandHandler *CommandHandler) ExecuteWithEnvVariables(command string, workingDir, logDir string, waitForCompletion bool, el *logging.ExtensionLogger,  params *map[string]interface{}) (returnCode int, err error) {
+func (commandHandler *CommandHandler) ExecuteWithEnvVariables(command string, workingDir, logDir string, waitForCompletion bool, el *logging.ExtensionLogger,  params *map[string]string) (returnCode int, err error) {
 	return execCmdInDirWithAction(command, workingDir, logDir, waitForCompletion, el, params)
 }
 
@@ -38,7 +38,7 @@ var execDontWaitFunctionToCall func(cmd string, workingDir string) (int, error) 
 var execWaitFunctionWithParams = execWaitWithEnvVariables
 var execDontWaitFunctionWithParams = execDontWaitWithEnvVariables
 
-func execCmdInDirWithAction(cmd, workingDir, logDir string, waitForCompletion bool, el *logging.ExtensionLogger,  params *map[string]interface{}) (int, error) {
+func execCmdInDirWithAction(cmd, workingDir, logDir string, waitForCompletion bool, el *logging.ExtensionLogger,  params *map[string]string) (int, error) {
 	var exitCode int
 	var execErr error
 	err := os.MkdirAll(workingDir, constants.FilePermissions_UserOnly_ReadWriteExecute)
@@ -91,10 +91,10 @@ func logPaths(dir string) (stdout string, stderr string) {
 	stderr = filepath.Join(dir, "stderr")
 	return
 }
- func addEnvVariables (params *map[string]interface{}, command *exec.Cmd) {
+ func addEnvVariables (params *map[string]string, command *exec.Cmd) {
 	 if params!= nil && len(*params) > 0 {
 		 for name, value := range *params {
-			 envVar := string("CustomAction_"+name+"="+value.(string))
+			 envVar := string("CustomAction_"+name+"="+value)
 			 (command).Env = append((command).Env, envVar)
 		 }
 	 }

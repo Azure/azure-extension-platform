@@ -30,7 +30,7 @@ func TestEchoCommand2(t *testing.T) {
 func TestCommandWithEnvironmentVariable(t *testing.T){
 	defer cleanupTest()
 	cmd := New()
-	var params map[string]interface{}
+	var params map[string]string
 	json.Unmarshal([]byte(`{"BAR": "Hello World"}`), &params)
 	fmt.Println(params)
 	retCode, err := cmd.ExecuteWithEnvVariables("echo $CustomAction_BAR", workingDir, workingDir, true, extensionLogger, &params)
@@ -45,7 +45,7 @@ func TestCommandWithEnvironmentVariable(t *testing.T){
 func TestCommandWithEnvironmentVariableQuotes(t *testing.T){
 	defer cleanupTest()
 	cmd := New()
-	var params map[string]interface{}
+	var params map[string]string
 	json.Unmarshal([]byte(`{"BAR": "\"Hello World\""}`), &params)
 	retCode, err := cmd.ExecuteWithEnvVariables("echo $CustomAction_BAR", workingDir, workingDir, true, extensionLogger, &params)
 
@@ -59,7 +59,7 @@ func TestCommandWithEnvironmentVariableQuotes(t *testing.T){
 func TestCommandWithTwoEnvironmentVariables(t *testing.T){
 	defer cleanupTest()
 	cmd := New()
-	var params map[string]interface{}
+	var params map[string]string
 	json.Unmarshal([]byte(`{"FOO": "bizz", "BAR": "buzz"}`), &params)
 	retCode, err := cmd.ExecuteWithEnvVariables("printenv", workingDir, workingDir, true, extensionLogger, &params)
 
@@ -88,7 +88,7 @@ func TestCommandWithEnvironmentVariableNil(t *testing.T){
 func TestCommandWithEnvironmentVariableEmpty(t *testing.T){
 	defer cleanupTest()
 	cmd := New()
-	var params map[string]interface{}
+	var params map[string]string
 	json.Unmarshal([]byte(`{}`), &params)
 	retCode, err := cmd.ExecuteWithEnvVariables("echo $CustomAction_FOO \n", workingDir, workingDir, true, extensionLogger, &params)
 

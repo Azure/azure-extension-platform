@@ -55,7 +55,7 @@ func TestDoesntWaitForCompletion(t *testing.T){
 func TestCommandWithEnvironmentVariable(t *testing.T){
 	defer cleanupTest()
 	cmd := New()
-	var params map[string]interface{}
+	var params map[string]string
 	json.Unmarshal([]byte(`{"FOO": "Hello World"}`), &params)
 	retCode, err := cmd.ExecuteWithEnvVariables("echo %CustomAction_FOO% \n", workingDir, workingDir, true, extensionLogger, &params)
 
@@ -69,7 +69,7 @@ func TestCommandWithEnvironmentVariable(t *testing.T){
 func TestCommandWithEnvironmentVariableEmpty(t *testing.T){
 	defer cleanupTest()
 	cmd := New()
-	var params map[string]interface{}
+	var params map[string]string
 	json.Unmarshal([]byte(`{}`), &params)
 	retCode, err := cmd.ExecuteWithEnvVariables("echo %CustomAction_FOO% \n", workingDir, workingDir, true, extensionLogger, &params)
 
@@ -98,7 +98,7 @@ func TestCommandWithEnvironmentVariableQuotes(t *testing.T){
 	defer cleanupTest()
 	cmd := New()
 
-	var params map[string]interface{}
+	var params map[string]string
 	json.Unmarshal([]byte(`{"FOO": "\"Hello World\""}`), &params)
 	retCode, err := cmd.ExecuteWithEnvVariables("echo %CustomAction_FOO% \n", workingDir, workingDir, true, extensionLogger, &params)
 
@@ -113,7 +113,7 @@ func TestCommandWithTwoEnvironmentVariables(t *testing.T){
 	defer cleanupTest()
 	cmd := New()
 
-	var params map[string]interface{}
+	var params map[string]string
 	json.Unmarshal([]byte(`{"FOO": "bizz", "BAR": "buzz"}`), &params)
 	retCode, err := cmd.ExecuteWithEnvVariables("set", workingDir, workingDir, true, extensionLogger, &params)
 
@@ -129,7 +129,7 @@ func TestDoesntWaitForCompletionEnvironmentVariable(t *testing.T){
 	defer cleanupTest()
 	cmd := New()
 	startTime := time.Now()
-	var params map[string]interface{}
+	var params map[string]string
 	json.Unmarshal([]byte(`{"TEST_FILE": "testDoesntWait.txt"}`), &params)
 	_, err := cmd.ExecuteWithEnvVariables("powershell.exe -command \"Start-Sleep -Seconds 5; 'sleep complete' | out-file %CustomAction_TEST_FILE%\"", workingDir, workingDir, false, extensionLogger, &params)
 	assert.NoError(t, err, "should be able to execute command")

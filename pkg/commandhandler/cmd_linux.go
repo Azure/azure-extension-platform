@@ -17,7 +17,7 @@ func execWait(cmd, workdir string, stdout, stderr io.WriteCloser) (int, error) {
 	}, nil, cmd)
 }
 
-func execWaitWithEnvVariables(cmd, workdir string, stdout, stderr io.WriteCloser, params string) (int, error) {
+func execWaitWithEnvVariables(cmd, workdir string, stdout, stderr io.WriteCloser, params *map[string]string) (int, error) {
 	defer stdout.Close()
 	defer stderr.Close()
 	return execCommonWithEnvVariables(workdir, stdout, stderr, func(c *exec.Cmd) error {
@@ -32,13 +32,13 @@ func execDontWait(cmd, workdir string) (int, error) {
 	}, nil, cmd, "&")
 }
 
-func execDontWaitWithEnvVariables(cmd, workdir string, params string) (int, error) {
+func execDontWaitWithEnvVariables(cmd, workdir string, params *map[string]string) (int, error) {
 	return execCommonWithEnvVariables(workdir, os.Stdout, os.Stderr, func(c *exec.Cmd) error {
 		return c.Start()
 	}, params, cmd, "&")
 }
 
-func execCommonWithEnvVariables(workdir string, stdout, stderr io.WriteCloser, execMethodToCall func(*exec.Cmd) error, params *map[string]interface{}, args ...string) (int, error) {
+func execCommonWithEnvVariables(workdir string, stdout, stderr io.WriteCloser, execMethodToCall func(*exec.Cmd) error, params *map[string]string, args ...string) (int, error) {
 
 	args = append([]string{"-c"}, args...)
 	c := exec.Command("/bin/sh", args...)
