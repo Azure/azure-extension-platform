@@ -47,12 +47,7 @@ func execCommonWithEnvVariables(workdir string, stdout, stderr io.WriteCloser, e
 	c.Stderr = stderr
 	c.Env = os.Environ()
 
-	if params != nil && len(params) > 0 {
-		for name, value := range parameters {
-			envVar := string("CustomAction_"+name+"="+value.(string))
-			c.Env = append(c.Env, envVar)
-		}
-	}
+	addEnvVariables(params, c)
 
 	err := execMethodToCall(c)
 	exitErr, ok := err.(*exec.ExitError)

@@ -68,3 +68,31 @@ func TestCommandWithTwoEnvironmentVariables(t *testing.T){
 	assert.Contains(t, string(fileInfo), "CustomAction_FOO=bizz", "stdout message should be as expected")
 	assert.Contains(t, string(fileInfo), "CustomAction_BAR=buzz", "stdout message should be as expected")
 }
+
+
+func TestCommandWithEnvironmentVariableNil(t *testing.T){
+	defer cleanupTest()
+	cmd := New()
+
+	retCode, err := cmd.ExecuteWithEnvVariables("echo $CustomAction_FOO \n", workingDir, workingDir, true, extensionLogger, nil)
+
+	assert.NoError(t, err, "command execution should succeed")
+	assert.Equal(t, 0, retCode, "return code should be 0")
+	fileInfo, err := ioutil.ReadFile(path.Join(workingDir, "stdout"))
+	assert.NoError(t, err, "stdout file should be read")
+	assert.Contains(t, string(fileInfo), "%CustomAction_FOO%", "stdout message should be as expected")
+}
+
+func TestCommandWithEnvironmentVariableEmpty(t *testing.T){
+	defer cleanupTest()
+	cmd := New()
+	var params map[string]interface{}
+	json.Unmarshal([]byte(`{}`), &params)
+	retCode, err := cmd.ExecuteWithEnvVariables("echo $CustomAction_FOO \n", workingDir, workingDir, true, extensionLogger, &params)
+
+	assert.NoError(t, err, "command execution should succeed")
+	assert.Equal(t, 0, retCode, "return code should be 0")
+	fileInfo, err := ioutil.ReadFile(path.Join(workingDir, "stdout"))
+	assert.NoError(t, err, "stdout file should be read")
+	assert.Contains(t, string(fileInfo), "%CustomAction_FOO%", "stdout message should be as expected")
+}
