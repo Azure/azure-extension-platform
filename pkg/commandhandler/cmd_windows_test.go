@@ -129,8 +129,10 @@ func TestDoesntWaitForCompletionEnvironmentVariable(t *testing.T){
 	defer cleanupTest()
 	cmd := New()
 	startTime := time.Now()
+
 	var params map[string]string
 	json.Unmarshal([]byte(`{"TEST_FILE": "testDoesntWait.txt"}`), &params)
+
 	_, err := cmd.ExecuteWithEnvVariables("powershell.exe -command \"Start-Sleep -Seconds 5; 'sleep complete' | out-file %CustomAction_TEST_FILE%\"", workingDir, workingDir, false, extensionLogger, &params)
 	assert.NoError(t, err, "should be able to execute command")
 	endTime := time.Now()

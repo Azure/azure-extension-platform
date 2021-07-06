@@ -1,7 +1,6 @@
 package commandhandler
 
 import (
-	"fmt"
 	"encoding/json"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
@@ -33,7 +32,6 @@ func TestCommandWithEnvironmentVariable(t *testing.T){
 	cmd := New()
 	var params map[string]string
 	json.Unmarshal([]byte(`{"BAR": "Hello World"}`), &params)
-	fmt.Println(params)
 	retCode, err := cmd.ExecuteWithEnvVariables("echo $CustomAction_BAR", workingDir, workingDir, true, extensionLogger, &params)
 
 	assert.NoError(t, err, "command execution should succeed")
