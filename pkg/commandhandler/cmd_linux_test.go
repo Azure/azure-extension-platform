@@ -2,7 +2,7 @@ package commandhandler
 
 import (
 	"fmt"
-	"json"
+	"encoding/json"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"path"
