@@ -83,7 +83,7 @@ func TestCommandWithEnvironmentVariableNil(t *testing.T){
 	assert.Equal(t, 0, retCode, "return code should be 0")
 	fileInfo, err := ioutil.ReadFile(path.Join(workingDir, "stdout"))
 	assert.NoError(t, err, "stdout file should be read")
-	assert.Contains(t, string(fileInfo), "$CustomAction_FOO", "stdout message should be as expected")
+	assert.Contains(t, string(fileInfo), "", "stdout message should be as expected")
 }
 
 func TestCommandWithEnvironmentVariableEmpty(t *testing.T){
@@ -97,5 +97,5 @@ func TestCommandWithEnvironmentVariableEmpty(t *testing.T){
 	assert.Equal(t, 0, retCode, "return code should be 0")
 	fileInfo, err := ioutil.ReadFile(path.Join(workingDir, "stdout"))
 	assert.NoError(t, err, "stdout file should be read")
-	assert.Contains(t, string(fileInfo), "$CustomAction_FOO", "stdout message should be as expected")
+	assert.Contains(t, string(fileInfo), "", "stdout message should be as expected")
 }
