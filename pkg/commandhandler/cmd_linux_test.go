@@ -1,6 +1,7 @@
 package commandhandler
 
 import (
+	"fmt"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"path"
@@ -31,6 +32,7 @@ func TestCommandWithEnvironmentVariable(t *testing.T){
 	cmd := New()
 	var params map[string]interface{}
 	json.Unmarshal([]byte(`{"BAR": "Hello World"}`), &params)
+	fmt.Println(params)
 	retCode, err := cmd.ExecuteWithEnvVariables("echo $CustomAction_BAR", workingDir, workingDir, true, extensionLogger, &params)
 
 	assert.NoError(t, err, "command execution should succeed")
@@ -80,7 +82,7 @@ func TestCommandWithEnvironmentVariableNil(t *testing.T){
 	assert.Equal(t, 0, retCode, "return code should be 0")
 	fileInfo, err := ioutil.ReadFile(path.Join(workingDir, "stdout"))
 	assert.NoError(t, err, "stdout file should be read")
-	assert.Contains(t, string(fileInfo), "%CustomAction_FOO%", "stdout message should be as expected")
+	assert.Contains(t, string(fileInfo), "$CustomAction_FOO", "stdout message should be as expected")
 }
 
 func TestCommandWithEnvironmentVariableEmpty(t *testing.T){
@@ -94,5 +96,5 @@ func TestCommandWithEnvironmentVariableEmpty(t *testing.T){
 	assert.Equal(t, 0, retCode, "return code should be 0")
 	fileInfo, err := ioutil.ReadFile(path.Join(workingDir, "stdout"))
 	assert.NoError(t, err, "stdout file should be read")
-	assert.Contains(t, string(fileInfo), "%CustomAction_FOO%", "stdout message should be as expected")
+	assert.Contains(t, string(fileInfo), "$CustomAction_FOO", "stdout message should be as expected")
 }
