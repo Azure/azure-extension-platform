@@ -14,7 +14,7 @@ type ICommandHandler interface {
 	Execute(command string, workingDir, logDir string, waitForCompletion bool, el *logging.ExtensionLogger) (returnCode int, err error)
 }
 type ICommandHandlerWithEnvVariables interface {
-	ExecuteWithEnvVariable(command string, workingDir, logDir string, waitForCompletion bool, el *logging.ExtensionLogger, params *map[string]interface{}) (returnCode int, err error)
+	ExecuteWithEnvVariables(command string, workingDir, logDir string, waitForCompletion bool, el *logging.ExtensionLogger, params *map[string]interface{}) (returnCode int, err error)
 }
 
 func (commandHandler *CommandHandler) ExecuteWithEnvVariables(command string, workingDir, logDir string, waitForCompletion bool, el *logging.ExtensionLogger,  params *map[string]string) (returnCode int, err error) {
