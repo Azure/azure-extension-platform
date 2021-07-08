@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/pkg/errors"
 	"io"
+	"os"
 	"os/exec"
 	"syscall"
 )
@@ -11,22 +12,42 @@ import (
 func execWait(cmd, workdir string, stdout, stderr io.WriteCloser) (int, error) {
 	defer stdout.Close()
 	defer stderr.Close()
-	return execCommon(cmd, workdir, stdout, stderr, func(c *exec.Cmd) error {
+	return execCommonWithEnvVariables(cmd ,workdir, stdout, stderr, func(c *exec.Cmd) error {
 		return c.Run()
-	})
+	}, nil)
+}
+
+func execWaitWithEnvVariables(cmd, workdir string, stdout, stderr io.WriteCloser, params *map[string]string) (int, error) {
+	defer stdout.Close()
+	defer stderr.Close()
+	return execCommonWithEnvVariables(cmd ,workdir, stdout, stderr, func(c *exec.Cmd) error {
+		return c.Run()
+	}, params)
 }
 
 func execDontWait(cmd, workdir string) (int, error) {
-	return execCommon(cmd, workdir, nil, nil, func(c *exec.Cmd) error {
+	return execCommonWithEnvVariables(cmd, workdir, nil, nil, func(c *exec.Cmd) error {
 		return c.Start()
-	})
+	}, nil)
 }
 
-func execCommon(cmd, workdir string, stdout, stderr io.WriteCloser, execFunctionToCall func(*exec.Cmd)(error)) (int, error) {
+func execDontWaitWithEnvVariables(cmd, workdir string, params *map[string]string) (int, error) {
+	return execCommonWithEnvVariables(cmd, workdir, nil, nil, func(c *exec.Cmd) error {
+		return c.Start()
+	}, params)
+}
+
+
+func execCommonWithEnvVariables(cmd, workdir string, stdout, stderr io.WriteCloser, execFunctionToCall func(*exec.Cmd) error, params *map[string]string) (int, error) {
+
 	c := exec.Command("cmd")
 	c.Dir = workdir
 	c.Stdout = stdout
 	c.Stderr = stderr
+	c.Env = os.Environ()
+
+	addEnvVariables(params, c)
+
 	// don't pass the args in exec.Command because
 	// On Windows, processes receive the whole command line as a single string
 	// and do their own parsing. Command combines and quotes Args into a command
