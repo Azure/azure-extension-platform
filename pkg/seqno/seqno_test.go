@@ -64,11 +64,11 @@ func Test_findSeqNoFilesInDifferentOrder(t *testing.T) {
 	// findSeqNum should return the most recently created file, sleep it necessary to ensure that the creation times
 	// are different enough
 	writeSequenceNumberFile(t, sequenceNumberTestFolder, "5")
-	time.Sleep(5 * time.Millisecond)
+	time.Sleep(10 * time.Millisecond)
 	writeSequenceNumberFile(t, sequenceNumberTestFolder, "4")
-	time.Sleep(5 * time.Millisecond)
+	time.Sleep(10 * time.Millisecond)
 	writeSequenceNumberFile(t, sequenceNumberTestFolder, "3")
-	time.Sleep(5 * time.Millisecond)
+	time.Sleep(10 * time.Millisecond)
 	writeSequenceNumberFile(t, sequenceNumberTestFolder, "2")
 
 	seqNo, err := FindSeqNum(el, sequenceNumberTestFolder)
