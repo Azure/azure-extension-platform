@@ -216,6 +216,7 @@ func getVMExtensionInternal(initInfo *InitializationInfo, manager environmentman
 		GetSettings:                settings,
 		ExtensionEvents:            extensionEvents,
 		ExtensionLogger:            extensionLogger,
+		customStatusFormatter:      initInfo.CustomStatusFormatter,
 		exec: &executionInfo{
 			manager:             manager,
 			requiresSeqNoChange: initInfo.RequiresSeqNoChange,
