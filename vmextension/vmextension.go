@@ -96,7 +96,7 @@ type VMExtension struct {
 	ExtensionEvents            *extensionevents.ExtensionEventManager    // Allows extensions to raise events
 	ExtensionLogger            *logging.ExtensionLogger                  // Automatically logs to the log directory
 	exec                       *executionInfo                            // Internal information necessary for the extension to run
-	customStatusFormatter      status.StatusMessageFormatter             // Custom status message formatter from initialization info
+	statusFormatter            status.StatusMessageFormatter             // Custom status message formatter from initialization info
 }
 
 type prodGetVMExtensionEnvironmentManager struct {
@@ -207,6 +207,13 @@ func getVMExtensionInternal(initInfo *InitializationInfo, manager environmentman
 		return manager.GetHandlerSettings(extensionLogger, handlerEnv)
 	}
 
+	var statusFormatter status.StatusMessageFormatter
+	if initInfo.CustomStatusFormatter != nil {
+		statusFormatter = initInfo.CustomStatusFormatter
+	} else {
+		statusFormatter = status.StatusMsg
+	}
+
 	ext = &VMExtension{
 		Name:                       initInfo.Name,
 		Version:                    initInfo.Version,
@@ -216,7 +223,7 @@ func getVMExtensionInternal(initInfo *InitializationInfo, manager environmentman
 		GetSettings:                settings,
 		ExtensionEvents:            extensionEvents,
 		ExtensionLogger:            extensionLogger,
-		customStatusFormatter:      initInfo.CustomStatusFormatter,
+		statusFormatter:            statusFormatter,
 		exec: &executionInfo{
 			manager:             manager,
 			requiresSeqNoChange: initInfo.RequiresSeqNoChange,
@@ -271,13 +278,7 @@ func reportStatus(ve *VMExtension, t status.StatusType, c cmd, msg string) error
 		return err
 	}
 
-	var statusFormatter status.StatusMessageFormatter
-	if ve.customStatusFormatter != nil {
-		statusFormatter = ve.customStatusFormatter
-	} else {
-		statusFormatter = status.StatusMsg
-	}
-	s := status.New(t, c.operation.ToStatusName(), statusFormatter(c.operation.ToStatusName(), t, msg))
+	s := status.New(t, c.operation.ToStatusName(), ve.statusFormatter(c.operation.ToStatusName(), t, msg))
 	if err := s.Save(ve.HandlerEnv.StatusFolder, requestedSequenceNumber); err != nil {
 		ve.ExtensionLogger.Error("Failed to save handler status: %v", err)
 		return errors.Wrap(err, "failed to save handler status")

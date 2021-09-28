@@ -132,7 +132,7 @@ func Test_reportStatusFormatter(t *testing.T) {
 	defer cleanupDirsForVMExtension(ext)
 
 	customFormattedMessage := "I am custom message"
-	ext.customStatusFormatter = func(operationName string, t status.StatusType, msg string) string {
+	ext.statusFormatter = func(operationName string, t status.StatusType, msg string) string {
 		return customFormattedMessage
 	}
 	err := reportStatus(ext, status.StatusSuccess, c, "msg")
@@ -628,6 +628,7 @@ func createTestVMExtension() *VMExtension {
 			updateCallback:      nil,
 			cmds:                map[OperationName]cmd{DisableOperation: disableCommand},
 		},
+		statusFormatter: status.StatusMsg,
 	}
 }
 
