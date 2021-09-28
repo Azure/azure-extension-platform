@@ -26,7 +26,7 @@ type InitializationInfo struct {
 	ResetStateCallback    CallbackFunc                  // Called for the ResetState operation. Only set this if the extension wants a callback.
 	InstallCallback       CallbackFunc                  // Called for the Install operation. Only set this if the extension wants a callback.
 	UninstallCallback     CallbackFunc                  // Called for the Uninstall operation. Only set this if the extension wants a callback.
-	CustomStatusFormatter status.StatusMessageFormatter // Provide a function to format the status. Do not overwrite to preserve default formatting behavior.
+	CustomStatusFormatter status.StatusMessageFormatter // Provide a function to format the status message. If nil default formatting behavior will be preserved.
 }
 
 // GetInitializationInfo returns a new InitializationInfo object
