@@ -9,11 +9,9 @@ on:
 jobs:
 
   build:
-    runs-on: ubuntu-latest
+    runs-on: [ubuntu-latest, windows-latest]
     steps:
     - uses: actions/checkout@v2
-      with:
-        submodules: true
 
     - name: Set up Go
       uses: actions/setup-go@v2
