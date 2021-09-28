@@ -96,7 +96,7 @@ type VMExtension struct {
 	ExtensionEvents            *extensionevents.ExtensionEventManager    // Allows extensions to raise events
 	ExtensionLogger            *logging.ExtensionLogger                  // Automatically logs to the log directory
 	exec                       *executionInfo                            // Internal information necessary for the extension to run
-	CustomStatusFormatter      status.StatusMessageFormatter             // Custom status message formatter from initialization info
+	customStatusFormatter      status.StatusMessageFormatter             // Custom status message formatter from initialization info
 }
 
 type prodGetVMExtensionEnvironmentManager struct {
@@ -271,8 +271,8 @@ func reportStatus(ve *VMExtension, t status.StatusType, c cmd, msg string) error
 	}
 
 	var statusFormatter status.StatusMessageFormatter
-	if ve.CustomStatusFormatter != nil {
-		statusFormatter = ve.CustomStatusFormatter
+	if ve.customStatusFormatter != nil {
+		statusFormatter = ve.customStatusFormatter
 	} else {
 		statusFormatter = status.StatusMsg
 	}
