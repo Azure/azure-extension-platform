@@ -85,25 +85,6 @@ type executionInfo struct {
 	manager             environmentmanager.IGetVMExtensionEnvironmentManager // Used by tests to mock the environment
 }
 
-// HandlerEnvironment describes the handler environment configuration presented
-// to the extension handler by the Azure Guest Agent.
-type handlerEnvironmentInternal struct {
-	Version            float64 `json:"version"`
-	Name               string  `json:"name"`
-	HandlerEnvironment struct {
-		HeartbeatFile       string `json:"heartbeatFile"`
-		StatusFolder        string `json:"statusFolder"`
-		ConfigFolder        string `json:"configFolder"`
-		LogFolder           string `json:"logFolder"`
-		EventsFolder        string `json:"eventsFolder"`
-		EventsFolderPreview string `json:"eventsFolder_preview"`
-		DeploymentID        string `json:"deploymentid"`
-		RoleName            string `json:"rolename"`
-		Instance            string `json:"instance"`
-		HostResolverAddress string `json:"hostResolverAddress"`
-	}
-}
-
 // VMExtension is an abstraction for standard extension operations in an OS agnostic manner
 type VMExtension struct {
 	Name                       string                                    // The name of the extension. This will contain 'Windows' or 'Linux'
@@ -115,6 +96,7 @@ type VMExtension struct {
 	ExtensionEvents            *extensionevents.ExtensionEventManager    // Allows extensions to raise events
 	ExtensionLogger            *logging.ExtensionLogger                  // Automatically logs to the log directory
 	exec                       *executionInfo                            // Internal information necessary for the extension to run
+	statusFormatter            status.StatusMessageFormatter             // Custom status message formatter from initialization info
 }
 
 type prodGetVMExtensionEnvironmentManager struct {
@@ -189,7 +171,7 @@ func getVMExtensionInternal(initInfo *InitializationInfo, manager environmentman
 			// current sequence number could not be found, this is a special error
 			currentSeqNo = nil
 		} else {
-			return nil, fmt.Errorf("Failed to read the current sequence number due to '%v'", err)
+			return nil, fmt.Errorf("failed to read the current sequence number due to '%v'", err)
 		}
 	} else {
 		*currentSeqNo = retrievedSequenceNumber
@@ -225,6 +207,13 @@ func getVMExtensionInternal(initInfo *InitializationInfo, manager environmentman
 		return manager.GetHandlerSettings(extensionLogger, handlerEnv)
 	}
 
+	var statusFormatter status.StatusMessageFormatter
+	if initInfo.CustomStatusFormatter != nil {
+		statusFormatter = initInfo.CustomStatusFormatter
+	} else {
+		statusFormatter = status.StatusMsg
+	}
+
 	ext = &VMExtension{
 		Name:                       initInfo.Name,
 		Version:                    initInfo.Version,
@@ -234,6 +223,7 @@ func getVMExtensionInternal(initInfo *InitializationInfo, manager environmentman
 		GetSettings:                settings,
 		ExtensionEvents:            extensionEvents,
 		ExtensionLogger:            extensionLogger,
+		statusFormatter:            statusFormatter,
 		exec: &executionInfo{
 			manager:             manager,
 			requiresSeqNoChange: initInfo.RequiresSeqNoChange,
@@ -288,7 +278,7 @@ func reportStatus(ve *VMExtension, t status.StatusType, c cmd, msg string) error
 		return err
 	}
 
-	s := status.New(t, c.operation.ToStatusName(), status.StatusMsg(c.operation.ToStatusName(), t, msg))
+	s := status.New(t, c.operation.ToStatusName(), ve.statusFormatter(c.operation.ToStatusName(), t, msg))
 	if err := s.Save(ve.HandlerEnv.StatusFolder, requestedSequenceNumber); err != nil {
 		ve.ExtensionLogger.Error("Failed to save handler status: %v", err)
 		return errors.Wrap(err, "failed to save handler status")
@@ -323,7 +313,7 @@ func (ve *VMExtension) printUsage(args []string) {
 	fmt.Printf("Usage: %s ", os.Args[0])
 	i := 0
 	for k := range ve.exec.cmds {
-		fmt.Printf(k.ToString())
+		fmt.Print(k.ToString())
 		if i != len(ve.exec.cmds)-1 {
 			fmt.Printf("|")
 		}

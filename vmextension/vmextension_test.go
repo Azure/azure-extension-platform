@@ -121,6 +121,30 @@ func Test_reportStatusSaved(t *testing.T) {
 	require.NoError(t, err, "File doesn't exist")
 }
 
+func Test_reportStatusFormatter(t *testing.T) {
+	ext := createTestVMExtension()
+
+	c := cmd{nil, InstallOperation, true, 99}
+	ext.HandlerEnv.StatusFolder = statusTestDirectory
+	ext.GetRequestedSequenceNumber = func() (uint, error) { return 45, nil }
+
+	createDirsForVMExtension(ext)
+	defer cleanupDirsForVMExtension(ext)
+
+	customFormattedMessage := "I am custom message"
+	ext.statusFormatter = func(operationName string, t status.StatusType, msg string) string {
+		return customFormattedMessage
+	}
+	err := reportStatus(ext, status.StatusSuccess, c, "msg")
+	require.NoError(t, err, "reportStatus failed")
+	statusFilePath := path.Join(statusTestDirectory, "45.status")
+	_, err = os.Stat(statusFilePath)
+	require.NoError(t, err, "File doesn't exist")
+	statusFileBytes, err := ioutil.ReadFile(statusFilePath)
+	require.NoError(t, err, "Could not read status file contents")
+	require.Contains(t, string(statusFileBytes), customFormattedMessage)
+}
+
 func Test_getVMExtensionNilValues(t *testing.T) {
 	_, err := GetVMExtension(nil)
 	require.Equal(t, extensionerrors.ErrArgCannotBeNull, err)
@@ -604,6 +628,7 @@ func createTestVMExtension() *VMExtension {
 			updateCallback:      nil,
 			cmds:                map[OperationName]cmd{DisableOperation: disableCommand},
 		},
+		statusFormatter: status.StatusMsg,
 	}
 }
 

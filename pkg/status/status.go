@@ -11,8 +11,8 @@ import (
 
 const (
 	// extension needn't write status files for other operations
-	EnableStatus = "Enable"
-	UpdateStatus = "Update"
+	EnableStatus  = "Enable"
+	UpdateStatus  = "Update"
 	DisableStatus = "Disable"
 )
 
@@ -110,13 +110,15 @@ func (r StatusReport) Save(statusFolder string, seqNo uint) error {
 	return nil
 }
 
+type StatusMessageFormatter func(operationName string, t StatusType, msg string) string
+
 // StatusMsg creates the reported status message based on the provided operation
 // type and the given message string.
 //
 // A message will be generated for empty string. For error status, pass the
 // error message.
-func StatusMsg(o string, t StatusType, msg string) string {
-	s := o
+func StatusMsg(operationName string, t StatusType, msg string) string {
+	s := operationName
 	switch t {
 	case StatusSuccess:
 		s += " succeeded"

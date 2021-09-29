@@ -1,9 +1,11 @@
 package extensionevents
 
 import (
+	"fmt"
+
 	"golang.org/x/sys/unix"
 )
 
 func getThreadID() string {
-	return string(unix.Gettid())
+	return fmt.Sprintf("%d", unix.Gettid())
 }
