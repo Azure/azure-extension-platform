@@ -66,7 +66,13 @@ func enable(ext *VMExtension) (string, error) {
 	msg, runErr := ext.exec.enableCallback(ext)
 	if runErr != nil {
 		ext.ExtensionLogger.Error("Enable failed: %v", runErr)
-		reportStatus(ext, status.StatusError, enableCmd, msg)
+		var msgToReport string
+		if msg == "" {
+			msgToReport = runErr.Error()
+		} else {
+			msgToReport = msg
+		}
+		reportStatus(ext, status.StatusError, enableCmd, msgToReport)
 	} else {
 		ext.ExtensionLogger.Info("Enable succeeded")
 		reportStatus(ext, status.StatusSuccess, enableCmd, msg)
