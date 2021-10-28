@@ -74,18 +74,18 @@ func (logger *ExtensionLogger) Close() {
 
 // Error logs an error. Format is the same as fmt.Print
 func (logger *ExtensionLogger) Error(format string, v ...interface{}) {
-	logger.errorLogger.Printf(format, v...)
-	logger.errorLogger.Printf(GetCallStack())
+	logger.errorLogger.Printf(format+"\n", v...)
+	logger.errorLogger.Printf(GetCallStack() + "\n")
 }
 
 // Warn logs a warning. Format is the same as fmt.Print
 func (logger *ExtensionLogger) Warn(format string, v ...interface{}) {
-	logger.warnLogger.Printf(format, v...)
+	logger.warnLogger.Printf(format+"\n", v...)
 }
 
 // Info logs an information statement. Format is the same as fmt.Print
 func (logger *ExtensionLogger) Info(format string, v ...interface{}) {
-	logger.infoLogger.Printf(format, v...)
+	logger.infoLogger.Printf(format+"\n", v...)
 }
 
 // Error logs an error. Get the message from a stream directly
