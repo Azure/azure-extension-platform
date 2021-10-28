@@ -2,7 +2,6 @@ package logging
 
 import (
 	"fmt"
-	"github.com/stretchr/testify/assert"
 	"io"
 	"io/ioutil"
 	"os"
@@ -10,6 +9,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 
 	"github.com/Azure/azure-extension-platform/pkg/constants"
 	"github.com/Azure/azure-extension-platform/pkg/handlerenv"
@@ -65,8 +66,18 @@ func Test_normalTrace(t *testing.T) {
 	el.Error("we ran out of cupcakes")
 	el.Close()
 
-	dir, _ := ioutil.ReadDir(logtestdir)
-	require.Equal(t, 1, len(dir))
+	files, _ := ioutil.ReadDir(logtestdir)
+	require.Equal(t, 1, len(files))
+
+	fullpath := path.Join(logtestdir, files[0].Name())
+	bytes, err := ioutil.ReadFile(fullpath)
+	assert.NoError(t, err)
+	contents := string(bytes)
+
+	lines := strings.Split(contents, "\n")
+	assert.Contains(t, lines[0], "this is a test")
+	assert.Contains(t, lines[1], "something weird happened")
+	assert.Contains(t, lines[2], "we ran out of cupcakes")
 }
 
 func Test_loggingFromStream(t *testing.T) {
