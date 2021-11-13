@@ -2,7 +2,6 @@ package logging
 
 import (
 	"fmt"
-	"github.com/stretchr/testify/assert"
 	"io"
 	"io/ioutil"
 	"os"
@@ -10,6 +9,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 
 	"github.com/Azure/azure-extension-platform/pkg/constants"
 	"github.com/Azure/azure-extension-platform/pkg/handlerenv"
@@ -56,7 +57,22 @@ func Test_cannotCreateFile(t *testing.T) {
 	el.Close()
 }
 
+func Test_fileName(t *testing.T) {
+	clearLogTestDir()
+	he := getHandlerEnvironment(logtestdir)
+	el := NewWithName(he, "yaba_%v.log")
+
+	el.Info("this is a %s", "test")
+	el.Close()
+
+	dir, _ := ioutil.ReadDir(logtestdir)
+	require.Equal(t, 1, len(dir))
+	require.True(t, strings.HasPrefix(dir[0].Name(), "yaba_"))
+	require.True(t, strings.HasSuffix(dir[0].Name(), ".log"))
+}
+
 func Test_normalTrace(t *testing.T) {
+	clearLogTestDir()
 	he := getHandlerEnvironment(logtestdir)
 	el := New(he)
 
@@ -159,6 +175,13 @@ func readContentsOfMostRecentLogFile(logfileDir string) (string, error) {
 	fileContents, err := ioutil.ReadFile(fileToRead)
 	fileContentsString := string(fileContents)
 	return fileContentsString, nil
+}
+
+func clearLogTestDir() {
+	dir, _ := ioutil.ReadDir(logtestdir)
+	for _, d := range dir {
+		os.RemoveAll(path.Join([]string{logtestdir, d.Name()}...))
+	}
 }
 
 func getHandlerEnvironment(eventsFolder string) *handlerenv.HandlerEnvironment {
