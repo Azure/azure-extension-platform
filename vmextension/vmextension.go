@@ -155,8 +155,9 @@ func getVMExtensionInternal(initInfo *InitializationInfo, manager environmentman
 		return nil, err
 	}
 
+	extensionLogger := logging.NewWithName(handlerEnv, initInfo.LogFileNamePattern)
+
 	// Create our event manager. This will be disabled if no eventsFolder exists
-	extensionLogger := logging.New(handlerEnv)
 	extensionEvents := extensionevents.New(extensionLogger, handlerEnv)
 
 	// Determine the sequence number requested
