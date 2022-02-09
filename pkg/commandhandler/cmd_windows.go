@@ -1,3 +1,5 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 package commandhandler
 
 import (
@@ -12,7 +14,7 @@ import (
 func execWait(cmd, workdir string, stdout, stderr io.WriteCloser) (int, error) {
 	defer stdout.Close()
 	defer stderr.Close()
-	return execCommonWithEnvVariables(cmd ,workdir, stdout, stderr, func(c *exec.Cmd) error {
+	return execCommonWithEnvVariables(cmd, workdir, stdout, stderr, func(c *exec.Cmd) error {
 		return c.Run()
 	}, nil)
 }
@@ -20,7 +22,7 @@ func execWait(cmd, workdir string, stdout, stderr io.WriteCloser) (int, error) {
 func execWaitWithEnvVariables(cmd, workdir string, stdout, stderr io.WriteCloser, params *map[string]string) (int, error) {
 	defer stdout.Close()
 	defer stderr.Close()
-	return execCommonWithEnvVariables(cmd ,workdir, stdout, stderr, func(c *exec.Cmd) error {
+	return execCommonWithEnvVariables(cmd, workdir, stdout, stderr, func(c *exec.Cmd) error {
 		return c.Run()
 	}, params)
 }
@@ -36,7 +38,6 @@ func execDontWaitWithEnvVariables(cmd, workdir string, params *map[string]string
 		return c.Start()
 	}, params)
 }
-
 
 func execCommonWithEnvVariables(cmd, workdir string, stdout, stderr io.WriteCloser, execFunctionToCall func(*exec.Cmd) error, params *map[string]string) (int, error) {
 
@@ -57,7 +58,7 @@ func execCommonWithEnvVariables(cmd, workdir string, stdout, stderr io.WriteClos
 	// unquoting algorithm. In these or other similar cases, you can do the
 	// quoting yourself and provide the full command line in SysProcAttr.CmdLine,
 	// leaving Args empty.
-	c.SysProcAttr = &syscall.SysProcAttr{CmdLine:"/C " + cmd}
+	c.SysProcAttr = &syscall.SysProcAttr{CmdLine: "/C " + cmd}
 
 	err := execFunctionToCall(c)
 	exitErr, ok := err.(*exec.ExitError)

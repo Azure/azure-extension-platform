@@ -1,3 +1,5 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 package extensionlauncher
 
 import (
@@ -23,7 +25,7 @@ func TestRunExecutableAsIndependentProcess(t *testing.T) {
 	testContentsOfFile(t, filePath, message)
 }
 
-func TestEnvironmentVariablesAreProperlyPassed(t *testing.T){
+func TestEnvironmentVariablesAreProperlyPassed(t *testing.T) {
 	testInit(t)
 	defer testCleanup()
 	testEnvKey := "TestEnvKey"

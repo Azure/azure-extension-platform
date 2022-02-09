@@ -1,3 +1,5 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 package extensionerrors
 
 import "github.com/pkg/errors"

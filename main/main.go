@@ -1,3 +1,5 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 package main
 
 import (
@@ -10,7 +12,7 @@ import (
 var el = logging.New(nil)
 var eh = exithelper.Exiter
 
-func main (){
+func main() {
 
 	extName, extVersion, exeName, operation, err := extensionlauncher.ParseArgs()
 	if err != nil {

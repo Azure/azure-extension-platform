@@ -1,3 +1,5 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 package extensionlauncher
 
 import (
@@ -108,9 +110,9 @@ func TestExistingStatusFileIsNotOverwritten(t *testing.T) {
 	assert.True(t, logFileFound, "log file should be found")
 }
 
-func testContentsOfFile(t *testing.T, fileFullPath, expectedContents string){
-	var fileFound =  false
-	for i:= 1; i <10; i++{
+func testContentsOfFile(t *testing.T, fileFullPath, expectedContents string) {
+	var fileFound = false
+	for i := 1; i < 10; i++ {
 		// test 10 times whether the file exists
 		fileContentBytes, err := ioutil.ReadFile(fileFullPath)
 		if err != nil {
@@ -120,8 +122,7 @@ func testContentsOfFile(t *testing.T, fileFullPath, expectedContents string){
 		fileFound = true
 		assert.Contains(t, string(fileContentBytes), expectedContents, "file %s should contain the string %s", fileFullPath, expectedContents)
 	}
-	if !fileFound{
+	if !fileFound {
 		assert.Fail(t, "could not find the file %s", fileFullPath)
 	}
 }
-

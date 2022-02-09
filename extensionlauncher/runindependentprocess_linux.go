@@ -1,3 +1,5 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 package extensionlauncher
 
 import (
@@ -8,7 +10,7 @@ import (
 
 var commandHandlerToUse = commandhandler.New()
 
-func runExecutableAsIndependentProcess(exeName, args, workingDir, logDir string, el *logging.ExtensionLogger){
+func runExecutableAsIndependentProcess(exeName, args, workingDir, logDir string, el *logging.ExtensionLogger) {
 	commandToExecute := fmt.Sprintf("%s %s", exeName, args)
 	commandHandlerToUse.Execute(commandToExecute, workingDir, logDir, false, el)
 }
