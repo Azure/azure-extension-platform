@@ -101,4 +101,3 @@ func ensureRegistryValueMissing(t *testing.T, registryKey string, valueName stri
 		require.NoError(t, err, "Registry DeleteValue failed")
 	}
 }
-

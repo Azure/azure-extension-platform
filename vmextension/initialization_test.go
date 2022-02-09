@@ -43,4 +43,3 @@ func testEnableCallbackReadSettings(ext *VMExtension) (string, error) {
 	_, err := ext.GetSettings()
 	return "trying to read settings", err
 }
-

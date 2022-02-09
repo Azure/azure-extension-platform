@@ -14,4 +14,3 @@ type ICertHandler interface {
 func New(certLocation string) (ICertHandler, error) {
 	return newCertHandler(certLocation)
 }
-

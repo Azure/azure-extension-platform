@@ -79,4 +79,3 @@ func setSequenceNumberInternal(extName, extVersion string, seqNo uint) error {
 	err = k.SetDWordValue(sequenceNumberKeyName, uint32(seqNo))
 	return err
 }
-

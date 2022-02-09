@@ -6,4 +6,3 @@ package vmextension
 func getOSName() (name string) {
 	return "Linux"
 }
-

@@ -137,4 +137,3 @@ func StatusMsg(operationName string, t StatusType, msg string) string {
 
 	return s
 }
-

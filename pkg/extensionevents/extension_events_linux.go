@@ -11,4 +11,3 @@ import (
 func getThreadID() string {
 	return fmt.Sprintf("%d", unix.Gettid())
 }
-

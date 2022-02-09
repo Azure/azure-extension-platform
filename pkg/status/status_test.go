@@ -81,4 +81,3 @@ func Test_statusSaveExistingFile(t *testing.T) {
 	err = report.Save(statusTestDirectory, 7)
 	require.NoError(t, err, "second ave report failed")
 }
-

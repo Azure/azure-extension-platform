@@ -5,12 +5,12 @@ package exithelper
 import "os"
 
 const (
-	MiscError = 1
-	ArgumentError = 2
-	EnvironmentError = 3
+	MiscError          = 1
+	ArgumentError      = 2
+	EnvironmentError   = 3
 	CommunicationError = 4
-	FileSystemError = 5
-	ExecutionError = 6
+	FileSystemError    = 5
+	ExecutionError     = 6
 )
 
 type IExitHelper interface {
@@ -24,4 +24,3 @@ func (*ExitHelper) Exit(exitCode int) {
 }
 
 var Exiter IExitHelper = &ExitHelper{}
-

@@ -206,4 +206,3 @@ func getHandlerEnvironment(eventsFolder string) *handlerenv.HandlerEnvironment {
 		EventsFolder:  "",
 	}
 }
-

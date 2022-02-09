@@ -120,4 +120,3 @@ type cryptEncryptMessagePara struct {
 	dwFlags                    uint32
 	dwInnerContentType         uint32
 }
-

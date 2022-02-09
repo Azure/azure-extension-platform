@@ -61,4 +61,3 @@ func getExtensionAndRun() error {
 	vmExt.Do()
 	return nil
 }
-

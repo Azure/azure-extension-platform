@@ -15,4 +15,3 @@ func GetCurrentProcessWorkingDir() (string, error) {
 	}
 	return filepath.Dir(p), nil
 }
-

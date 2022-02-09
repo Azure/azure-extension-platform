@@ -36,4 +36,3 @@ func DecryptProtectedSettings(configFolder string, thumbprint string, decoded []
 	v := bOut.String()
 	return v, nil
 }
-

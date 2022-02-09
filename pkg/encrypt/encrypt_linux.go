@@ -61,4 +61,3 @@ func newCertHandler(certLocation string) (ICertHandler, error) {
 	}
 	return &LinuxCertificateHandler{CertOperations: cert, certLocation: certLocation}, nil
 }
-

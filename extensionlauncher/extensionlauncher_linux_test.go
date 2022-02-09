@@ -27,7 +27,7 @@ func TestRunExecutableAsIndependentProcess(t *testing.T) {
 	testContentsOfFile(t, filePath, message)
 }
 
-func TestEnvironmentVariablesAreProperlyPassed(t *testing.T){
+func TestEnvironmentVariablesAreProperlyPassed(t *testing.T) {
 	testInit(t)
 	defer testCleanup()
 	testEnvKey := "TestEnvKey"
@@ -40,5 +40,3 @@ func TestEnvironmentVariablesAreProperlyPassed(t *testing.T){
 	testContentsOfFile(t, filePath, testEnvKey)
 	testContentsOfFile(t, filePath, currentTime)
 }
-
-

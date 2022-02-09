@@ -126,5 +126,3 @@ func findAndReadFile(fileName string) (b []byte, fileLoc string, _ error) {
 
 	return b, fileLoc, nil
 }
-
-

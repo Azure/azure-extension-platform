@@ -17,4 +17,3 @@ type IGetVMExtensionEnvironmentManager interface {
 	GetHandlerSettings(el *logging.ExtensionLogger, he *handlerenv.HandlerEnvironment) (*settings.HandlerSettings, error)
 	SetSequenceNumberInternal(extensionName, extensionVersion string, seqNo uint) error
 }
-

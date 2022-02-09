@@ -59,4 +59,3 @@ func GetInitializationInfo(name string, version string, requiresSeqNoChange bool
 		LogFileNamePattern:  "",
 	}, nil
 }
-

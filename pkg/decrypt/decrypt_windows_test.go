@@ -75,4 +75,3 @@ func getTestData() string {
 	testData := "{\"AfricanLandMammal\":\"cheetah\",\"InterestingNumber\":\"42\",\"ChipmunkType\":\"Townsends\"}"
 	return testData
 }
-

@@ -10,4 +10,3 @@ const agentDir = "/var/lib/waagent"
 func GetDataFolder(name string, version string) string {
 	return path.Join(agentDir, name)
 }
-

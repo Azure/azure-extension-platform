@@ -95,4 +95,3 @@ func TestPanicWithoutCallStack(t *testing.T) {
 
 	panic(err)
 }
-

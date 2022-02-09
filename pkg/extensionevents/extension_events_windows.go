@@ -10,4 +10,3 @@ import (
 func getThreadID() string {
 	return fmt.Sprintf("%v", windows.GetCurrentThreadId())
 }
-

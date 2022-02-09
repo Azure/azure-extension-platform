@@ -56,4 +56,3 @@ func getLastOpenedAndLastClosedTime(filePath string) (lastOpened, lastClosed tim
 	lastClosed, err = time.Parse(time.RFC3339Nano, groups[0][1])
 	return
 }
-

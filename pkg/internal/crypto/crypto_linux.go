@@ -109,4 +109,3 @@ func (cert *SelfSignedCertificateKey) GetCertificateThumbprint() string {
 	sigBytes := sha1.Sum(cert.Cert.Raw)
 	return strings.ToUpper(hex.EncodeToString(sigBytes[:]))
 }
-

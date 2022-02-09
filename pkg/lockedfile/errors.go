@@ -25,4 +25,3 @@ type FileIoTimeout struct {
 func (self *FileIoTimeout) Error() string {
 	return self.message
 }
-

@@ -330,4 +330,3 @@ func noop(ext *VMExtension) (string, error) {
 	ext.ExtensionLogger.Info("noop")
 	return "", nil
 }
-

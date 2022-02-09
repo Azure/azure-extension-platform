@@ -33,4 +33,3 @@ func CombineErrors(err1 error, err2 error) error {
 	}
 	return errors.Wrap(err1, err2.Error())
 }
-

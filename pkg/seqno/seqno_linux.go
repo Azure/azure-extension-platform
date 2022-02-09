@@ -40,4 +40,3 @@ func setSequenceNumberInternal(extName, extVersion string, seqNo uint) error {
 	}
 	return nil
 }
-

@@ -28,4 +28,3 @@ func CleanupTestDirectory(t *testing.T, testDirectory string) {
 		require.NoError(t, err, "os.Remove failed")
 	}
 }
-

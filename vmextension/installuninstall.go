@@ -145,4 +145,3 @@ func uninstall(ext *VMExtension) (string, error) {
 	ext.ExtensionLogger.Info("uninstalled")
 	return "", nil
 }
-

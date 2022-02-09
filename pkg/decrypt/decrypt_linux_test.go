@@ -71,4 +71,3 @@ func TestCanEncryptAndDecrypt(t *testing.T) {
 	assert.Equal(t, "value1", protSettings.Key1, "values associated with key1 should be the same")
 	assert.Equal(t, stringToEncrypt, decrypted, "the decrypted message should be the same as the original")
 }
-

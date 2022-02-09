@@ -26,4 +26,3 @@ func (self *lockedFile) Close() error {
 	self.metadata.updateAndWriteMetadata(self, updateCloseTime)
 	return self.closeInner()
 }
-

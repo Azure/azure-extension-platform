@@ -670,4 +670,3 @@ func cleanupDirsForVMExtension(vmExt *VMExtension) (combinedError error) {
 	combinedError = extensionerrors.CombineErrors(combinedError, os.RemoveAll(vmExt.HandlerEnv.DataFolder))
 	return
 }
-

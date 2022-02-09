@@ -207,4 +207,3 @@ func GetCertificateThumbprint(cert *syscall.CertContext) ([]byte, error) {
 
 	return computedHashBuffer, nil
 }
-

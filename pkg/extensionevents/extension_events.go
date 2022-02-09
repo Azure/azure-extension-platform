@@ -113,4 +113,3 @@ func (eem *ExtensionEventManager) LogVerboseEvent(taskName string, message strin
 func (eem *ExtensionEventManager) LogInformationalEvent(taskName string, message string) {
 	eem.logEvent(taskName, eventLevelInformational, message)
 }
-

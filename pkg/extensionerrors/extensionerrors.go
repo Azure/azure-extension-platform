@@ -45,4 +45,3 @@ var (
 
 	ErrInvalidOperationName = errors.New("operation name is invalid")
 )
-

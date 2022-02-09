@@ -317,4 +317,3 @@ func TestSameSequenceNumberIsNotExecutedTwice(t *testing.T) {
 	}()
 	getExtensionAndRun()
 }
-

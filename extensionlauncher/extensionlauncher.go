@@ -80,4 +80,3 @@ func writeTransitioningStatus(extensionName, extensionVersion, operation string,
 		}
 	}
 }
-

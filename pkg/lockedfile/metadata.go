@@ -47,4 +47,3 @@ func (self *Metadata) updateAndWriteMetadata(lockedFile ILockedFile, updateOpera
 	}
 	return self.writeMetadataToLockedFile(lockedFile)
 }
-

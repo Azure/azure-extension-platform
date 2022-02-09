@@ -118,4 +118,3 @@ func FindSeqNum(el *logging.ExtensionLogger, configFolder string) (uint, error) 
 		return uint(seqs[0]), nil
 	}
 }
-

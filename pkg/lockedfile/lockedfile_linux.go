@@ -78,4 +78,3 @@ func (self *lockedFile) WriteLockedFile(bytes []byte) error {
 func (self *lockedFile) closeInner() error {
 	return syscall.Close(self.fileDescriptor)
 }
-

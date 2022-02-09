@@ -171,4 +171,3 @@ func decryptDataWithCert(decoded []byte, cert *syscall.CertContext, storeHandle 
 
 	return returnedBytes, nil
 }
-

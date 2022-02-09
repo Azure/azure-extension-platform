@@ -13,11 +13,11 @@ import (
 )
 
 const (
-	lineReturnCharacter = "\r\n"
+	lineReturnCharacter       = "\r\n"
 	commandNotExistReturnCode = 1
 )
 
-func TestQuotedCommandWorksCorrectly(t *testing.T){
+func TestQuotedCommandWorksCorrectly(t *testing.T) {
 	defer cleanupTest()
 	cmd := New()
 	retCode, err := cmd.Execute("dir \"C:\\Program Files\"", workingDir, workingDir, true, extensionLogger)
@@ -32,7 +32,7 @@ func TestQuotedCommandWorksCorrectly(t *testing.T){
 	assert.NotZero(t, fileInfo.Size(), "stdout file size should not be 0")
 }
 
-func TestQuotedCommandWorksCorrectly2(t *testing.T){
+func TestQuotedCommandWorksCorrectly2(t *testing.T) {
 	defer cleanupTest()
 	cmd := New()
 	retCode, err := cmd.Execute("echo \"Hello World\"", workingDir, workingDir, true, extensionLogger)
@@ -43,7 +43,7 @@ func TestQuotedCommandWorksCorrectly2(t *testing.T){
 	assert.Contains(t, string(fileInfo), "\"Hello World\"", "stdout message should be as expected")
 }
 
-func TestDoesntWaitForCompletion(t *testing.T){
+func TestDoesntWaitForCompletion(t *testing.T) {
 	defer cleanupTest()
 	cmd := New()
 	startTime := time.Now()
@@ -54,7 +54,7 @@ func TestDoesntWaitForCompletion(t *testing.T){
 	assert.Less(t, duration, time.Second, "execute shouldn't block")
 }
 
-func TestCommandWithEnvironmentVariable(t *testing.T){
+func TestCommandWithEnvironmentVariable(t *testing.T) {
 	defer cleanupTest()
 	cmd := New()
 	var params map[string]string
@@ -68,7 +68,7 @@ func TestCommandWithEnvironmentVariable(t *testing.T){
 	assert.Contains(t, string(fileInfo), "Hello World", "stdout message should be as expected")
 }
 
-func TestCommandWithEnvironmentVariableEmpty(t *testing.T){
+func TestCommandWithEnvironmentVariableEmpty(t *testing.T) {
 	defer cleanupTest()
 	cmd := New()
 	var params map[string]string
@@ -82,7 +82,7 @@ func TestCommandWithEnvironmentVariableEmpty(t *testing.T){
 	assert.Contains(t, string(fileInfo), "", "stdout message should be as expected")
 }
 
-func TestCommandWithEnvironmentVariableNil(t *testing.T){
+func TestCommandWithEnvironmentVariableNil(t *testing.T) {
 	defer cleanupTest()
 	cmd := New()
 
@@ -95,8 +95,7 @@ func TestCommandWithEnvironmentVariableNil(t *testing.T){
 	assert.Contains(t, string(fileInfo), "%CustomAction_FOO%", "stdout message should be as expected")
 }
 
-
-func TestCommandWithEnvironmentVariableQuotes(t *testing.T){
+func TestCommandWithEnvironmentVariableQuotes(t *testing.T) {
 	defer cleanupTest()
 	cmd := New()
 
@@ -111,7 +110,7 @@ func TestCommandWithEnvironmentVariableQuotes(t *testing.T){
 	assert.Contains(t, string(fileInfo), "\"Hello World\"", "stdout message should be as expected")
 }
 
-func TestCommandWithTwoEnvironmentVariables(t *testing.T){
+func TestCommandWithTwoEnvironmentVariables(t *testing.T) {
 	defer cleanupTest()
 	cmd := New()
 
@@ -127,7 +126,7 @@ func TestCommandWithTwoEnvironmentVariables(t *testing.T){
 	assert.Contains(t, string(fileInfo), "CustomAction_BAR=buzz", "stdout message should contain environment variable")
 }
 
-func TestDoesntWaitForCompletionEnvironmentVariable(t *testing.T){
+func TestDoesntWaitForCompletionEnvironmentVariable(t *testing.T) {
 	defer cleanupTest()
 	cmd := New()
 	startTime := time.Now()

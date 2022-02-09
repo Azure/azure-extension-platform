@@ -12,7 +12,7 @@ import (
 var el = logging.New(nil)
 var eh = exithelper.Exiter
 
-func main (){
+func main() {
 
 	extName, extVersion, exeName, operation, err := extensionlauncher.ParseArgs()
 	if err != nil {
@@ -28,4 +28,3 @@ func main (){
 	extensionlauncher.Run(handlerEnv, el, extName, extVersion, exeName, operation)
 	eh.Exit(0)
 }
-

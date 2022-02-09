@@ -206,4 +206,3 @@ func setDisabled(ext *VMExtension, disabled bool) error {
 	}
 	return nil
 }
-
