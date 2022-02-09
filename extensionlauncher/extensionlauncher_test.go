@@ -1,3 +1,5 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 package extensionlauncher
 
 import (
@@ -124,4 +126,5 @@ func testContentsOfFile(t *testing.T, fileFullPath, expectedContents string){
 		assert.Fail(t, "could not find the file %s", fileFullPath)
 	}
 }
+
 

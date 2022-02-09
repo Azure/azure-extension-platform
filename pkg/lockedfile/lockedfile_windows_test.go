@@ -1,3 +1,5 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 package lockedfile
 
 import (
@@ -20,3 +22,4 @@ func TestSplittingAndCombiningUlongToUintHighLow(t *testing.T) {
 	assert.Equal(t, uint32(0xABCE), high, "values should be equal")
 	assert.Equal(t, uint32(0x0234FEDC), low, "values should be equal")
 }
+

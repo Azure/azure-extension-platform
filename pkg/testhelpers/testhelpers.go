@@ -1,3 +1,5 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 package testhelpers
 
 import (
@@ -26,3 +28,4 @@ func CleanupTestDirectory(t *testing.T, testDirectory string) {
 		require.NoError(t, err, "os.Remove failed")
 	}
 }
+

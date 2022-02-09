@@ -1,3 +1,5 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 package vmextension
 
 import (
@@ -143,3 +145,4 @@ func uninstall(ext *VMExtension) (string, error) {
 	ext.ExtensionLogger.Info("uninstalled")
 	return "", nil
 }
+

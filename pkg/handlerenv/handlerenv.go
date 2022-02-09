@@ -1,3 +1,5 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 package handlerenv
 
 import (
@@ -124,4 +126,5 @@ func findAndReadFile(fileName string) (b []byte, fileLoc string, _ error) {
 
 	return b, fileLoc, nil
 }
+
 

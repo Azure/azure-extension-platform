@@ -1,3 +1,5 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 package seqno
 
 import (
@@ -175,3 +177,4 @@ func writeSequenceNumberFile(t *testing.T, testDirectory string, name string) st
 
 	return fullPath
 }
+

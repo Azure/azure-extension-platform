@@ -1,3 +1,5 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 package lockedfile
 
 import (
@@ -45,3 +47,4 @@ func (self *Metadata) updateAndWriteMetadata(lockedFile ILockedFile, updateOpera
 	}
 	return self.writeMetadataToLockedFile(lockedFile)
 }
+

@@ -1,3 +1,5 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 package commandhandler
 
 import (
@@ -50,4 +52,5 @@ func TestNonExistingCommand(t *testing.T) {
 	assert.Equal(t, commandNotExistReturnCode, retcode)
 	assert.Error(t, err)
 }
+
 

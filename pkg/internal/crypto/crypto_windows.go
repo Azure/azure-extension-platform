@@ -1,3 +1,5 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 package crypto
 
 import (
@@ -205,3 +207,4 @@ func GetCertificateThumbprint(cert *syscall.CertContext) ([]byte, error) {
 
 	return computedHashBuffer, nil
 }
+

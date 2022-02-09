@@ -1,3 +1,5 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 package seqno
 
 import (
@@ -99,3 +101,4 @@ func ensureRegistryValueMissing(t *testing.T, registryKey string, valueName stri
 		require.NoError(t, err, "Registry DeleteValue failed")
 	}
 }
+

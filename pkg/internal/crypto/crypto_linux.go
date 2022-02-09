@@ -1,3 +1,5 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 package crypto
 
 import (
@@ -107,3 +109,4 @@ func (cert *SelfSignedCertificateKey) GetCertificateThumbprint() string {
 	sigBytes := sha1.Sum(cert.Cert.Raw)
 	return strings.ToUpper(hex.EncodeToString(sigBytes[:]))
 }
+

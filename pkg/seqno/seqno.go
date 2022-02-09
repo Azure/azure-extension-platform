@@ -1,3 +1,5 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 package seqno
 
 import (
@@ -116,3 +118,4 @@ func FindSeqNum(el *logging.ExtensionLogger, configFolder string) (uint, error) 
 		return uint(seqs[0]), nil
 	}
 }
+

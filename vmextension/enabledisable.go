@@ -1,3 +1,5 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 package vmextension
 
 import (
@@ -204,3 +206,4 @@ func setDisabled(ext *VMExtension, disabled bool) error {
 	}
 	return nil
 }
+

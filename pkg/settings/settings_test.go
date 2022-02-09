@@ -1,3 +1,5 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 package settings
 
 import (
@@ -187,3 +189,4 @@ func writeSettingsToFile(t *testing.T, thumbprint string, protectedSettings stri
 	err = ioutil.WriteFile(fileName, file, 0644)
 	require.NoError(t, err)
 }
+

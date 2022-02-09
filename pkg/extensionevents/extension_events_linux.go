@@ -1,3 +1,5 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 package extensionevents
 
 import (
@@ -9,3 +11,4 @@ import (
 func getThreadID() string {
 	return fmt.Sprintf("%d", unix.Gettid())
 }
+

@@ -1,3 +1,5 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 package encrypt
 
 // this package is meant for creating protected settings for testing extensions
@@ -12,3 +14,4 @@ type ICertHandler interface {
 func New(certLocation string) (ICertHandler, error) {
 	return newCertHandler(certLocation)
 }
+

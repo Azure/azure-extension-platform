@@ -1,3 +1,5 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 package encrypt
 
 import (
@@ -118,3 +120,4 @@ type cryptEncryptMessagePara struct {
 	dwFlags                    uint32
 	dwInnerContentType         uint32
 }
+

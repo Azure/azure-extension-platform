@@ -1,3 +1,5 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 package seqno
 
 import (
@@ -38,3 +40,4 @@ func setSequenceNumberInternal(extName, extVersion string, seqNo uint) error {
 	}
 	return nil
 }
+

@@ -1,3 +1,5 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 package extensionlauncher
 
 import (
@@ -78,3 +80,4 @@ func writeTransitioningStatus(extensionName, extensionVersion, operation string,
 		}
 	}
 }
+

@@ -1,3 +1,5 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 package extensionlauncher
 
 import (
@@ -12,3 +14,4 @@ func runExecutableAsIndependentProcess(exeName, args, workingDir, logDir string,
 	commandToExecute := fmt.Sprintf("%s %s", exeName, args)
 	commandHandlerToUse.Execute(commandToExecute, workingDir, logDir, false, el)
 }
+

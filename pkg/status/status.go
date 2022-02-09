@@ -1,3 +1,5 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 package status
 
 import (
@@ -135,3 +137,4 @@ func StatusMsg(operationName string, t StatusType, msg string) string {
 
 	return s
 }
+

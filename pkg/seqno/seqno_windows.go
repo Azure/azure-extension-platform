@@ -1,3 +1,5 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 package seqno
 
 import (
@@ -77,3 +79,4 @@ func setSequenceNumberInternal(extName, extVersion string, seqNo uint) error {
 	err = k.SetDWordValue(sequenceNumberKeyName, uint32(seqNo))
 	return err
 }
+

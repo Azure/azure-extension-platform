@@ -1,3 +1,5 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 package vmextension
 
 import (
@@ -282,3 +284,4 @@ func testCallbackError(ext *VMExtension) error {
 	errorCallbackCalled = true
 	return fmt.Errorf("oh no. The world is ending, but styling prevents me from using end punctuation or caps")
 }
+

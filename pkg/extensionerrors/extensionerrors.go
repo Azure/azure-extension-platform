@@ -1,3 +1,5 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 package extensionerrors
 
 import "github.com/pkg/errors"
@@ -43,3 +45,4 @@ var (
 
 	ErrInvalidOperationName = errors.New("operation name is invalid")
 )
+

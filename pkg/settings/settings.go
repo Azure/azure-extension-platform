@@ -1,3 +1,5 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 package settings
 
 import (
@@ -121,3 +123,4 @@ func parseHandlerSettingsFile(el *logging.ExtensionLogger, path string) (h handl
 
 	return f.RuntimeSettings[0].HandlerSettings, nil
 }
+

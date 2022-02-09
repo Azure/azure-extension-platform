@@ -1,3 +1,5 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 package lockedfile
 
 import (
@@ -169,3 +171,4 @@ func combineTwoUint32ToUlong(high uint32, low uint32) (long uint64) {
 	long += uint64(low)
 	return long
 }
+

@@ -1,3 +1,5 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 package decrypt
 
 import (
@@ -34,3 +36,4 @@ func DecryptProtectedSettings(configFolder string, thumbprint string, decoded []
 	v := bOut.String()
 	return v, nil
 }
+

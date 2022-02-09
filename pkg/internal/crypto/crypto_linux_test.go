@@ -1,3 +1,5 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 package crypto
 
 import (
@@ -72,3 +74,4 @@ func TestCreateSelfSignedCertificate_CertificatesAndKeysAreExclusive(t *testing.
 		fmt.Printf("Mismatched Cert and key didn't match as expected: %s\n", err.Error())
 	}
 }
+

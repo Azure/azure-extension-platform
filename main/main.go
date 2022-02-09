@@ -1,3 +1,5 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 package main
 
 import (
@@ -26,3 +28,4 @@ func main (){
 	extensionlauncher.Run(handlerEnv, el, extName, extVersion, exeName, operation)
 	eh.Exit(0)
 }
+

@@ -1,3 +1,5 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 package lockedfile
 
 import (
@@ -76,3 +78,4 @@ func (self *lockedFile) WriteLockedFile(bytes []byte) error {
 func (self *lockedFile) closeInner() error {
 	return syscall.Close(self.fileDescriptor)
 }
+

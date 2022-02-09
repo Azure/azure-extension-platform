@@ -1,3 +1,5 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 package extensionerrors
 
 import (
@@ -93,3 +95,4 @@ func TestPanicWithoutCallStack(t *testing.T) {
 
 	panic(err)
 }
+

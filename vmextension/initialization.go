@@ -1,3 +1,5 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 package vmextension
 
 import (
@@ -57,3 +59,4 @@ func GetInitializationInfo(name string, version string, requiresSeqNoChange bool
 		LogFileNamePattern:  "",
 	}, nil
 }
+

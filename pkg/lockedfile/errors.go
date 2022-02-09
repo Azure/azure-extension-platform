@@ -1,3 +1,5 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 package lockedfile
 
 type FileLockTimeoutError struct {
@@ -23,3 +25,4 @@ type FileIoTimeout struct {
 func (self *FileIoTimeout) Error() string {
 	return self.message
 }
+

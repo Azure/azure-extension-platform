@@ -1,3 +1,5 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 package seqno
 
 import (
@@ -29,3 +31,4 @@ func Test_ReadSequenceNumberNoMrseqFile(t *testing.T) {
 func cleanupTest() {
 	os.Remove(mostRecentSequenceFileName)
 }
+

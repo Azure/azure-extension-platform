@@ -1,3 +1,5 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 package lockedfile
 
 import (
@@ -24,3 +26,4 @@ func (self *lockedFile) Close() error {
 	self.metadata.updateAndWriteMetadata(self, updateCloseTime)
 	return self.closeInner()
 }
+

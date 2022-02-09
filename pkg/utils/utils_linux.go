@@ -1,3 +1,5 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 package utils
 
 import "path"
@@ -8,3 +10,4 @@ const agentDir = "/var/lib/waagent"
 func GetDataFolder(name string, version string) string {
 	return path.Join(agentDir, name)
 }
+

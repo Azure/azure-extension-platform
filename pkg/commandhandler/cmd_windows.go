@@ -1,3 +1,5 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 package commandhandler
 
 import (
@@ -72,3 +74,4 @@ func execCommonWithEnvVariables(cmd, workdir string, stdout, stderr io.WriteClos
 	}
 	return 0, nil
 }
+

@@ -1,3 +1,5 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 package logging
 
 import (
@@ -117,3 +119,4 @@ func (logger *ExtensionLogger) InfoFromStream(prefix string, streamReader io.Rea
 	io.Copy(logger.infoLogger.Writer(), streamReader)
 	logger.infoLogger.Writer().Write([]byte(fmt.Sprintln())) // add a newline at the end of the stream contents
 }
+

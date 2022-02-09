@@ -1,3 +1,5 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 // Sample code to for how to use azure-extension-helper with your extension
 
 package main
@@ -59,3 +61,4 @@ func getExtensionAndRun() error {
 	vmExt.Do()
 	return nil
 }
+

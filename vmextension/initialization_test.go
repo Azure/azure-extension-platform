@@ -1,3 +1,5 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 package vmextension
 
 import (
@@ -41,3 +43,4 @@ func testEnableCallbackReadSettings(ext *VMExtension) (string, error) {
 	_, err := ext.GetSettings()
 	return "trying to read settings", err
 }
+

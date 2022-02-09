@@ -1,3 +1,5 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 package decrypt
 
 import (
@@ -169,3 +171,4 @@ func decryptDataWithCert(decoded []byte, cert *syscall.CertContext, storeHandle 
 
 	return returnedBytes, nil
 }
+

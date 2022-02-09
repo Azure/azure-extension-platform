@@ -1,3 +1,5 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 package decrypt
 
 import (
@@ -73,3 +75,4 @@ func getTestData() string {
 	testData := "{\"AfricanLandMammal\":\"cheetah\",\"InterestingNumber\":\"42\",\"ChipmunkType\":\"Townsends\"}"
 	return testData
 }
+

@@ -1,3 +1,5 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 package extensionlauncher
 
 import (
@@ -38,4 +40,5 @@ func TestEnvironmentVariablesAreProperlyPassed(t *testing.T){
 	testContentsOfFile(t, filePath, testEnvKey)
 	testContentsOfFile(t, filePath, currentTime)
 }
+
 

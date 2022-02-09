@@ -1,3 +1,5 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 package exithelper
 
 import "os"
@@ -22,3 +24,4 @@ func (*ExitHelper) Exit(exitCode int) {
 }
 
 var Exiter IExitHelper = &ExitHelper{}
+

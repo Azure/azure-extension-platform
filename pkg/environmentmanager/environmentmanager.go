@@ -1,3 +1,5 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 package environmentmanager
 
 import (
@@ -15,3 +17,4 @@ type IGetVMExtensionEnvironmentManager interface {
 	GetHandlerSettings(el *logging.ExtensionLogger, he *handlerenv.HandlerEnvironment) (*settings.HandlerSettings, error)
 	SetSequenceNumberInternal(extensionName, extensionVersion string, seqNo uint) error
 }
+

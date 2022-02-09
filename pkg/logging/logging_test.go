@@ -1,3 +1,5 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 package logging
 
 import (
@@ -204,3 +206,4 @@ func getHandlerEnvironment(eventsFolder string) *handlerenv.HandlerEnvironment {
 		EventsFolder:  "",
 	}
 }
+

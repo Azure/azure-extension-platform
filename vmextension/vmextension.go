@@ -1,3 +1,5 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 package vmextension
 
 import (
@@ -328,3 +330,4 @@ func noop(ext *VMExtension) (string, error) {
 	ext.ExtensionLogger.Info("noop")
 	return "", nil
 }
+

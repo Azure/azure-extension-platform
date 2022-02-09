@@ -1,3 +1,5 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 package extensionerrors
 
 import (
@@ -31,3 +33,4 @@ func CombineErrors(err1 error, err2 error) error {
 	}
 	return errors.Wrap(err1, err2.Error())
 }
+
