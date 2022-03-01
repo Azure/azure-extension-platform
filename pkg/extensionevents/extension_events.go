@@ -65,7 +65,7 @@ func (eem *ExtensionEventManager) logEvent(taskName string, eventLevel string, m
 
 	// File name is the unix time in milliseconds
 	fileName := strconv.FormatInt(time.Now().UTC().UnixNano()/1000, 10)
-	filePath := path.Join(eem.eventsFolder, fileName)
+	filePath := path.Join(eem.eventsFolder, fileName) + ".json"
 
 	b, err := json.Marshal(extensionEvent)
 	if err != nil {
