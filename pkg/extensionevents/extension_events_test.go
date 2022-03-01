@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -98,6 +99,7 @@ func Test_NoTaskName(t *testing.T) {
 }
 
 func verifyEventFile(t *testing.T, fileName string, expectedLevel string, expectedMessage string) {
+	require.Equal(t, ".json", filepath.Ext(fileName))
 	openedFile, err := os.Open(path.Join(eventstestdir, fileName))
 	require.NoError(t, err)
 	defer openedFile.Close()
