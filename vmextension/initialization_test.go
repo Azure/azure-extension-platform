@@ -32,7 +32,7 @@ func Test_initializationInfoDefaults(t *testing.T) {
 	require.Equal(t, true, ii.RequiresSeqNoChange)
 	require.Equal(t, 52, ii.InstallExitCode)
 	require.Equal(t, 3, ii.OtherExitCode)
-	require.Equal(t, "", ii.LogFileNameFormat)
+	require.Equal(t, "", ii.LogFileNamePattern)
 }
 
 func testEnableCallback(ext *VMExtension) (string, error) {
