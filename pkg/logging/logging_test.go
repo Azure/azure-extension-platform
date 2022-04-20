@@ -6,16 +6,16 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"math/rand"
 	"os"
 	"path"
 	"strings"
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
-
 	"github.com/Azure/azure-extension-platform/pkg/constants"
 	"github.com/Azure/azure-extension-platform/pkg/handlerenv"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -205,4 +205,25 @@ func getHandlerEnvironment(eventsFolder string) *handlerenv.HandlerEnvironment {
 		DataFolder:    "",
 		EventsFolder:  "",
 	}
+}
+
+func Test_rotateLogFolder(t *testing.T) {
+	clearLogTestDir()
+	const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	he := getHandlerEnvironment(logtestdir)
+
+	for i := 0; i < 7; i++ {
+		el := NewWithName(he, "yaba_%v.log")
+
+		b := make([]byte, 7500000)
+		for i := range b {
+			b[i] = letterBytes[rand.Intn(len(letterBytes))]
+		}
+
+		el.Info("%s", string(b))
+		el.Close()
+	}
+
+	size, _ := getDirSize(logtestdir)
+	require.LessOrEqual(t, size, int64(logDirThresholdHigh))
 }

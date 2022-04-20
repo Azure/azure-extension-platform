@@ -29,7 +29,7 @@ type InitializationInfo struct {
 	InstallCallback       CallbackFunc                  // Called for the Install operation. Only set this if the extension wants a callback.
 	UninstallCallback     CallbackFunc                  // Called for the Uninstall operation. Only set this if the extension wants a callback.
 	CustomStatusFormatter status.StatusMessageFormatter // Provide a function to format the status message. If nil default formatting behavior will be preserved.
-	LogFileNamePattern    string                        // Default pattern to use for log files
+	LogFileNamePattern    string                        // Default format to use for log files. Expected to be format string with one parameter; Eg: "<name_pattern>%v"
 }
 
 // GetInitializationInfo returns a new InitializationInfo object
