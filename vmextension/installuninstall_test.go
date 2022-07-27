@@ -71,7 +71,7 @@ func Test_installCallback(t *testing.T) {
 	// Callback returns an error, but it isn't propagated
 	ext.exec.installCallback = testCallbackError
 	_, err = install(ext)
-	require.NoError(t, err)
+	require.Error(t, err)
 	require.True(t, errorCallbackCalled)
 }
 
