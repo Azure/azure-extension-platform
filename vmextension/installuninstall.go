@@ -113,6 +113,7 @@ func install(ext *VMExtension) (string, error) {
 		err := ext.exec.installCallback(ext)
 		if err != nil {
 			ext.ExtensionLogger.Error("Install failed: %v", err)
+			return "", err
 		}
 	}
 
