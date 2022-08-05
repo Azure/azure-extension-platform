@@ -38,8 +38,10 @@ type extensionEvent struct {
 // ExtensionEventManager allows extensions to log events that will be collected
 // by the Guest Agent
 type ExtensionEventManager struct {
-	extensionLogger *logging.ExtensionLogger
-	eventsFolder    string
+	extensionLogger  *logging.ExtensionLogger
+	eventsFolder     string
+	extensionVersion string
+	operationID      string
 }
 
 func (eem *ExtensionEventManager) logEvent(taskName string, eventLevel string, message string) {
@@ -53,14 +55,14 @@ func (eem *ExtensionEventManager) logEvent(taskName string, eventLevel string, m
 	tid := getThreadID()
 
 	extensionEvent := extensionEvent{
-		Version:     eventVersion,
+		Version:     eem.extensionVersion,
 		Timestamp:   timestamp,
 		TaskName:    taskName,
 		EventLevel:  eventLevel,
 		Message:     message,
 		EventPid:    pid,
 		EventTid:    tid,
-		OperationID: "",
+		OperationID: eem.operationID,
 	}
 
 	// File name is the unix time in milliseconds
@@ -82,11 +84,27 @@ func (eem *ExtensionEventManager) logEvent(taskName string, eventLevel string, m
 // New creates a new instance of the ExtensionEventManager
 func New(el *logging.ExtensionLogger, he *handlerenv.HandlerEnvironment) *ExtensionEventManager {
 	eem := &ExtensionEventManager{
-		extensionLogger: el,
-		eventsFolder:    he.EventsFolder,
+		extensionLogger:  el,
+		eventsFolder:     he.EventsFolder,
+		extensionVersion: eventVersion,
+		operationID:      "",
 	}
 
 	return eem
+}
+
+// "SetOperationId()" sets operation Id passed by user while logging extension events
+// This is made as separate function (not included in "logEvent()") to enable users to set Operation ID globally for their extension.
+// "operationID" corresponds to "Context3" column in 'GuestAgentGenericLogs' table (Rdos cluster)
+func (eem *ExtensionEventManager) SetOperationID(operationID string) {
+	eem.operationID = operationID
+}
+
+// "SetExtensionVersion()" sets extension version passed by user while logging extension events
+// This is made as separate function (not included in "logEvent()") to enable users to set extension version globally for their extension.
+// "extensionVersion" is appended with "EventName" column in 'GuestAgentGenericLogs' table (Rdos cluster)
+func (eem *ExtensionEventManager) SetExtensionVersion(extensionVersion string) {
+	eem.extensionVersion = extensionVersion
 }
 
 // LogCriticalEvent writes a message with critical status for the extension
