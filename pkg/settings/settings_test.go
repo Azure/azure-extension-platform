@@ -9,6 +9,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strconv"
 	"testing"
 
 	"github.com/Azure/azure-extension-platform/pkg/constants"
@@ -125,6 +126,38 @@ func Test_settingsTooManyRuntimeSettings(t *testing.T) {
 	require.Equal(t, extensionerrors.ErrInvalidSettingsRuntimeSettingsCount, err)
 }
 
+func Test_clearProtectedSettings(t *testing.T) {
+	//set up test files
+	he := getTestHandlerEnvironment()
+	err := initHandlerEnvironmentDirs(he)
+	defer cleanuphandlerEnvDir(he)
+	require.NoError(t, err)
+
+	configFolder := he.ConfigFolder
+	settingsExtensionName := ".settings"
+	el := logging.New(nil)
+
+	err = createTestFiles(configFolder, settingsExtensionName)
+	require.NoError(t, err)
+
+	CleanUpSettings(el, configFolder)
+
+	//verify that settings file were cleared
+	fileName := ""
+	for i := 0; i < 3; i++ {
+		fileName = filepath.Join(configFolder, strconv.FormatInt(int64(i), 10)+settingsExtensionName)
+		content, err := ioutil.ReadFile(fileName)
+		require.NoError(t, err)
+		require.Equal(t, len(content), 0)
+	}
+
+	//verify that non settings file did not get cleared
+	fileName = filepath.Join(configFolder, "HandlerEnv.txt")
+	content, err := ioutil.ReadFile(fileName)
+	require.NoError(t, err)
+	require.Equal(t, len(content), 9)
+}
+
 func validateHandlerSettings(t *testing.T, hs *HandlerSettings) {
 	require.NotNil(t, hs)
 	v := make(map[string]interface{})
@@ -188,4 +221,28 @@ func writeSettingsToFile(t *testing.T, thumbprint string, protectedSettings stri
 	require.NoError(t, err)
 	err = ioutil.WriteFile(fileName, file, 0644)
 	require.NoError(t, err)
+}
+
+func createTestFiles(folderPath, settingsExtensionName string) error {
+	fileName := ""
+
+	testContent := []byte("beep boop")
+	for i := 0; i < 4; i++ {
+		if i < 3 {
+			fileName = filepath.Join(folderPath, strconv.FormatInt(int64(i), 10)+settingsExtensionName)
+		} else { //non settings file
+			fileName = filepath.Join(folderPath, "HandlerEnv.txt")
+		}
+
+		file, err := os.Create(fileName)
+		if err != nil {
+			return err
+		}
+		size, err := file.Write(testContent)
+		if err != nil || size == 0 {
+			return err
+		}
+	}
+
+	return nil
 }
