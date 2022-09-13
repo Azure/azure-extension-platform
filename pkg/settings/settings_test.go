@@ -193,38 +193,37 @@ func writeSettingsToFile(t *testing.T, thumbprint string, protectedSettings stri
 
 func Test_protectedSettings(t *testing.T) {
 	//set up test files
-	testFolderPath := "/config"
+	he := getTestHandlerEnvironment()
+	err := initHandlerEnvironmentDirs(he)
+	defer cleanuphandlerEnvDir(he)
+	require.NoError(t, err)
+
+	configFolder := he.ConfigFolder
 	settingsExtensionName := ".settings"
 	el := logging.New(nil)
 
-	err := createTestFiles(testFolderPath, settingsExtensionName)
+	err = createTestFiles(configFolder, settingsExtensionName)
 	require.NoError(t, err)
-	// cleanup
-	defer os.RemoveAll(testFolderPath)
 
-	CleanUpSettings(el, testFolderPath)
+	CleanUpSettings(el, configFolder)
 
 	//verify that settings file were cleared
 	fileName := ""
 	for i := 0; i < 3; i++ {
-		fileName = filepath.Join(testFolderPath, strconv.FormatInt(int64(i), 10)+settingsExtensionName)
+		fileName = filepath.Join(configFolder, strconv.FormatInt(int64(i), 10)+settingsExtensionName)
 		content, err := ioutil.ReadFile(fileName)
 		require.NoError(t, err)
 		require.Equal(t, len(content), 0)
 	}
 
 	//verify that non settings file did not get cleared
-	fileName = filepath.Join(testFolderPath, "HandlerEnv.txt")
+	fileName = filepath.Join(configFolder, "HandlerEnv.txt")
 	content, err := ioutil.ReadFile(fileName)
 	require.NoError(t, err)
 	require.Equal(t, len(content), 9)
 }
 
 func createTestFiles(folderPath, settingsExtensionName string) error {
-	err := os.MkdirAll(folderPath, os.ModeDir)
-	if err != nil {
-		return err
-	}
 	fileName := ""
 
 	testContent := []byte("beep boop")
