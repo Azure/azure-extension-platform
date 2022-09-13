@@ -125,9 +125,9 @@ func parseHandlerSettingsFile(el *logging.ExtensionLogger, path string) (h handl
 	return f.RuntimeSettings[0].HandlerSettings, nil
 }
 
-// cleanUpSettings replaces the protected settings for all settings files [ex: 0.settings, etc] to ensure no
+// CleanUpSettings replaces the protected settings for all settings files [ex: 0.settings, etc] to ensure no
 // protected settings are logged in VM
-func cleanUpSettings(el *logging.ExtensionLogger, configFolder string) {
+func CleanUpSettings(el *logging.ExtensionLogger, configFolder string) {
 	configDir, err := ioutil.ReadDir(configFolder)
 	if err != nil {
 		el.Error("error clearing config file: %v", err)

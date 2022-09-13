@@ -202,7 +202,7 @@ func Test_protectedSettings(t *testing.T) {
 	// cleanup
 	defer os.RemoveAll(testFolderPath)
 
-	cleanUpSettings(el, testFolderPath)
+	CleanUpSettings(el, testFolderPath)
 
 	//verify that settings file were cleared
 	fileName := ""
