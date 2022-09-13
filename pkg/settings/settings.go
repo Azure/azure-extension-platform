@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"path/filepath"
+	"strings"
 
 	"github.com/Azure/azure-extension-platform/pkg/decrypt"
 	"github.com/Azure/azure-extension-platform/pkg/extensionerrors"
@@ -122,4 +123,26 @@ func parseHandlerSettingsFile(el *logging.ExtensionLogger, path string) (h handl
 	}
 
 	return f.RuntimeSettings[0].HandlerSettings, nil
+}
+
+// cleanUpSettings replaces the protected settings for all settings files [ex: 0.settings, etc] to ensure no
+// protected settings are logged in VM
+func cleanUpSettings(el *logging.ExtensionLogger, configFolder string) {
+	configDir, err := ioutil.ReadDir(configFolder)
+	if err != nil {
+		el.Error("error clearing config file: %v", err)
+		return
+	}
+	content := []byte("")
+	for _, file := range configDir {
+		if strings.Compare(filepath.Ext(file.Name()), settingsFileSuffix) == 0 { //checking if its a settings file
+			filePath := filepath.Join(configFolder, file.Name())
+			err = ioutil.WriteFile(filePath, content, 0644)
+			if err != nil {
+				el.Error("error clearing %s, err %v", file.Name(), err)
+			} else {
+				el.Info("%s cleared successfully", file.Name())
+			}
+		}
+	}
 }
