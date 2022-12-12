@@ -59,6 +59,7 @@ func TryClearRegexMatchingFilesExcept(directory string, regexFileNamePattern str
 	return err
 }
 
+// Try delete all directories in parentDirectory excepth directory by name 'exceptDirectoryName'
 func TryDeleteDirectoriesExcept(parentDirectory string, exceptDirectoryName string) error {
 	// Check if the directory exists
 	directoryFDRef, err := os.Open(parentDirectory)
@@ -80,6 +81,9 @@ func TryDeleteDirectoriesExcept(parentDirectory string, exceptDirectoryName stri
 	return err
 }
 
+//Try empty runtime settings files for an extension except last, delete scripts except last.
+// runtimeSettingsRegexFormatWithAnyExtName - regex identifying all settings files- example. "\\d+.settings", "RunCommandName.\\d+.settings"
+// runtimeSettingsLastSeqNumFormatWithAnyExtName -  example. "%s.settings", "RunCommandName.%s.settings"
 func TryClearExtensionScriptsDirectoriesAndSettingsFilesExceptMostRecent(scriptsDirectory string,
 	runtimeSettingsDirectory string,
 	extensionName string,

@@ -72,4 +72,28 @@ func Test_TryClearRuntimeSettingsAndDeleteScriptsExceptMostRecent(t *testing.T) 
 		"%d.settings")    // Format string to construct last runtime settings file which need to be skipped
 	require.Equal(t, nil, err)
 
+	runtimeSettingsFiles, error := os.ReadDir(runtimeSettingsDirectory)
+	require.Equal(t, nil, error)
+	require.Equal(t, 3, len(runtimeSettingsFiles))
+
+	// Verify most recent runtime settings (2.settings) is not cleared
+	mostrecentSettingsFile := "2.settings"
+	for _, runtimesettingsfile := range runtimeSettingsFiles {
+		fileName := runtimesettingsfile.Name()
+		fileInfo, _ := os.Stat(filepath.Join(runtimeSettingsDirectory, fileName))
+		if fileName == mostrecentSettingsFile {
+			require.True(t, fileInfo.Size() > 0)
+		} else {
+			require.True(t, fileInfo.Size() == 0)
+		}
+	}
+
+	scriptDirectories, error := os.ReadDir(filepath.Join(scriptsDirectory, extensionName))
+	require.Equal(t, nil, error)
+	require.Equal(t, 1, len(scriptDirectories))
+	require.Equal(t, "2", scriptDirectories[0].Name())
+
+	scriptFile, error := os.ReadDir(filepath.Join(scriptsDirectory, extensionName, "2"))
+	fileInfo, _ := os.Stat(filepath.Join(scriptsDirectory, extensionName, scriptDirectories[0].Name(), scriptFile[0].Name()))
+	require.True(t, fileInfo.Size() > 0)
 }
