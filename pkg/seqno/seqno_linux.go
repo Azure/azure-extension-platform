@@ -11,6 +11,7 @@ import (
 
 	"github.com/Azure/azure-extension-platform/pkg/constants"
 	"github.com/Azure/azure-extension-platform/pkg/extensionerrors"
+	"github.com/Azure/azure-extension-platform/pkg/utils"
 )
 
 var mostRecentSequenceFileName = "mrseq"
@@ -53,7 +54,7 @@ func setSequenceNumberInternal(extName, extVersion string, seqNo uint) error {
 
 func getMrseqFilePath() (string, error) {
 	// mrseq file path must always be present in the same directory as the extension executable
-	currentDir, err := filepath.Abs(filepath.Dir(os.Args[0]))
+	currentDir, err := utils.GetCurrentProcessWorkingDir()
 	if err != nil {
 		return "", err
 	}
