@@ -31,7 +31,7 @@ func (*ProdSequenceNumberRetriever) GetSequenceNumber(name, version string) (uin
 // GetCurrentSequenceNumber returns the current sequence number the extension is using
 func GetCurrentSequenceNumber(el *logging.ExtensionLogger, retriever ISequenceNumberRetriever, name, version string) (sn uint, _ error) {
 	sequenceNumber, err := retriever.GetSequenceNumber(name, version)
-	if err == extensionerrors.ErrNotFound {
+	if err == extensionerrors.ErrNotFound || err == extensionerrors.ErrNoMrseqFile {
 		// If we can't find the sequence number, then it's possible that the extension
 		// hasn't been installed yet. Go back to 0.
 		el.Error("couldn't find sequence number")

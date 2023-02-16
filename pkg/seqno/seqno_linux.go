@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"strconv"
 
 	"github.com/Azure/azure-extension-platform/pkg/constants"
@@ -16,7 +17,11 @@ var mostRecentSequenceFileName = "mrseq"
 
 // sequence number for the extension from the registry
 func getSequenceNumberInternal(name, version string) (uint, error) {
-	mrseqStr, err := ioutil.ReadFile(mostRecentSequenceFileName)
+	mrseqPath, err := getMrseqFilePath()
+	if err != nil {
+		return 0, err
+	}
+	mrseqStr, err := ioutil.ReadFile(mrseqPath)
 	if err != nil {
 		if os.IsNotExist(err) {
 			return 0, extensionerrors.ErrNoMrseqFile
@@ -34,9 +39,23 @@ func getSequenceNumberInternal(name, version string) (uint, error) {
 
 func setSequenceNumberInternal(extName, extVersion string, seqNo uint) error {
 	b := []byte(fmt.Sprintf("%v", seqNo))
-	err := ioutil.WriteFile(mostRecentSequenceFileName, b, constants.FilePermissions_UserOnly_ReadWrite)
+
+	mrseqPath, err := getMrseqFilePath()
+	if err != nil {
+		return err
+	}
+	err = ioutil.WriteFile(mrseqPath, b, constants.FilePermissions_UserOnly_ReadWrite)
 	if err != nil {
 		return fmt.Errorf("could not write sequence number file %s, error: %v", mostRecentSequenceFileName, err)
 	}
 	return nil
+}
+
+func getMrseqFilePath() (string, error) {
+	// mrseq file path must always be present in the same directory as the extension executable
+	currentDir, err := filepath.Abs(filepath.Dir(os.Args[0]))
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(currentDir, mostRecentSequenceFileName), nil
 }
