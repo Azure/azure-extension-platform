@@ -29,5 +29,9 @@ func Test_ReadSequenceNumberNoMrseqFile(t *testing.T) {
 }
 
 func cleanupTest() {
-	os.Remove(mostRecentSequenceFileName)
+	mrseqFilePath, err := getMrseqFilePath()
+	if err != nil {
+		return
+	}
+	os.Remove(mrseqFilePath)
 }
