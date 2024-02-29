@@ -29,7 +29,7 @@ func (*ProdSequenceNumberRetriever) GetSequenceNumber(name, version string) (uin
 }
 
 // GetCurrentSequenceNumber returns the current sequence number the extension is using
-func GetCurrentSequenceNumber(el *logging.ExtensionLogger, retriever ISequenceNumberRetriever, name, version string) (sn uint, _ error) {
+func GetCurrentSequenceNumber(el logging.ILogger, retriever ISequenceNumberRetriever, name, version string) (sn uint, _ error) {
 	sequenceNumber, err := retriever.GetSequenceNumber(name, version)
 	if err == extensionerrors.ErrNotFound || err == extensionerrors.ErrNoMrseqFile {
 		// If we can't find the sequence number, then it's possible that the extension
@@ -47,7 +47,7 @@ func SetSequenceNumber(extName, extVersion string, seqNo uint) error {
 
 // findSeqnum finds the most recently used file under the config folder
 // Note that this is different than just choosing the highest number, which may be incorrect
-func FindSeqNum(el *logging.ExtensionLogger, configFolder string) (uint, error) {
+func FindSeqNum(el logging.ILogger, configFolder string) (uint, error) {
 	// try getting the sequence number from the environment first
 	seqNoString := os.Getenv(configSequenceNumber)
 	if seqNoString == "" {
