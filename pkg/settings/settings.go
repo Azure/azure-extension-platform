@@ -46,7 +46,7 @@ type handlerSettingsContainer struct {
 }
 
 // GetHandlerSettings reads and parses the handler's settings in an OS independent manner
-func GetHandlerSettings(el *logging.ExtensionLogger, he *handlerenv.HandlerEnvironment, seqNo uint) (hs *HandlerSettings, _ error) {
+func GetHandlerSettings(el logging.ILogger, he *handlerenv.HandlerEnvironment, seqNo uint) (hs *HandlerSettings, _ error) {
 	// The file will be under the config folder with the path {seqNo}.settings
 	settingsFileName := filepath.Join(he.ConfigFolder, fmt.Sprintf("%d%s", seqNo, settingsFileSuffix))
 	parsedHs, err := parseHandlerSettingsFile(el, settingsFileName)
@@ -80,7 +80,7 @@ func GetHandlerSettings(el *logging.ExtensionLogger, he *handlerenv.HandlerEnvir
 // unmarshalProtectedSettings decodes the protected settings from handler
 // runtime settings JSON file, decrypts it using the certificates and unmarshals
 // into the given struct v.
-func unmarshalProtectedSettings(el *logging.ExtensionLogger, configFolder string, hs handlerSettings) (string, error) {
+func unmarshalProtectedSettings(el logging.ILogger, configFolder string, hs handlerSettings) (string, error) {
 	if hs.ProtectedSettingsBase64 == "" {
 		// No protected settings
 		return "", nil
@@ -102,7 +102,7 @@ func unmarshalProtectedSettings(el *logging.ExtensionLogger, configFolder string
 
 // parseHandlerSettings parses a handler settings file (e.g. 0.settings) and
 // returns it as a structured object.
-func parseHandlerSettingsFile(el *logging.ExtensionLogger, path string) (h handlerSettings, _ error) {
+func parseHandlerSettingsFile(el logging.ILogger, path string) (h handlerSettings, _ error) {
 	b, err := ioutil.ReadFile(path)
 	if err != nil {
 		el.Error("parseHandlerSettingsFile failed. Error reading %s: %v", path, err)
@@ -127,7 +127,7 @@ func parseHandlerSettingsFile(el *logging.ExtensionLogger, path string) (h handl
 
 // CleanUpSettings replaces the protected settings for all settings files [ex: 0.settings, etc] to ensure no
 // protected settings are logged in VM
-func CleanUpSettings(el *logging.ExtensionLogger, configFolder string) {
+func CleanUpSettings(el logging.ILogger, configFolder string) {
 	configDir, err := ioutil.ReadDir(configFolder)
 	if err != nil {
 		el.Error("error clearing config file: %v", err)
