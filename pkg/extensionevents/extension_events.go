@@ -37,7 +37,7 @@ type extensionEvent struct {
 // ExtensionEventManager allows extensions to log events that will be collected
 // by the Guest Agent
 type ExtensionEventManager struct {
-	extensionLogger *logging.ExtensionLogger
+	extensionLogger logging.ILogger
 	eventsFolder    string
 	operationID     string
 }
@@ -81,7 +81,7 @@ func (eem *ExtensionEventManager) logEvent(taskName string, eventLevel string, m
 }
 
 // New creates a new instance of the ExtensionEventManager
-func New(el *logging.ExtensionLogger, he *handlerenv.HandlerEnvironment) *ExtensionEventManager {
+func New(el logging.ILogger, he *handlerenv.HandlerEnvironment) *ExtensionEventManager {
 	eem := &ExtensionEventManager{
 		extensionLogger: el,
 		eventsFolder:    he.EventsFolder,
