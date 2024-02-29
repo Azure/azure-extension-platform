@@ -53,7 +53,7 @@ func (mm *mockGetVMExtensionEnvironmentManager) GetHandlerEnvironment(name strin
 	return mm.he, nil
 }
 
-func (mm *mockGetVMExtensionEnvironmentManager) FindSeqNum(el *logging.ExtensionLogger, configFolder string) (uint, error) {
+func (mm *mockGetVMExtensionEnvironmentManager) FindSeqNum(el logging.ILogger, configFolder string) (uint, error) {
 	if mm.findSeqNumError != nil {
 		return 0, mm.findSeqNumError
 	}
@@ -61,7 +61,7 @@ func (mm *mockGetVMExtensionEnvironmentManager) FindSeqNum(el *logging.Extension
 	return mm.seqNo, nil
 }
 
-func (mm *mockGetVMExtensionEnvironmentManager) GetCurrentSequenceNumber(el *logging.ExtensionLogger, retriever seqno.ISequenceNumberRetriever, name, version string) (uint, error) {
+func (mm *mockGetVMExtensionEnvironmentManager) GetCurrentSequenceNumber(el logging.ILogger, retriever seqno.ISequenceNumberRetriever, name, version string) (uint, error) {
 	if mm.getCurrentSequenceNumberError != nil {
 		return 0, mm.getCurrentSequenceNumberError
 	}
@@ -69,7 +69,7 @@ func (mm *mockGetVMExtensionEnvironmentManager) GetCurrentSequenceNumber(el *log
 	return mm.currentSeqNo, nil
 }
 
-func (mm *mockGetVMExtensionEnvironmentManager) GetHandlerSettings(el *logging.ExtensionLogger, he *handlerenv.HandlerEnvironment) (hs *settings.HandlerSettings, _ error) {
+func (mm *mockGetVMExtensionEnvironmentManager) GetHandlerSettings(el logging.ILogger, he *handlerenv.HandlerEnvironment) (hs *settings.HandlerSettings, _ error) {
 	if mm.getHandlerSettingsError != nil {
 		return hs, mm.getHandlerSettingsError
 	}

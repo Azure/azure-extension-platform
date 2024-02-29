@@ -108,15 +108,15 @@ func (*prodGetVMExtensionEnvironmentManager) GetHandlerEnvironment(name string, 
 	return handlerenv.GetHandlerEnvironment(name, version)
 }
 
-func (*prodGetVMExtensionEnvironmentManager) FindSeqNum(el *logging.ExtensionLogger, configFolder string) (uint, error) {
+func (*prodGetVMExtensionEnvironmentManager) FindSeqNum(el logging.ILogger, configFolder string) (uint, error) {
 	return seqno.FindSeqNum(el, configFolder)
 }
 
-func (*prodGetVMExtensionEnvironmentManager) GetCurrentSequenceNumber(el *logging.ExtensionLogger, retriever seqno.ISequenceNumberRetriever, name, version string) (uint, error) {
+func (*prodGetVMExtensionEnvironmentManager) GetCurrentSequenceNumber(el logging.ILogger, retriever seqno.ISequenceNumberRetriever, name, version string) (uint, error) {
 	return seqno.GetCurrentSequenceNumber(el, retriever, name, version)
 }
 
-func (em *prodGetVMExtensionEnvironmentManager) GetHandlerSettings(el *logging.ExtensionLogger, he *handlerenv.HandlerEnvironment) (*settings.HandlerSettings, error) {
+func (em *prodGetVMExtensionEnvironmentManager) GetHandlerSettings(el logging.ILogger, he *handlerenv.HandlerEnvironment) (*settings.HandlerSettings, error) {
 	seqNo, err := em.FindSeqNum(el, he.ConfigFolder)
 	if err != nil {
 		return nil, err
