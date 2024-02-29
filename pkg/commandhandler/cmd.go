@@ -13,13 +13,13 @@ import (
 )
 
 type ICommandHandler interface {
-	Execute(command string, workingDir, logDir string, waitForCompletion bool, el *logging.ExtensionLogger) (returnCode int, err error)
+	Execute(command string, workingDir, logDir string, waitForCompletion bool, el logging.ILogger) (returnCode int, err error)
 }
 type ICommandHandlerWithEnvVariables interface {
-	ExecuteWithEnvVariables(command string, workingDir, logDir string, waitForCompletion bool, el *logging.ExtensionLogger, params *map[string]string) (returnCode int, err error)
+	ExecuteWithEnvVariables(command string, workingDir, logDir string, waitForCompletion bool, el logging.ILogger, params *map[string]string) (returnCode int, err error)
 }
 
-func (commandHandler *CommandHandler) ExecuteWithEnvVariables(command string, workingDir, logDir string, waitForCompletion bool, el *logging.ExtensionLogger, params *map[string]string) (returnCode int, err error) {
+func (commandHandler *CommandHandler) ExecuteWithEnvVariables(command string, workingDir, logDir string, waitForCompletion bool, el logging.ILogger, params *map[string]string) (returnCode int, err error) {
 	return execCmdInDirWithAction(command, workingDir, logDir, waitForCompletion, el, params)
 }
 
@@ -30,7 +30,7 @@ func New() *CommandHandler {
 	return &CommandHandler{}
 }
 
-func (commandHandler *CommandHandler) Execute(command string, workingDir, logDir string, waitForCompletion bool, el *logging.ExtensionLogger) (returnCode int, err error) {
+func (commandHandler *CommandHandler) Execute(command string, workingDir, logDir string, waitForCompletion bool, el logging.ILogger) (returnCode int, err error) {
 	return execCmdInDirWithAction(command, workingDir, logDir, waitForCompletion, el, nil)
 }
 
@@ -40,7 +40,7 @@ var execDontWaitFunctionToCall func(cmd string, workingDir string) (int, error) 
 var execWaitFunctionWithParams = execWaitWithEnvVariables
 var execDontWaitFunctionWithParams = execDontWaitWithEnvVariables
 
-func execCmdInDirWithAction(cmd, workingDir, logDir string, waitForCompletion bool, el *logging.ExtensionLogger, params *map[string]string) (int, error) {
+func execCmdInDirWithAction(cmd, workingDir, logDir string, waitForCompletion bool, el logging.ILogger, params *map[string]string) (int, error) {
 	var exitCode int
 	var execErr error
 	err := os.MkdirAll(workingDir, constants.FilePermissions_UserOnly_ReadWriteExecute)
