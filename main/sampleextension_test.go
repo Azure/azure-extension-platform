@@ -55,18 +55,18 @@ func (mock *mockVMExtensionEnvironmentManager) GetHandlerEnvironment(name string
 	return mock.handlerEnvironment, nil
 }
 
-func (mock *mockVMExtensionEnvironmentManager) FindSeqNum(el *logging.ExtensionLogger, configFolder string) (uint, error) {
+func (mock *mockVMExtensionEnvironmentManager) FindSeqNum(el logging.ILogger, configFolder string) (uint, error) {
 	return seqno.FindSeqNum(el, configFolder)
 }
 
-func (mock *mockVMExtensionEnvironmentManager) GetCurrentSequenceNumber(el *logging.ExtensionLogger, retriever seqno.ISequenceNumberRetriever, name, version string) (uint, error) {
+func (mock *mockVMExtensionEnvironmentManager) GetCurrentSequenceNumber(el logging.ILogger, retriever seqno.ISequenceNumberRetriever, name, version string) (uint, error) {
 	if mock.currentSeqNum == nil {
 		return 0, extensionerrors.ErrNoSettingsFiles
 	} else {
 		return *mock.currentSeqNum, nil
 	}
 }
-func (mem *mockVMExtensionEnvironmentManager) GetHandlerSettings(el *logging.ExtensionLogger, he *handlerenv.HandlerEnvironment) (*settings.HandlerSettings, error) {
+func (mem *mockVMExtensionEnvironmentManager) GetHandlerSettings(el logging.ILogger, he *handlerenv.HandlerEnvironment) (*settings.HandlerSettings, error) {
 	seqNo, err := mem.FindSeqNum(el, he.ConfigFolder)
 	if err != nil {
 		return nil, err

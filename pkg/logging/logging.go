@@ -33,6 +33,21 @@ const (
 	logDirThresholdHigh = fortyMB
 )
 
+type StreamLogReader interface {
+	ErrorFromStream(prefix string, streamReader io.Reader)
+	WarnFromStream(prefix string, streamReader io.Reader)
+	InfoFromStream(prefix string, streamReader io.Reader)
+}
+
+// Target interface for Extentsion-Platform
+type ILogger interface {
+	StreamLogReader
+	Error(format string, v ...interface{})
+	Warn(format string, v ...interface{})
+	Info(format string, v ...interface{})
+	Close()
+}
+
 // ExtensionLogger exposes logging capabilities to the extension
 // It automatically appends time stamps and debug level to each message
 // and ensures all logs are placed in the logs folder passed by the agent
