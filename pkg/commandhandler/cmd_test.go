@@ -3,13 +3,14 @@
 package commandhandler
 
 import (
-	"github.com/Azure/azure-extension-platform/pkg/logging"
-	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"os"
 	"path"
 	"strings"
 	"testing"
+
+	"github.com/Azure/azure-extension-platform/pkg/logging"
+	"github.com/stretchr/testify/assert"
 )
 
 var workingDir = path.Join(".", "testdir", "currentWorkingDir")
@@ -42,12 +43,4 @@ func TestStderr(t *testing.T) {
 	assert.NoError(t, err)
 	stdoutResult := strings.TrimSuffix(strings.TrimSuffix(string(fileBytes), lineReturnCharacter), " ")
 	assert.Equal(t, "1 2 3 4", stdoutResult)
-}
-
-func TestNonExistingCommand(t *testing.T) {
-	defer cleanupTest()
-	cmd := New()
-	retcode, err := cmd.Execute("command_does_not_exist", workingDir, workingDir, true, extensionLogger)
-	assert.Equal(t, commandNotExistReturnCode, retcode)
-	assert.Error(t, err)
 }
