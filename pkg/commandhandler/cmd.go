@@ -3,13 +3,14 @@
 package commandhandler
 
 import (
-	"github.com/Azure/azure-extension-platform/pkg/constants"
-	"github.com/Azure/azure-extension-platform/pkg/logging"
-	"github.com/pkg/errors"
 	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
+
+	"github.com/Azure/azure-extension-platform/pkg/constants"
+	"github.com/Azure/azure-extension-platform/pkg/logging"
+	"github.com/pkg/errors"
 )
 
 type ICommandHandler interface {
@@ -70,10 +71,13 @@ func execCmdInDirWithAction(cmd, workingDir, logDir string, waitForCompletion bo
 			stdOutFile.Close()
 		}
 
-		stdErrFile, err3 := os.OpenFile(errFileName, os.O_RDONLY, constants.FilePermissions_UserOnly_ReadWrite)
+		stdErrContents, err3 := os.ReadFile(errFileName)
 		if err3 == nil {
-			el.InfoFromStream("stderr:", stdErrFile)
-			stdErrFile.Close()
+			el.Info("stderr: %s", stdErrContents)
+
+			if execErr != nil {
+				return exitCode, errors.Wrap(execErr, string(stdErrContents))
+			}
 		}
 
 	} else {
