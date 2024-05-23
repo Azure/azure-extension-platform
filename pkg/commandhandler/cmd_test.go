@@ -51,7 +51,7 @@ func TestNonExistingCommand(t *testing.T) {
 	retcode, err := cmd.Execute("command_does_not_exist", workingDir, workingDir, true, extensionLogger)
 	assert.Equal(t, commandNotExistReturnCode, retcode)
 	assert.Error(t, err, "command execution should fail")
-	assert.Contains(t, err.Error(), "is recognized as an internal or external command", "error returned by cmd.Execute should include stderr")
+	assert.Contains(t, err.Error(), "is not recognized as an internal or external command", "error returned by cmd.Execute should include stderr")
 
 	fileInfo, err := os.ReadFile(path.Join(workingDir, "stderr"))
 	assert.NoError(t, err, "stderr file should be read")
