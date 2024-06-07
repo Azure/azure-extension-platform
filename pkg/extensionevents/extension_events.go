@@ -40,6 +40,7 @@ type ExtensionEventManager struct {
 	extensionLogger logging.ILogger
 	eventsFolder    string
 	operationID     string
+	prefix          string
 }
 
 func (eem *ExtensionEventManager) logEvent(taskName string, eventLevel string, message string) {
@@ -53,12 +54,17 @@ func (eem *ExtensionEventManager) logEvent(taskName string, eventLevel string, m
 	pid := fmt.Sprintf("%v", os.Getpid())
 	tid := getThreadID()
 
+	fullMessage := message
+	if eem.prefix != "" {
+		fullMessage = eem.prefix + message
+	}
+
 	extensionEvent := extensionEvent{
 		Version:     extensionVersion,
 		Timestamp:   timestamp,
 		TaskName:    taskName,
 		EventLevel:  eventLevel,
-		Message:     message,
+		Message:     fullMessage,
 		EventPid:    pid,
 		EventTid:    tid,
 		OperationID: eem.operationID,
@@ -96,6 +102,12 @@ func New(el logging.ILogger, he *handlerenv.HandlerEnvironment) *ExtensionEventM
 // "operationID" corresponds to "Context3" column in 'GuestAgentGenericLogs' table (Rdos cluster)
 func (eem *ExtensionEventManager) SetOperationID(operationID string) {
 	eem.operationID = operationID
+}
+
+// "SetPreifx()" sets a prefix to use for all messages
+// The prefix will continue to be used until "SetPrefix()" is called with an empty string
+func (eem *ExtensionEventManager) SetPrefix(prefix string) {
+	eem.prefix = prefix
 }
 
 // LogCriticalEvent writes a message with critical status for the extension

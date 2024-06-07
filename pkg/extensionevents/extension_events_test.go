@@ -63,6 +63,7 @@ func Test_logAllTypes(t *testing.T) {
 	el := logging.New(nil)
 	he := getHandlerEnvironment(eventstestdir)
 	eem := New(el, he)
+	eem.prefix = "(chipmunk) "
 	defer clearEventTestDir()
 
 	duration, _ := time.ParseDuration("100ms")
@@ -79,11 +80,11 @@ func Test_logAllTypes(t *testing.T) {
 	dir, _ := ioutil.ReadDir(eventstestdir)
 	require.Equal(t, 5, len(dir))
 
-	verifyEventFile(t, dir[0].Name(), "Critical", "critical message")
-	verifyEventFile(t, dir[1].Name(), "Error", "error message")
-	verifyEventFile(t, dir[2].Name(), "Informational", "informational message")
-	verifyEventFile(t, dir[3].Name(), "Verbose", "verbose message")
-	verifyEventFile(t, dir[4].Name(), "Warning", "warning message")
+	verifyEventFile(t, dir[0].Name(), "Critical", "(chipmunk) critical message")
+	verifyEventFile(t, dir[1].Name(), "Error", "(chipmunk) error message")
+	verifyEventFile(t, dir[2].Name(), "Informational", "(chipmunk) informational message")
+	verifyEventFile(t, dir[3].Name(), "Verbose", "(chipmunk) verbose message")
+	verifyEventFile(t, dir[4].Name(), "Warning", "(chipmunk) warning message")
 }
 
 func Test_NoTaskName(t *testing.T) {
