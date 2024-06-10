@@ -104,7 +104,7 @@ func (eem *ExtensionEventManager) SetOperationID(operationID string) {
 	eem.operationID = operationID
 }
 
-// "SetPreifx()" sets a prefix to use for all messages
+// "SetPrefix()" sets a prefix to use for all messages
 // The prefix will continue to be used until "SetPrefix()" is called with an empty string
 func (eem *ExtensionEventManager) SetPrefix(prefix string) {
 	eem.prefix = prefix
