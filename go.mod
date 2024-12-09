@@ -1,6 +1,6 @@
 module github.com/Azure/azure-extension-platform
 
-go 1.21
+go 1.23
 
 require (
 	github.com/go-kit/kit v0.12.0
