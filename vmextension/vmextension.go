@@ -289,6 +289,25 @@ func reportStatus(ve *VMExtension, t status.StatusType, c cmd, msg string) error
 	return nil
 }
 
+func reportError(ve *VMExtension, c cmd, errorCode int, msg string) error {
+	if !c.shouldReportStatus {
+		ve.ExtensionLogger.Info("status not reported for operation (by design)")
+		return nil
+	}
+
+	requestedSequenceNumber, err := ve.GetRequestedSequenceNumber()
+	if err != nil {
+		return err
+	}
+
+	s := status.NewError(c.operation.ToStatusName(), status.ErrorClarification{Code: errorCode, Message: msg})
+	if err := s.Save(ve.HandlerEnv.StatusFolder, requestedSequenceNumber); err != nil {
+		ve.ExtensionLogger.Error("Failed to save handler status: %v", err)
+		return errors.Wrap(err, "failed to save handler status")
+	}
+	return nil
+}
+
 // parseCmd looks at os.Args and parses the subcommand. If it is invalid,
 // it prints the usage string and an error message and exits with code 0.
 func (ve *VMExtension) parseCmd(args []string, eh exithelper.IExitHelper) cmd {

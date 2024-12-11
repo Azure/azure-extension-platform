@@ -4,10 +4,11 @@ package status
 
 import (
 	"encoding/json"
-	"github.com/Azure/azure-extension-platform/pkg/testhelpers"
-	"io/ioutil"
+	"os"
 	"path"
 	"testing"
+
+	"github.com/Azure/azure-extension-platform/pkg/testhelpers"
 
 	"github.com/stretchr/testify/require"
 )
@@ -49,6 +50,18 @@ func Test_newStatus(t *testing.T) {
 	require.Equal(t, StatusError, report[0].Status.Status)
 }
 
+func Test_newError(t *testing.T) {
+	ec := ErrorClarification{Code: 42, Message: "unhappy chipmunks"}
+	report := NewError("WorldDomination", ec)
+	require.NotNil(t, report)
+	require.Equal(t, 1, len(report))
+	require.Equal(t, "WorldDomination", report[0].Status.Operation)
+	require.Equal(t, StatusError, report[0].Status.Status)
+	require.Equal(t, 1, len(report[0].Status.Substatuses))
+	require.Equal(t, 42, report[0].Status.Substatuses[0].Code)
+	require.Equal(t, "unhappy chipmunks", report[0].Status.Substatuses[0].Message)
+}
+
 func Test_statusSaveFolderDoesntExist(t *testing.T) {
 	report := New(StatusSuccess, "flip", "flop")
 	err := report.Save("./flopperdoodle", 5)
@@ -62,7 +75,7 @@ func Test_statusSaveNewFile(t *testing.T) {
 	require.NoError(t, err, "save report failed")
 
 	filePath := path.Join(statusTestDirectory, "5.status")
-	b, err := ioutil.ReadFile(filePath)
+	b, err := os.ReadFile(filePath)
 	require.NoError(t, err, "ReadFile failed")
 
 	var r StatusReport
