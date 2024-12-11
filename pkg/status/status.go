@@ -5,7 +5,6 @@ package status
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"time"
@@ -16,6 +15,10 @@ const (
 	EnableStatus  = "Enable"
 	UpdateStatus  = "Update"
 	DisableStatus = "Disable"
+)
+
+const (
+	ErrorClarificationSubStatusName = "ErrorClarification"
 )
 
 type CmdFunc func() (message string, err error)
@@ -37,6 +40,11 @@ type StatusItem struct {
 	Status       Status `json:"status"`
 }
 
+type ErrorClarification struct {
+	Code    int
+	Message string
+}
+
 type StatusType string
 
 const (
@@ -55,6 +63,14 @@ type Status struct {
 	Operation        string           `json:"operation"`
 	Status           StatusType       `json:"status"`
 	FormattedMessage FormattedMessage `json:"formattedMessage"`
+	Substatuses      []Substatus      `json:"substatus"`
+}
+
+type Substatus struct {
+	Name    string `json:"name"`
+	Status  string `json:"status"`
+	Code    int    `json:"code"`
+	Message string `json:"message"`
 }
 
 // FormattedMessage is a struct used for serializing status
@@ -80,6 +96,30 @@ func New(t StatusType, operation string, message string) StatusReport {
 	}
 }
 
+func NewError(operation string, ec ErrorClarification) StatusReport {
+	return []StatusItem{
+		{
+			Version:      1, // this is the protocol version do not change unless you are sure
+			TimestampUTC: time.Now().UTC().Format(time.RFC3339),
+			Status: Status{
+				Operation: operation,
+				Status:    StatusError,
+				FormattedMessage: FormattedMessage{
+					Lang:    "en",
+					Message: ec.Message},
+				Substatuses: []Substatus{
+					{
+						Name:    ErrorClarificationSubStatusName,
+						Status:  "error",
+						Code:    ec.Code,
+						Message: ec.Message,
+					},
+				},
+			},
+		},
+	}
+}
+
 func (r StatusReport) marshal() ([]byte, error) {
 	return json.MarshalIndent(r, "", "\t")
 }
@@ -90,7 +130,7 @@ func (r StatusReport) marshal() ([]byte, error) {
 func (r StatusReport) Save(statusFolder string, seqNo uint) error {
 	fn := fmt.Sprintf("%d.status", seqNo)
 	path := filepath.Join(statusFolder, fn)
-	tmpFile, err := ioutil.TempFile(statusFolder, fn)
+	tmpFile, err := os.CreateTemp(statusFolder, fn)
 	if err != nil {
 		return fmt.Errorf("status: failed to create temporary file: %v", err)
 	}
@@ -101,7 +141,7 @@ func (r StatusReport) Save(statusFolder string, seqNo uint) error {
 		return fmt.Errorf("status: failed to marshal into json: %v", err)
 	}
 
-	if err := ioutil.WriteFile(tmpFile.Name(), b, 0644); err != nil {
+	if err := os.WriteFile(tmpFile.Name(), b, 0644); err != nil {
 		return fmt.Errorf("status: failed to path=%s error=%v", tmpFile.Name(), err)
 	}
 
