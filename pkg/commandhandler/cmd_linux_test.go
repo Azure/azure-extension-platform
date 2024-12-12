@@ -4,11 +4,13 @@ package commandhandler
 
 import (
 	"encoding/json"
-	"github.com/stretchr/testify/assert"
 	"io/ioutil"
+	"os"
 	"path"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 const (
@@ -96,4 +98,17 @@ func TestCommandWithEnvironmentVariableEmpty(t *testing.T) {
 	fileInfo, err := ioutil.ReadFile(path.Join(workingDir, "stdout"))
 	assert.NoError(t, err, "stdout file should be read")
 	assert.Contains(t, string(fileInfo), "", "stdout message should be as expected")
+}
+
+func TestNonExistingCommand(t *testing.T) {
+	defer cleanupTest()
+	cmd := New()
+	retcode, err := cmd.Execute("command_does_not_exist", workingDir, workingDir, true, extensionLogger)
+	assert.Equal(t, commandNotExistReturnCode, retcode)
+	assert.Error(t, err, "command execution should fail")
+	assert.Contains(t, err.Error(), "command_does_not_exist: not found", "error returned by cmd.Execute should include stderr")
+
+	fileInfo, err := os.ReadFile(path.Join(workingDir, "stderr"))
+	assert.NoError(t, err, "stderr file should be read")
+	assert.Contains(t, string(fileInfo), "command_does_not_exist: not found", "stderr message should be as expected")
 }
