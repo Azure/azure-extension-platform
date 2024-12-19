@@ -5,7 +5,6 @@ package vmextension
 import (
 	"encoding/json"
 	"errors"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path"
@@ -97,6 +96,18 @@ func Test_reportStatusShouldntReport(t *testing.T) {
 	require.True(t, os.IsNotExist(err), "File exists when we don't expect it to")
 }
 
+func Test_reportErrorShouldntReport(t *testing.T) {
+	ext := createTestVMExtension()
+	c := cmd{nil, InstallOperation, false, 99}
+	ext.HandlerEnv.StatusFolder = statusTestDirectory
+	ext.GetRequestedSequenceNumber = func() (uint, error) { return 45, nil }
+
+	err := reportErrorWithClarification(ext, c, 42, "msg")
+	require.NoError(t, err, "reportError failed")
+	_, err = os.Stat(path.Join(statusTestDirectory, "45.status"))
+	require.True(t, os.IsNotExist(err), "File exists when we don't expect it to")
+}
+
 func Test_reportStatusCouldntSave(t *testing.T) {
 	ext := createTestVMExtension()
 	c := cmd{nil, InstallOperation, true, 99}
@@ -104,6 +115,16 @@ func Test_reportStatusCouldntSave(t *testing.T) {
 	ext.GetRequestedSequenceNumber = func() (uint, error) { return 45, nil }
 
 	err := reportStatus(ext, status.StatusSuccess, c, "msg")
+	require.Error(t, err)
+}
+
+func Test_reportErrorCouldntSave(t *testing.T) {
+	ext := createTestVMExtension()
+	c := cmd{nil, InstallOperation, true, 99}
+	ext.HandlerEnv.StatusFolder = "./yabamonster"
+	ext.GetRequestedSequenceNumber = func() (uint, error) { return 45, nil }
+
+	err := reportErrorWithClarification(ext, c, 42, "msg")
 	require.Error(t, err)
 }
 
@@ -119,6 +140,22 @@ func Test_reportStatusSaved(t *testing.T) {
 
 	err := reportStatus(ext, status.StatusSuccess, c, "msg")
 	require.NoError(t, err, "reportStatus failed")
+	_, err = os.Stat(path.Join(statusTestDirectory, "45.status"))
+	require.NoError(t, err, "File doesn't exist")
+}
+
+func Test_reportErrorSaved(t *testing.T) {
+	ext := createTestVMExtension()
+
+	c := cmd{nil, InstallOperation, true, 99}
+	ext.HandlerEnv.StatusFolder = statusTestDirectory
+	ext.GetRequestedSequenceNumber = func() (uint, error) { return 45, nil }
+
+	createDirsForVMExtension(ext)
+	defer cleanupDirsForVMExtension(ext)
+
+	err := reportErrorWithClarification(ext, c, 42, "msg")
+	require.NoError(t, err, "reportError failed")
 	_, err = os.Stat(path.Join(statusTestDirectory, "45.status"))
 	require.NoError(t, err, "File doesn't exist")
 }
@@ -142,7 +179,7 @@ func Test_reportStatusFormatter(t *testing.T) {
 	statusFilePath := path.Join(statusTestDirectory, "45.status")
 	_, err = os.Stat(statusFilePath)
 	require.NoError(t, err, "File doesn't exist")
-	statusFileBytes, err := ioutil.ReadFile(statusFilePath)
+	statusFileBytes, err := os.ReadFile(statusFilePath)
 	require.NoError(t, err, "Could not read status file contents")
 	require.Contains(t, string(statusFileBytes), customFormattedMessage)
 }
@@ -414,6 +451,18 @@ func Test_enableCallbackFails(t *testing.T) {
 	require.Equal(t, extensionerrors.ErrMustRunAsAdmin, err)
 }
 
+func Test_enableCallbackErrorClarification(t *testing.T) {
+	mm := createMockVMExtensionEnvironmentManager()
+	ii, _ := GetInitializationInfo("yaba", "5.0", true, testErrorClarificationEnableCallback)
+	ext, _ := getVMExtensionInternal(ii, mm)
+
+	_, err := enable(ext)
+	ewc, ok := err.(ErrorWithClarification)
+	require.True(t, ok, "ErrorWithClarification not returned")
+	require.Equal(t, 42, ewc.ErrorCode)
+	require.Equal(t, extensionerrors.ErrArgCannotBeNullOrEmpty, ewc.Err)
+}
+
 func Test_enableCallbackSucceeds(t *testing.T) {
 	mm := createMockVMExtensionEnvironmentManager()
 	ii, _ := GetInitializationInfo("yaba", "5.0", true, testEnableCallback)
@@ -576,7 +625,7 @@ func writeHandlerEnvironment(t *testing.T, rawhe string) {
 	d := []byte(rawhe)
 	dir, _ := filepath.Abs(filepath.Dir(os.Args[0]))
 	fp := path.Join(dir, handlerEnvFileName)
-	err := ioutil.WriteFile(fp, d, 0644)
+	err := os.WriteFile(fp, d, 0644)
 	require.NoError(t, err)
 }
 
@@ -592,6 +641,10 @@ func putBackArgs(args []string) {
 
 func testFailEnableCallback(ext *VMExtension) (string, error) {
 	return "", extensionerrors.ErrMustRunAsAdmin
+}
+
+func testErrorClarificationEnableCallback(ext *VMExtension) (string, error) {
+	return "", NewErrorWithClarification(42, extensionerrors.ErrArgCannotBeNullOrEmpty)
 }
 
 func getTestHandlerEnvironment() *handlerenv.HandlerEnvironment {

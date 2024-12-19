@@ -4,7 +4,6 @@ package vmextension
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 	"syscall"
@@ -20,6 +19,11 @@ var (
 	disableDependency disableDependencies = &disableDependencyImpl{}
 )
 
+const (
+	ErrorNoSequenceNumber = -10001
+	ErrorUnparseableSeqNo = -10002
+)
+
 func enable(ext *VMExtension) (string, error) {
 	// If the sequence number has not changed and we require it to, then exit
 	// remember the sequence number
@@ -28,14 +32,14 @@ func enable(ext *VMExtension) (string, error) {
 	if !exists {
 		msg := "extension does not have an enable command"
 		ext.ExtensionLogger.Error(msg)
-		reportStatus(ext, status.StatusError, enableCmd, msg)
+		reportErrorWithClarification(ext, enableCmd, ErrorNoSequenceNumber, msg)
 		return msg, fmt.Errorf(msg)
 	}
 	requestedSequenceNumber, err := ext.GetRequestedSequenceNumber()
 	if err != nil {
 		msg := "could not determine requested sequence number"
 		ext.ExtensionLogger.Error("%s: %v", msg, err)
-		reportStatus(ext, status.StatusError, enableCmd, err.Error()+msg)
+		reportErrorWithClarification(ext, enableCmd, ErrorUnparseableSeqNo, err.Error()+msg)
 		return msg, err
 	}
 
@@ -67,14 +71,26 @@ func enable(ext *VMExtension) (string, error) {
 	// execute the command, save its error
 	msg, runErr := ext.exec.enableCallback(ext)
 	if runErr != nil {
-		ext.ExtensionLogger.Error("Enable failed: %v", runErr)
+		unifiedErr := runErr
+		ewc, supportsEwc := runErr.(ErrorWithClarification)
+		if supportsEwc {
+			unifiedErr = ewc.Err
+		}
+		ext.ExtensionLogger.Error("Enable failed: %v", unifiedErr)
 		var msgToReport string
 		if msg == "" {
-			msgToReport = runErr.Error()
+			msgToReport = unifiedErr.Error()
 		} else {
 			msgToReport = msg
 		}
-		reportStatus(ext, status.StatusError, enableCmd, msgToReport)
+
+		if supportsEwc {
+			// The extension supports error clarifications
+			reportErrorWithClarification(ext, enableCmd, ewc.ErrorCode, msgToReport)
+		} else {
+			// The extension does not support error clarifications
+			reportStatus(ext, status.StatusError, enableCmd, msgToReport)
+		}
 	} else {
 		ext.ExtensionLogger.Info("Enable succeeded")
 		reportStatus(ext, status.StatusSuccess, enableCmd, msg)
@@ -91,7 +107,7 @@ type disableDependencies interface {
 type disableDependencyImpl struct{}
 
 func (*disableDependencyImpl) writeFile(filename string, data []byte, perm os.FileMode) error {
-	return ioutil.WriteFile(filename, data, perm)
+	return os.WriteFile(filename, data, perm)
 }
 
 func (*disableDependencyImpl) remove(name string) error {
