@@ -67,10 +67,9 @@ type Status struct {
 }
 
 type Substatus struct {
-	Name    string `json:"name"`
-	Status  string `json:"status"`
-	Code    int    `json:"code"`
-	Message string `json:"message"`
+	Name   string `json:"name"`
+	Status string `json:"status"`
+	Code   int    `json:"code"`
 }
 
 // FormattedMessage is a struct used for serializing status
@@ -109,10 +108,9 @@ func NewError(operation string, ec ErrorClarification) StatusReport {
 					Message: ec.Message},
 				Substatuses: []Substatus{
 					{
-						Name:    ErrorClarificationSubStatusName,
-						Status:  "error",
-						Code:    ec.Code,
-						Message: ec.Message,
+						Name:   ErrorClarificationSubStatusName,
+						Status: string(StatusError),
+						Code:   ec.Code,
 					},
 				},
 			},

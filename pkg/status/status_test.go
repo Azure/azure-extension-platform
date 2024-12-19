@@ -59,7 +59,6 @@ func Test_newError(t *testing.T) {
 	require.Equal(t, StatusError, report[0].Status.Status)
 	require.Equal(t, 1, len(report[0].Status.Substatuses))
 	require.Equal(t, 42, report[0].Status.Substatuses[0].Code)
-	require.Equal(t, "unhappy chipmunks", report[0].Status.Substatuses[0].Message)
 }
 
 func Test_statusSaveFolderDoesntExist(t *testing.T) {

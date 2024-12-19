@@ -102,7 +102,7 @@ func Test_reportErrorShouldntReport(t *testing.T) {
 	ext.HandlerEnv.StatusFolder = statusTestDirectory
 	ext.GetRequestedSequenceNumber = func() (uint, error) { return 45, nil }
 
-	err := reportError(ext, c, 42, "msg")
+	err := reportErrorWithClarification(ext, c, 42, "msg")
 	require.NoError(t, err, "reportError failed")
 	_, err = os.Stat(path.Join(statusTestDirectory, "45.status"))
 	require.True(t, os.IsNotExist(err), "File exists when we don't expect it to")
@@ -124,7 +124,7 @@ func Test_reportErrorCouldntSave(t *testing.T) {
 	ext.HandlerEnv.StatusFolder = "./yabamonster"
 	ext.GetRequestedSequenceNumber = func() (uint, error) { return 45, nil }
 
-	err := reportError(ext, c, 42, "msg")
+	err := reportErrorWithClarification(ext, c, 42, "msg")
 	require.Error(t, err)
 }
 
@@ -154,7 +154,7 @@ func Test_reportErrorSaved(t *testing.T) {
 	createDirsForVMExtension(ext)
 	defer cleanupDirsForVMExtension(ext)
 
-	err := reportError(ext, c, 42, "msg")
+	err := reportErrorWithClarification(ext, c, 42, "msg")
 	require.NoError(t, err, "reportError failed")
 	_, err = os.Stat(path.Join(statusTestDirectory, "45.status"))
 	require.NoError(t, err, "File doesn't exist")

@@ -289,7 +289,7 @@ func reportStatus(ve *VMExtension, t status.StatusType, c cmd, msg string) error
 	return nil
 }
 
-func reportError(ve *VMExtension, c cmd, errorCode int, msg string) error {
+func reportErrorWithClarification(ve *VMExtension, c cmd, errorCode int, msg string) error {
 	if !c.shouldReportStatus {
 		ve.ExtensionLogger.Info("status not reported for operation (by design)")
 		return nil

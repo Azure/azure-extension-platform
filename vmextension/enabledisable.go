@@ -32,14 +32,14 @@ func enable(ext *VMExtension) (string, error) {
 	if !exists {
 		msg := "extension does not have an enable command"
 		ext.ExtensionLogger.Error(msg)
-		reportError(ext, enableCmd, ErrorNoSequenceNumber, msg)
+		reportErrorWithClarification(ext, enableCmd, ErrorNoSequenceNumber, msg)
 		return msg, fmt.Errorf(msg)
 	}
 	requestedSequenceNumber, err := ext.GetRequestedSequenceNumber()
 	if err != nil {
 		msg := "could not determine requested sequence number"
 		ext.ExtensionLogger.Error("%s: %v", msg, err)
-		reportError(ext, enableCmd, ErrorUnparseableSeqNo, err.Error()+msg)
+		reportErrorWithClarification(ext, enableCmd, ErrorUnparseableSeqNo, err.Error()+msg)
 		return msg, err
 	}
 
@@ -86,7 +86,7 @@ func enable(ext *VMExtension) (string, error) {
 
 		if supportsEwc {
 			// The extension supports error clarifications
-			reportError(ext, enableCmd, ewc.ErrorCode, msgToReport)
+			reportErrorWithClarification(ext, enableCmd, ewc.ErrorCode, msgToReport)
 		} else {
 			// The extension does not support error clarifications
 			reportStatus(ext, status.StatusError, enableCmd, msgToReport)
