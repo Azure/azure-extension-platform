@@ -4,12 +4,13 @@ package commandhandler
 
 import (
 	"encoding/json"
-	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"os"
 	"path"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
 const (
@@ -139,4 +140,17 @@ func TestDoesntWaitForCompletionEnvironmentVariable(t *testing.T) {
 	endTime := time.Now()
 	duration := endTime.Sub(startTime)
 	assert.Less(t, duration, time.Second, "execute shouldn't block")
+}
+
+func TestNonExistingCommand(t *testing.T) {
+	defer cleanupTest()
+	cmd := New()
+	retcode, err := cmd.Execute("command_does_not_exist", workingDir, workingDir, true, extensionLogger)
+	assert.Equal(t, commandNotExistReturnCode, retcode)
+	assert.Error(t, err, "command execution should fail")
+	assert.Contains(t, err.Error(), "is not recognized as an internal or external command", "error returned by cmd.Execute should include stderr")
+
+	fileInfo, err := os.ReadFile(path.Join(workingDir, "stderr"))
+	assert.NoError(t, err, "stderr file should be read")
+	assert.Contains(t, string(fileInfo), "is not recognized as an internal or external command", "stderr message should be as expected")
 }
