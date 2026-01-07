@@ -33,6 +33,31 @@ func TestNewErrorWithClarification_SetsFields(t *testing.T) {
 	require.Equal(t, root, ewc.Err)
 }
 
+func TestErrorWithClarificationPtr_Error_WhenErrNil(t *testing.T) {
+	ewc := NewErrorWithClarificationPtr(42, nil)
+	require.Equal(t, "Error code 42", ewc.Error())
+}
+
+func TestErrorWithClarificationPtr_Error_WhenErrNonNil(t *testing.T) {
+	root := errors.New("root failure")
+	ewc := NewErrorWithClarificationPtr(42, root)
+	require.Equal(t, "root failure", ewc.Error())
+}
+
+func TestErrorWithClarificationPtr_Unwrap(t *testing.T) {
+	root := errors.New("root")
+	ewc := NewErrorWithClarificationPtr(7, root)
+	require.Equal(t, root, errors.Unwrap(ewc))
+	require.True(t, errors.Is(ewc, root))
+}
+
+func TestNewErrorWithClarificationPtr_SetsFields(t *testing.T) {
+	root := errors.New("x")
+	ewc := NewErrorWithClarificationPtr(123, root)
+	require.Equal(t, 123, ewc.ErrorCode)
+	require.Equal(t, root, ewc.Err)
+}
+
 func TestCreateWrappedErrorWithClarification_WhenInputErrNil(t *testing.T) {
 	out := CreateWrappedErrorWithClarification(nil, "msg")
 	require.Equal(t, Internal_UnknownError, out.ErrorCode)
