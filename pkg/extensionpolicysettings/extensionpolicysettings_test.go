@@ -21,8 +21,8 @@ const extensionRuntimePolicySettingsFilePath = "./testutils/runtime_policy.json"
 
 // This is a sample struct for an example extension's policy settings. Each extension will define their own struct that implements the ExtensionPolicySettings interface according to their needs.
 type TestPolicy struct {
-	RequiresSigning string   `json:"requiresigning"`
-	AllowedScripts  []string `json:"allowedscripts"`
+	RequiresSigning string   `json:"requireSigning"`
+	AllowedScripts  []string `json:"allowedScripts"`
 }
 
 func (tp TestPolicy) ValidateFormat() error {
@@ -46,8 +46,8 @@ func TestLoadExtensionPolicySettings(t *testing.T) {
 	// Test cases:
 	// 1. Valid policy file: we should be able to load the settings without error
 	validPolicyContent := `{
-		"requiresigning": "true",
-		"allowedscripts": []
+		"requireSigning": "true",
+		"allowedScripts": []
 	}`
 	writeToFile(extensionRuntimePolicySettingsFilePath, validPolicyContent)
 	defer cleanupFile(extensionRuntimePolicySettingsFilePath)
@@ -86,8 +86,8 @@ func TestGetSettings(t *testing.T) {
 	// Setup test parameters
 	manager := NewExtensionPolicySettingsManager[TestPolicy](extensionRuntimePolicySettingsFilePath, extensionLogger)
 	validPolicyContent := `{
-		"requiresigning": "true",
-		"allowedscripts": []
+		"requireSigning": "true",
+		"allowedScripts": []
 	}`
 	writeToFile(extensionRuntimePolicySettingsFilePath, validPolicyContent)
 	defer cleanupFile(extensionRuntimePolicySettingsFilePath) // Clean up after test
@@ -114,8 +114,8 @@ func TestValidateAgainstAllowlist(t *testing.T) {
 
 	// Some scripts are allowed
 	validPolicyContent := fmt.Sprintf(`{
-    "requiresigning": "true",
-    "allowedscripts": ["%s", "%s"]
+    "requireSigning": "true",
+    "allowedScripts": ["%s", "%s"]
 	}`, script1Hash, script2Hash)
 	writeToFile(extensionRuntimePolicySettingsFilePath, validPolicyContent)
 
