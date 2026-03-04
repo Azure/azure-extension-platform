@@ -32,7 +32,8 @@ func (tp TestPolicy) ValidateFormat() error {
 
 func TestNewExtensionPolicySettingsManager(t *testing.T) {
 	// Create a new ExtensionPolicySettingsManager
-	manager := NewExtensionPolicySettingsManager[TestPolicy](extensionRuntimePolicySettingsFilePath, extensionLogger)
+	manager, err := NewExtensionPolicySettingsManager[TestPolicy](extensionRuntimePolicySettingsFilePath, extensionLogger)
+	require.NoError(t, err)
 	require.NotNil(t, manager)
 	require.Equal(t, extensionRuntimePolicySettingsFilePath, manager.settingsFilePath)
 	require.Equal(t, extensionLogger, manager.logger)
@@ -41,7 +42,8 @@ func TestNewExtensionPolicySettingsManager(t *testing.T) {
 
 func TestLoadExtensionPolicySettings(t *testing.T) {
 	// Setup test parameters
-	manager := NewExtensionPolicySettingsManager[TestPolicy](extensionRuntimePolicySettingsFilePath, extensionLogger)
+	manager, err := NewExtensionPolicySettingsManager[TestPolicy](extensionRuntimePolicySettingsFilePath, extensionLogger)
+	require.NoError(t, err)
 
 	// Test cases:
 	// 1. Valid policy file: we should be able to load the settings without error
@@ -53,7 +55,7 @@ func TestLoadExtensionPolicySettings(t *testing.T) {
 	defer cleanupFile(extensionRuntimePolicySettingsFilePath)
 
 	// Call LoadExtensionPolicySettings and check for errors
-	err := manager.LoadExtensionPolicySettings()
+	err = manager.LoadExtensionPolicySettings()
 	require.NoError(t, err)
 	require.NotNil(t, manager.settings)
 	require.Equal(t, "true", manager.settings.RequiresSigning)
@@ -84,7 +86,8 @@ func TestLoadExtensionPolicySettings(t *testing.T) {
 
 func TestGetSettings(t *testing.T) {
 	// Setup test parameters
-	manager := NewExtensionPolicySettingsManager[TestPolicy](extensionRuntimePolicySettingsFilePath, extensionLogger)
+	manager, err := NewExtensionPolicySettingsManager[TestPolicy](extensionRuntimePolicySettingsFilePath, extensionLogger)
+	require.NoError(t, err)
 	validPolicyContent := `{
 		"requireSigning": "true",
 		"allowedScripts": []
@@ -93,7 +96,7 @@ func TestGetSettings(t *testing.T) {
 	defer cleanupFile(extensionRuntimePolicySettingsFilePath) // Clean up after test
 
 	// Call LoadExtensionPolicySettings and check for errors
-	err := manager.LoadExtensionPolicySettings()
+	err = manager.LoadExtensionPolicySettings()
 	require.NoError(t, err)
 	require.NotNil(t, manager.settings)
 	require.Equal(t, "true", manager.settings.RequiresSigning)
@@ -105,7 +108,8 @@ func TestGetSettings(t *testing.T) {
 
 func TestValidateAgainstAllowlist(t *testing.T) {
 	// Setup test parameters
-	manager := NewExtensionPolicySettingsManager[TestPolicy](extensionRuntimePolicySettingsFilePath, extensionLogger)
+	manager, err := NewExtensionPolicySettingsManager[TestPolicy](extensionRuntimePolicySettingsFilePath, extensionLogger)
+	require.NoError(t, err)
 	defer cleanupFile(extensionRuntimePolicySettingsFilePath) // Clean up after test
 
 	script1Hash := hashHelper("./testutils/testscripts/script1.sh")
@@ -120,7 +124,7 @@ func TestValidateAgainstAllowlist(t *testing.T) {
 	writeToFile(extensionRuntimePolicySettingsFilePath, validPolicyContent)
 
 	// Call LoadExtensionPolicySettings and check for errors
-	err := manager.LoadExtensionPolicySettings()
+	err = manager.LoadExtensionPolicySettings()
 	require.NoError(t, err)
 	require.NotNil(t, manager.settings)
 	require.Equal(t, "true", manager.settings.RequiresSigning)

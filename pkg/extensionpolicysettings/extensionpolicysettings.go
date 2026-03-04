@@ -22,14 +22,24 @@ type ExtensionPolicySettingsManager[T ExtensionPolicySettings] struct {
 	settings         *T
 }
 
-func NewExtensionPolicySettingsManager[T ExtensionPolicySettings](policyFilePath string, logger logging.ILogger) *ExtensionPolicySettingsManager[T] {
+func NewExtensionPolicySettingsManager[T ExtensionPolicySettings](policyFilePath string, logger logging.ILogger) (*ExtensionPolicySettingsManager[T], error) {
+	if policyFilePath == "" {
+		logger.Error("Policy file path is empty. ExtensionPolicySettingsManager may not function correctly.")
+		return nil, fmt.Errorf("policy file path cannot be empty")
+	}
 	return &ExtensionPolicySettingsManager[T]{
 		settingsFilePath: policyFilePath,
 		logger:           logger, // settings is not loaded until LoadExtensionPolicySettings is called
-	}
+	}, nil
 }
 
 func (epsm *ExtensionPolicySettingsManager[T]) LoadExtensionPolicySettings() error {
+	if (epsm == nil) || (epsm.logger == nil) {
+		return fmt.Errorf("invalid ExtensionPolicySettingsManager: manager or logger is nil")
+	}
+	if epsm.settingsFilePath == "" {
+		return fmt.Errorf("invalid ExtensionPolicySettingsManager: settings file path is empty")
+	}
 	epsm.logger.Info(fmt.Sprintf("Loading extension policy settings from file: %s", epsm.settingsFilePath))
 
 	// If an extension has a default policy configuration in case the file does not exist, they should handle that logic before calling this function.
