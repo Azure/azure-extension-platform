@@ -71,13 +71,13 @@ func (epsm *ExtensionPolicySettingsManager[T]) LoadExtensionPolicySettings() err
 	}
 
 	epsm.settings = settings
-	epsm.logger.Info("Extension policy settings loaded and validated successfully.")
+	//epsm.logger.Info("Extension policy settings loaded and validated successfully.")
 	return nil
 }
 
 func (epsm *ExtensionPolicySettingsManager[T]) GetSettings() *T {
 	if epsm.settings == nil {
-		epsm.logger.Info("Extension policy settings have not been loaded yet. Returning nil.")
+		//epsm.logger.Info("Extension policy settings have not been loaded yet. Returning nil.")
 	}
 	return epsm.settings
 }
