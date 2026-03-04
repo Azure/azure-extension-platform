@@ -67,7 +67,7 @@ func (epsm *ExtensionPolicySettingsManager[T]) LoadExtensionPolicySettings() err
 
 	// Extensions themselves must decide the criteria for valid policy settings (i.e., if they can be null etc.).
 	if err := (*settings).ValidateFormat(); err != nil {
-		return fmt.Errorf("extension policy settings validation failed: %w", err)
+		return fmt.Errorf("extension policy invalid: %w", err)
 	}
 
 	epsm.settings = settings
