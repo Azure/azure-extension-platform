@@ -24,7 +24,7 @@ type ExtensionPolicySettingsManager[T ExtensionPolicySettings] struct {
 
 func NewExtensionPolicySettingsManager[T ExtensionPolicySettings](policyFilePath string, logger logging.ILogger) (*ExtensionPolicySettingsManager[T], error) {
 	if policyFilePath == "" {
-		logger.Error("Policy file path is empty. ExtensionPolicySettingsManager may not function correctly.")
+		//logger.Error("Policy file path is empty. ExtensionPolicySettingsManager may not function correctly.")
 		return nil, fmt.Errorf("policy file path cannot be empty")
 	}
 	return &ExtensionPolicySettingsManager[T]{
@@ -98,14 +98,18 @@ func ValidateValueInAllowlist(logger logging.ILogger, value string, allowlist []
 
 	for _, allowlistValue := range allowlist {
 		if value == allowlistValue {
-			logger.Info("Validation successful: item is in the allowlist.")
+			//logger.Info("Validation successful: item is in the allowlist.")
 			return nil
 		}
 	}
-	logger.Info("validation failed: item is not in the allowlist.")
+	//logger.Info("validation failed: item is not in the allowlist.")
 	return extensionerrors.ErrItemNotInAllowlist
 }
 
+// This function is the entry point for most use cases: it takes in the filepath, reads the content, and
+// determines if the content is allowlisted. If hashOpt is not HashTypeNone, it will compute the hash of the file content.
+// If extensions don't want to validate a filepath but a value directly, they can call ValidateValueInAllowlist,
+// which this function calls.
 func ValidateFileHashInAllowlist(logger logging.ILogger, filePath string, allowlist []string, hashOpt HashType) error {
 	if len(allowlist) == 0 {
 		return extensionerrors.ErrPolicyAllowlistEmpty
@@ -123,12 +127,12 @@ func ValidateFileHashInAllowlist(logger logging.ILogger, filePath string, allowl
 	value := string(content) // What if content is empty? Do we want to treat that as an error or just compute the hash of an empty string? For now, we'll compute the hash of an empty string, but this is something to consider based on the specific use case and security requirements.
 
 	if hashOpt != HashTypeNone {
-		logger.Info(fmt.Sprintf("Computing hash of file %s for validation.", filePath))
+		//logger.Info(fmt.Sprintf("Computing hash of file %s for validation.", filePath))
 		value, err := ComputeFileHash(logger, value, hashOpt)
 		if err != nil {
 			return fmt.Errorf("failed to compute hash for file %s for validation: %w", filePath, err)
 		}
-		logger.Info(fmt.Sprintf("Computed hash value for file %s: %s", filePath, value))
+		//logger.Info(fmt.Sprintf("Computed hash value for file %s: %s", filePath, value))
 		return ValidateValueInAllowlist(logger, value, allowlist)
 	}
 
@@ -137,7 +141,7 @@ func ValidateFileHashInAllowlist(logger logging.ILogger, filePath string, allowl
 
 // ComputeFileHash computes the hash of a file or leaves string as is.
 func ComputeFileHash(logger logging.ILogger, contents string, hashOpt HashType) (string, error) {
-	logger.Info("Computing hash for file contents")
+	//logger.Info("Computing hash for file contents")
 
 	if contents == "" {
 		return "", extensionerrors.ErrContentsToValidateEmpty
@@ -153,6 +157,6 @@ func ComputeFileHash(logger logging.ILogger, contents string, hashOpt HashType) 
 		hashStr = hex.EncodeToString(hash[:])
 	}
 
-	logger.Info(fmt.Sprintf("Computed hash: %s", hashStr))
+	//logger.Info(fmt.Sprintf("Computed hash: %s", hashStr))
 	return hashStr, nil
 }
