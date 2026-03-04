@@ -40,7 +40,7 @@ func (epsm *ExtensionPolicySettingsManager[T]) LoadExtensionPolicySettings() err
 	if epsm.settingsFilePath == "" {
 		return fmt.Errorf("invalid ExtensionPolicySettingsManager: settings file path is empty")
 	}
-	epsm.logger.Info(fmt.Sprintf("Loading extension policy settings from file: %s", epsm.settingsFilePath))
+	//epsm.logger.Info(fmt.Sprintf("Loading extension policy settings from file: %s", epsm.settingsFilePath))
 
 	// If an extension has a default policy configuration in case the file does not exist, they should handle that logic before calling this function.
 	if _, err := os.Stat(epsm.settingsFilePath); os.IsNotExist(err) {
