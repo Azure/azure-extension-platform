@@ -51,11 +51,15 @@ var (
 
 	ErrEmptyPolicyFile = errors.New("policy file is empty")
 
+	ErrEmptyPolicyFilePath = errors.New("the path to the policy file cannot be empty")
+
 	ErrFailedToUnmarshalPolicyFile = errors.New("failed to unmarshal policy file")
+
+	ErrPolicyNotYetLoaded = errors.New("policy settings have not yet been loaded")
 
 	ErrPolicyValidationFailed = errors.New("policy validation failed")
 
-	ErrPolicyAllowlistEmpty = errors.New("File is not in allowlist because the allowlist is empty")
+	ErrPolicyAllowlistEmpty = errors.New("file is not in allowlist because the allowlist is empty")
 
 	ErrItemNotInAllowlist = errors.New("item is not in the allowlist")
 

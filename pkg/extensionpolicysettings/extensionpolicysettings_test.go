@@ -12,15 +12,13 @@ import (
 	"testing"
 
 	"github.com/Azure/azure-extension-platform/pkg/extensionerrors"
-	"github.com/Azure/azure-extension-platform/pkg/logging"
 	"github.com/stretchr/testify/require"
 )
 
-var extensionLogger = logging.New(nil)
-
 const extensionRuntimePolicySettingsFilePath = "./testutils/runtime_policy.json"
 
-// This is a sample struct for an example extension's policy settings. Each extension will define their own struct that implements the ExtensionPolicySettings interface according to their needs.
+// This is a sample struct for an example extension's policy settings.
+// Each extension will define their own struct that implements the ExtensionPolicySettings interface according to their needs.
 type TestPolicy struct {
 	RequiresSigning string   `json:"requireSigning"`
 	AllowedScripts  []string `json:"allowedScripts"`
@@ -33,17 +31,16 @@ func (tp TestPolicy) ValidateFormat() error {
 
 func TestNewExtensionPolicySettingsManager(t *testing.T) {
 	// Create a new ExtensionPolicySettingsManager
-	manager, err := NewExtensionPolicySettingsManager[TestPolicy](extensionRuntimePolicySettingsFilePath, extensionLogger)
+	manager, err := NewExtensionPolicySettingsManager[TestPolicy](extensionRuntimePolicySettingsFilePath)
 	require.NoError(t, err)
 	require.NotNil(t, manager)
 	require.Equal(t, extensionRuntimePolicySettingsFilePath, manager.settingsFilePath)
-	require.Equal(t, extensionLogger, manager.logger)
 	require.Nil(t, manager.settings) // settings should not be loaded until LoadExtensionPolicySettings is called
 }
 
 func TestLoadExtensionPolicySettings(t *testing.T) {
 	// Setup test parameters
-	manager, err := NewExtensionPolicySettingsManager[TestPolicy](extensionRuntimePolicySettingsFilePath, extensionLogger)
+	manager, err := NewExtensionPolicySettingsManager[TestPolicy](extensionRuntimePolicySettingsFilePath)
 	require.NoError(t, err)
 
 	// Test cases:
@@ -87,29 +84,34 @@ func TestLoadExtensionPolicySettings(t *testing.T) {
 
 func TestGetSettings(t *testing.T) {
 	// Setup test parameters
-	manager, err := NewExtensionPolicySettingsManager[TestPolicy](extensionRuntimePolicySettingsFilePath, extensionLogger)
+	manager, err := NewExtensionPolicySettingsManager[TestPolicy](extensionRuntimePolicySettingsFilePath)
 	require.NoError(t, err)
 	validPolicyContent := `{
 		"requireSigning": "true",
 		"allowedScripts": []
 	}`
 	require.NoError(t, writeToFile(extensionRuntimePolicySettingsFilePath, validPolicyContent))
-	defer cleanupFile(extensionRuntimePolicySettingsFilePath) // Clean up after test
+	defer cleanupFile(extensionRuntimePolicySettingsFilePath)
 
 	// Call LoadExtensionPolicySettings and check for errors
+	_, err = manager.GetSettings()
+	require.ErrorIs(t, err, extensionerrors.ErrPolicyNotYetLoaded) // should return an error because settings have not been loaded yet
 	err = manager.LoadExtensionPolicySettings()
 	require.NoError(t, err)
 	require.NotNil(t, manager.settings)
 	require.Equal(t, "true", manager.settings.RequiresSigning)
 
 	// Call GetSettings and check for errors
-	settings := manager.GetSettings()
+	settings, err := manager.GetSettings()
+	require.NoError(t, err)
 	require.NotNil(t, settings)
+	require.Equal(t, "true", settings.RequiresSigning)
+	require.Empty(t, settings.AllowedScripts)
 }
 
 func TestValidateAgainstAllowlist(t *testing.T) {
 	// Setup test parameters
-	manager, err := NewExtensionPolicySettingsManager[TestPolicy](extensionRuntimePolicySettingsFilePath, extensionLogger)
+	manager, err := NewExtensionPolicySettingsManager[TestPolicy](extensionRuntimePolicySettingsFilePath)
 	require.NoError(t, err)
 	defer cleanupFile(extensionRuntimePolicySettingsFilePath) // Clean up after test
 
@@ -136,19 +138,19 @@ func TestValidateAgainstAllowlist(t *testing.T) {
 	require.Equal(t, "true", manager.settings.RequiresSigning)
 	require.NotEmpty(t, manager.settings.AllowedScripts)
 
-	require.NoError(t, ValidateFileHashInAllowlist(manager.logger, "./testutils/testscripts/script1.sh", manager.settings.AllowedScripts, HashTypeSHA256))
-	require.NoError(t, ValidateFileHashInAllowlist(manager.logger, "./testutils/testscripts/script2.sh", manager.settings.AllowedScripts, HashTypeSHA256))
-	require.ErrorIs(t, ValidateFileHashInAllowlist(manager.logger, "./testutils/testscripts/script3.sh", manager.settings.AllowedScripts, HashTypeSHA256), extensionerrors.ErrItemNotInAllowlist)
-	require.NoError(t, ValidateFileHashInAllowlist(manager.logger, "./testutils/testscripts/script5.sh", manager.settings.AllowedScripts, HashTypeSHA1))
+	require.NoError(t, ValidateFileHashInAllowlist("./testutils/testscripts/script1.sh", manager.settings.AllowedScripts, HashTypeSHA256))
+	require.NoError(t, ValidateFileHashInAllowlist("./testutils/testscripts/script2.sh", manager.settings.AllowedScripts, HashTypeSHA256))
+	require.ErrorIs(t, ValidateFileHashInAllowlist("./testutils/testscripts/script3.sh", manager.settings.AllowedScripts, HashTypeSHA256), extensionerrors.ErrItemNotInAllowlist)
+	require.NoError(t, ValidateFileHashInAllowlist("./testutils/testscripts/script5.sh", manager.settings.AllowedScripts, HashTypeSHA1))
 
 	// Empty filepath
-	require.ErrorIs(t, ValidateFileHashInAllowlist(manager.logger, "", manager.settings.AllowedScripts, HashTypeSHA256), extensionerrors.ErrEmptyFilepathToValidate)
+	require.ErrorIs(t, ValidateFileHashInAllowlist("", manager.settings.AllowedScripts, HashTypeSHA256), extensionerrors.ErrEmptyFilepathToValidate)
 	// Missing file
-	require.Error(t, ValidateFileHashInAllowlist(manager.logger, "./testutils/testscripts/missing.sh", manager.settings.AllowedScripts, HashTypeSHA256))
+	require.Error(t, ValidateFileHashInAllowlist("./testutils/testscripts/missing.sh", manager.settings.AllowedScripts, HashTypeSHA256))
 	// Now, empty list.
-	require.ErrorIs(t, ValidateFileHashInAllowlist(manager.logger, "./testutils/testscripts/script1.sh", []string{}, HashTypeSHA256), extensionerrors.ErrPolicyAllowlistEmpty)
+	require.ErrorIs(t, ValidateFileHashInAllowlist("./testutils/testscripts/script1.sh", []string{}, HashTypeSHA256), extensionerrors.ErrPolicyAllowlistEmpty)
 	// Empty file
-	require.NoError(t, ValidateFileHashInAllowlist(manager.logger, "./testutils/testscripts/script4.sh", manager.settings.AllowedScripts, HashTypeSHA256))
+	require.NoError(t, ValidateFileHashInAllowlist("./testutils/testscripts/script4.sh", manager.settings.AllowedScripts, HashTypeSHA256))
 
 }
 
@@ -160,7 +162,6 @@ func writeToFile(filePath, content string) error {
 }
 
 func cleanupFile(path string) {
-	// Do not remove missingPolicyFilePath as it simulates a missing file
 	if _, err := os.Stat(path); err == nil {
 		os.Remove(path)
 	}

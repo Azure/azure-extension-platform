@@ -9,7 +9,6 @@ import (
 	"os"
 
 	"github.com/Azure/azure-extension-platform/pkg/extensionerrors"
-	"github.com/Azure/azure-extension-platform/pkg/logging"
 )
 
 type ExtensionPolicySettings interface {
@@ -18,29 +17,25 @@ type ExtensionPolicySettings interface {
 
 type ExtensionPolicySettingsManager[T ExtensionPolicySettings] struct {
 	settingsFilePath string
-	logger           logging.ILogger
 	settings         *T
 }
 
-func NewExtensionPolicySettingsManager[T ExtensionPolicySettings](policyFilePath string, logger logging.ILogger) (*ExtensionPolicySettingsManager[T], error) {
+func NewExtensionPolicySettingsManager[T ExtensionPolicySettings](policyFilePath string) (*ExtensionPolicySettingsManager[T], error) {
 	if policyFilePath == "" {
-		//logger.Error("Policy file path is empty. ExtensionPolicySettingsManager may not function correctly.")
-		return nil, fmt.Errorf("policy file path cannot be empty")
+		return nil, extensionerrors.ErrEmptyPolicyFilePath
 	}
 	return &ExtensionPolicySettingsManager[T]{
 		settingsFilePath: policyFilePath,
-		logger:           logger, // settings is not loaded until LoadExtensionPolicySettings is called
 	}, nil
 }
 
 func (epsm *ExtensionPolicySettingsManager[T]) LoadExtensionPolicySettings() error {
-	if (epsm == nil) || (epsm.logger == nil) {
-		return fmt.Errorf("invalid ExtensionPolicySettingsManager: manager or logger is nil")
+	if epsm == nil {
+		return fmt.Errorf("invalid ExtensionPolicySettingsManager: manager is nil")
 	}
 	if epsm.settingsFilePath == "" {
-		return fmt.Errorf("invalid ExtensionPolicySettingsManager: settings file path is empty")
+		return extensionerrors.ErrEmptyPolicyFilePath
 	}
-	//epsm.logger.Info(fmt.Sprintf("Loading extension policy settings from file: %s", epsm.settingsFilePath))
 
 	// If an extension has a default policy configuration in case the file does not exist, they should handle that logic before calling this function.
 	if _, err := os.Stat(epsm.settingsFilePath); os.IsNotExist(err) {
@@ -49,11 +44,9 @@ func (epsm *ExtensionPolicySettingsManager[T]) LoadExtensionPolicySettings() err
 		return fmt.Errorf("error checking extension policy settings file: %w", err)
 	}
 
-	// Read the file content: check: what if the file is locked? What if we don't have permissions to read?
-
 	fileContent, err := os.ReadFile(epsm.settingsFilePath)
 	if err != nil {
-		return fmt.Errorf("failed to read extension policy settings file: %w", err) // Should we have retry logic?
+		return fmt.Errorf("failed to read extension policy settings file: %w", err) // TODO: Add retry logic if appropriate.
 	}
 
 	if len(fileContent) == 0 {
@@ -67,19 +60,18 @@ func (epsm *ExtensionPolicySettingsManager[T]) LoadExtensionPolicySettings() err
 
 	// Extensions themselves must decide the criteria for valid policy settings (i.e., if they can be null etc.).
 	if err := (*settings).ValidateFormat(); err != nil {
-		return fmt.Errorf("extension policy invalid: %w", err)
+		return fmt.Errorf("extension policy loaded, but invalid format: %w", err)
 	}
 
 	epsm.settings = settings
-	//epsm.logger.Info("Extension policy settings loaded and validated successfully.")
 	return nil
 }
 
-func (epsm *ExtensionPolicySettingsManager[T]) GetSettings() *T {
+func (epsm *ExtensionPolicySettingsManager[T]) GetSettings() (*T, error) {
 	if epsm.settings == nil {
-		//epsm.logger.Info("Extension policy settings have not been loaded yet. Returning nil.")
+		return nil, extensionerrors.ErrPolicyNotYetLoaded
 	}
-	return epsm.settings
+	return epsm.settings, nil
 }
 
 // Validation Helper Functions
@@ -91,18 +83,16 @@ const (
 	HashTypeSHA256
 )
 
-func ValidateValueInAllowlist(logger logging.ILogger, value string, allowlist []string) error {
+func ValidateValueInAllowlist(value string, allowlist []string) error {
 	if len(allowlist) == 0 {
 		return extensionerrors.ErrPolicyAllowlistEmpty
 	}
 
 	for _, allowlistValue := range allowlist {
 		if value == allowlistValue {
-			//logger.Info("Validation successful: item is in the allowlist.")
 			return nil
 		}
 	}
-	//logger.Info("validation failed: item is not in the allowlist.")
 	return extensionerrors.ErrItemNotInAllowlist
 }
 
@@ -110,7 +100,7 @@ func ValidateValueInAllowlist(logger logging.ILogger, value string, allowlist []
 // determines if the content is allowlisted. If hashOpt is not HashTypeNone, it will compute the hash of the file content.
 // If extensions don't want to validate a filepath but a value directly, they can call ValidateValueInAllowlist,
 // which this function calls.
-func ValidateFileHashInAllowlist(logger logging.ILogger, filePath string, allowlist []string, hashOpt HashType) error {
+func ValidateFileHashInAllowlist(filePath string, allowlist []string, hashOpt HashType) error {
 	if len(allowlist) == 0 {
 		return extensionerrors.ErrPolicyAllowlistEmpty
 	}
@@ -128,21 +118,21 @@ func ValidateFileHashInAllowlist(logger logging.ILogger, filePath string, allowl
 		return fmt.Errorf("failed to read file %s for validation: %w", filePath, err)
 	}
 
-	value := string(content) // What if content is empty? Do we want to treat that as an error or just compute the hash of an empty string? For now, we'll compute the hash of an empty string, but this is something to consider based on the specific use case and security requirements.
+	value := string(content)
 
 	if hashOpt != HashTypeNone {
-		value, err := ComputeFileHash(logger, value, hashOpt)
+		value, err := ComputeFileHash(value, hashOpt)
 		if err != nil {
 			return fmt.Errorf("error occured when hashing contents of file %s for validation: %w", filePath, err)
 		}
-		return ValidateValueInAllowlist(logger, value, allowlist)
+		return ValidateValueInAllowlist(value, allowlist)
 	}
 
-	return ValidateValueInAllowlist(logger, value, allowlist)
+	return ValidateValueInAllowlist(value, allowlist)
 }
 
 // ComputeFileHash computes the hash of a file or leaves string as is.
-func ComputeFileHash(logger logging.ILogger, contents string, hashOpt HashType) (string, error) {
+func ComputeFileHash(contents string, hashOpt HashType) (string, error) {
 	var hashStr string
 	switch hashOpt {
 	case HashTypeSHA1:
@@ -153,6 +143,5 @@ func ComputeFileHash(logger logging.ILogger, contents string, hashOpt HashType) 
 		hashStr = hex.EncodeToString(hash[:])
 	}
 
-	//logger.Info(fmt.Sprintf("Computed hash: %s", hashStr))
 	return hashStr, nil
 }
