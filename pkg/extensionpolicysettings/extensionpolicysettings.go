@@ -119,6 +119,10 @@ func ValidateFileHashInAllowlist(logger logging.ILogger, filePath string, allowl
 		return extensionerrors.ErrEmptyFilepathToValidate
 	}
 
+	if _, err := os.Stat(filePath); os.IsNotExist(err) {
+		return fmt.Errorf("file to validate does not exist: %w", err)
+	}
+
 	content, err := os.ReadFile(filePath)
 	if err != nil {
 		return fmt.Errorf("failed to read file %s for validation: %w", filePath, err)
@@ -127,12 +131,10 @@ func ValidateFileHashInAllowlist(logger logging.ILogger, filePath string, allowl
 	value := string(content) // What if content is empty? Do we want to treat that as an error or just compute the hash of an empty string? For now, we'll compute the hash of an empty string, but this is something to consider based on the specific use case and security requirements.
 
 	if hashOpt != HashTypeNone {
-		//logger.Info(fmt.Sprintf("Computing hash of file %s for validation.", filePath))
 		value, err := ComputeFileHash(logger, value, hashOpt)
 		if err != nil {
-			return fmt.Errorf("failed to compute hash for file %s for validation: %w", filePath, err)
+			return fmt.Errorf("error occured when hashing contents of file %s for validation: %w", filePath, err)
 		}
-		//logger.Info(fmt.Sprintf("Computed hash value for file %s: %s", filePath, value))
 		return ValidateValueInAllowlist(logger, value, allowlist)
 	}
 
@@ -141,12 +143,6 @@ func ValidateFileHashInAllowlist(logger logging.ILogger, filePath string, allowl
 
 // ComputeFileHash computes the hash of a file or leaves string as is.
 func ComputeFileHash(logger logging.ILogger, contents string, hashOpt HashType) (string, error) {
-	//logger.Info("Computing hash for file contents")
-
-	if contents == "" {
-		return "", extensionerrors.ErrContentsToValidateEmpty
-	}
-
 	var hashStr string
 	switch hashOpt {
 	case HashTypeSHA1:

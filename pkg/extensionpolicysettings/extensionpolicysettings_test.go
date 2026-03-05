@@ -4,6 +4,7 @@
 package extensionpolicysettings
 
 import (
+	"crypto/sha1"
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
@@ -92,7 +93,7 @@ func TestGetSettings(t *testing.T) {
 		"requireSigning": "true",
 		"allowedScripts": []
 	}`
-	writeToFile(extensionRuntimePolicySettingsFilePath, validPolicyContent)
+	require.NoError(t, writeToFile(extensionRuntimePolicySettingsFilePath, validPolicyContent))
 	defer cleanupFile(extensionRuntimePolicySettingsFilePath) // Clean up after test
 
 	// Call LoadExtensionPolicySettings and check for errors
@@ -112,16 +113,21 @@ func TestValidateAgainstAllowlist(t *testing.T) {
 	require.NoError(t, err)
 	defer cleanupFile(extensionRuntimePolicySettingsFilePath) // Clean up after test
 
-	script1Hash := hashHelper("./testutils/testscripts/script1.sh")
-	script2Hash := hashHelper("./testutils/testscripts/script2.sh")
-	//script3Hash := hashHelper("./testutils/testscripts/script3.sh")
+	script1Hash, err := hashHelper("./testutils/testscripts/script1.sh", TestHashTypeSha256)
+	require.NoError(t, err)
+	script2Hash, err := hashHelper("./testutils/testscripts/script2.sh", TestHashTypeSha256)
+	require.NoError(t, err)
+	// Skip computing script3 hash because it will not be allowed..
+	script4Hash := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" // pre-computed hash of the empty string
+	script5Hash, err := hashHelper("./testutils/testscripts/script5.sh", TestHashTypeSha1)
+	require.NoError(t, err)
 
 	// Some scripts are allowed
 	validPolicyContent := fmt.Sprintf(`{
     "requireSigning": "true",
-    "allowedScripts": ["%s", "%s"]
-	}`, script1Hash, script2Hash)
-	writeToFile(extensionRuntimePolicySettingsFilePath, validPolicyContent)
+    "allowedScripts": ["%s", "%s", "%s", "%s"]
+	}`, script1Hash, script2Hash, script4Hash, script5Hash)
+	require.NoError(t, writeToFile(extensionRuntimePolicySettingsFilePath, validPolicyContent))
 
 	// Call LoadExtensionPolicySettings and check for errors
 	err = manager.LoadExtensionPolicySettings()
@@ -133,18 +139,24 @@ func TestValidateAgainstAllowlist(t *testing.T) {
 	require.NoError(t, ValidateFileHashInAllowlist(manager.logger, "./testutils/testscripts/script1.sh", manager.settings.AllowedScripts, HashTypeSHA256))
 	require.NoError(t, ValidateFileHashInAllowlist(manager.logger, "./testutils/testscripts/script2.sh", manager.settings.AllowedScripts, HashTypeSHA256))
 	require.ErrorIs(t, ValidateFileHashInAllowlist(manager.logger, "./testutils/testscripts/script3.sh", manager.settings.AllowedScripts, HashTypeSHA256), extensionerrors.ErrItemNotInAllowlist)
-	require.ErrorIs(t, ValidateFileHashInAllowlist(manager.logger, "", manager.settings.AllowedScripts, HashTypeSHA256), extensionerrors.ErrEmptyFilepathToValidate)
-	require.Error(t, ValidateFileHashInAllowlist(manager.logger, "./testutils/testscripts/missing.sh", manager.settings.AllowedScripts, HashTypeSHA256))
+	require.NoError(t, ValidateFileHashInAllowlist(manager.logger, "./testutils/testscripts/script5.sh", manager.settings.AllowedScripts, HashTypeSHA1))
 
+	// Empty filepath
+	require.ErrorIs(t, ValidateFileHashInAllowlist(manager.logger, "", manager.settings.AllowedScripts, HashTypeSHA256), extensionerrors.ErrEmptyFilepathToValidate)
+	// Missing file
+	require.Error(t, ValidateFileHashInAllowlist(manager.logger, "./testutils/testscripts/missing.sh", manager.settings.AllowedScripts, HashTypeSHA256))
 	// Now, empty list.
 	require.ErrorIs(t, ValidateFileHashInAllowlist(manager.logger, "./testutils/testscripts/script1.sh", []string{}, HashTypeSHA256), extensionerrors.ErrPolicyAllowlistEmpty)
+	// Empty file
+	require.NoError(t, ValidateFileHashInAllowlist(manager.logger, "./testutils/testscripts/script4.sh", manager.settings.AllowedScripts, HashTypeSHA256))
+
 }
 
-func writeToFile(filePath, content string) {
+// Helper functions for tests
+
+func writeToFile(filePath, content string) error {
 	err := os.WriteFile(filePath, []byte(content), 0644)
-	if err != nil {
-		panic(err)
-	}
+	return err
 }
 
 func cleanupFile(path string) {
@@ -154,14 +166,30 @@ func cleanupFile(path string) {
 	}
 }
 
-func hashHelper(filePath string) string {
+type TestHashType int
+
+const (
+	TestHashTypeSha1 TestHashType = iota
+	TestHashTypeSha256
+)
+
+func hashHelper(filePath string, hashOpt TestHashType) (string, error) {
 	contents, err := os.ReadFile(filePath)
 
 	if err != nil {
-		panic(err)
+		return "", err
 	}
 
-	hash := sha256.Sum256([]byte(contents))
-	hashStr := hex.EncodeToString(hash[:])
-	return hashStr
+	var hashStr string
+	switch hashOpt {
+	case TestHashTypeSha1:
+		hash := sha1.New()
+		hash.Write(contents)
+		hashStr = hex.EncodeToString(hash.Sum(nil))
+	case TestHashTypeSha256:
+		hash := sha256.New()
+		hash.Write(contents)
+		hashStr = hex.EncodeToString(hash.Sum(nil))
+	}
+	return hashStr, nil
 }
