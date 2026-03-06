@@ -5,10 +5,11 @@ package encrypt
 import (
 	"encoding/hex"
 	"fmt"
-	"github.com/Azure/azure-extension-platform/pkg/internal/crypto"
-	"golang.org/x/sys/windows"
 	"syscall"
 	"unsafe"
+
+	"github.com/Azure/azure-extension-platform/pkg/internal/crypto"
+	"golang.org/x/sys/windows"
 )
 
 const (
@@ -30,7 +31,7 @@ func (cHandler *certHandler) GetThumbprint() (certThumbprint string, err error) 
 
 func (cHandler *certHandler) Encrypt(bytesToEncrypt []byte) (encryptedBytes []byte, err error) {
 	alg := szOID_RSA_RC4
-	buffer := []byte(alg)
+	buffer := append([]byte(alg), 0) // null-terminate for the C API
 	procCryptEncryptMessage := crypto.Modcrypt32.NewProc("CryptEncryptMessage")
 	cai := crypto.CryptAlgorithmIdentifier{
 		PszObjID: uintptr(unsafe.Pointer(&buffer[0])),

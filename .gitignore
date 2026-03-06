@@ -13,3 +13,4 @@ vmextension/testdir/
 vendor/
 pkg/utils/configTemp/
 pkg/utils/downloadTemp/
+pkg/settings/testdir/

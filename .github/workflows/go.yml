@@ -23,6 +23,8 @@ jobs:
 
     - name: Test
       run: go test -v ./...
+      env:
+        CGO_ENABLED: "0"
   
   build_windows:
     runs-on: windows-latest
@@ -39,3 +41,5 @@ jobs:
 
     - name: Test
       run: go test -v ./...
+      env:
+        CGO_ENABLED: "0"
