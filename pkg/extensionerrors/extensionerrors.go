@@ -44,4 +44,26 @@ var (
 	ErrNotFound = errors.New("NotFound")
 
 	ErrInvalidOperationName = errors.New("operation name is invalid")
+
+	ErrMissingPolicyFile = errors.New("policy file is missing")
+
+	ErrInvalidPolicyFile = errors.New("policy file is invalid")
+
+	ErrEmptyPolicyFile = errors.New("policy file is empty")
+
+	ErrEmptyPolicyFilePath = errors.New("the path to the policy file cannot be empty")
+
+	ErrFailedToUnmarshalPolicyFile = errors.New("failed to unmarshal policy file")
+
+	ErrPolicyNotYetLoaded = errors.New("policy settings have not yet been loaded")
+
+	ErrPolicyValidationFailed = errors.New("policy validation failed")
+
+	ErrPolicyAllowlistEmpty = errors.New("file is not in allowlist because the allowlist is empty")
+
+	ErrItemNotInAllowlist = errors.New("item is not in the allowlist")
+
+	ErrEmptyFilepathToValidate = errors.New("filepath of the file to validate cannot be empty")
+
+	ErrFailedToReadFileToValidate = errors.New("failed to read file to validate")
 )
