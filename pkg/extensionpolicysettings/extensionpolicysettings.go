@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/Azure/azure-extension-platform/pkg/extensionerrors"
 )
@@ -89,7 +90,10 @@ func ValidateValueInAllowlist(value string, allowlist []string) error {
 	}
 
 	for _, allowlistValue := range allowlist {
-		if value == allowlistValue {
+		// Although a hash value wouldn't have whitespace we trim spaces for other use cases of this function.
+		trimmedAllowlistValue := strings.TrimSpace(allowlistValue)
+		trimmedValue := strings.TrimSpace(value)
+		if strings.EqualFold(trimmedValue, trimmedAllowlistValue) {
 			return nil
 		}
 	}

@@ -29,6 +29,27 @@ func (tp TestPolicy) ValidateFormat() error {
 	return nil
 }
 
+type InvalidFormatPolicy struct {
+	Value string `json:"value"`
+}
+
+func (p InvalidFormatPolicy) ValidateFormat() error {
+	return fmt.Errorf("invalid format for test")
+}
+
+func TestNewExtensionPolicySettingsManager_EmptyPath(t *testing.T) {
+	manager, err := NewExtensionPolicySettingsManager[TestPolicy]("")
+	require.ErrorIs(t, err, extensionerrors.ErrEmptyPolicyFilePath)
+	require.Nil(t, manager)
+}
+
+func TestLoadExtensionPolicySettings_NilManager(t *testing.T) {
+	var manager *ExtensionPolicySettingsManager[TestPolicy]
+	err := manager.LoadExtensionPolicySettings()
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "manager is nil")
+}
+
 func TestNewExtensionPolicySettingsManager(t *testing.T) {
 	// Create a new ExtensionPolicySettingsManager
 	manager, err := NewExtensionPolicySettingsManager[TestPolicy](extensionRuntimePolicySettingsFilePath)
@@ -36,6 +57,25 @@ func TestNewExtensionPolicySettingsManager(t *testing.T) {
 	require.NotNil(t, manager)
 	require.Equal(t, extensionRuntimePolicySettingsFilePath, manager.settingsFilePath)
 	require.Nil(t, manager.settings) // settings should not be loaded until LoadExtensionPolicySettings is called
+}
+
+func TestLoadExtensionPolicySettings_EmptyManagerPath(t *testing.T) { // lourdes: go back and understand the difference between this test and the test above
+	manager := &ExtensionPolicySettingsManager[TestPolicy]{}
+	err := manager.LoadExtensionPolicySettings()
+	require.ErrorIs(t, err, extensionerrors.ErrEmptyPolicyFilePath)
+}
+
+func TestLoadExtensionPolicySettings_ValidateFormatFailure(t *testing.T) {
+	manager, err := NewExtensionPolicySettingsManager[InvalidFormatPolicy](extensionRuntimePolicySettingsFilePath)
+	require.NoError(t, err)
+
+	validJSONButInvalidFormat := `{"value":"anything"}`
+	require.NoError(t, writeToFile(extensionRuntimePolicySettingsFilePath, validJSONButInvalidFormat))
+	defer cleanupFile(extensionRuntimePolicySettingsFilePath)
+
+	err = manager.LoadExtensionPolicySettings()
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "invalid format")
 }
 
 func TestLoadExtensionPolicySettings(t *testing.T) {
@@ -109,6 +149,12 @@ func TestGetSettings(t *testing.T) {
 	require.Empty(t, settings.AllowedScripts)
 }
 
+func TestValidateValueInAllowlist(t *testing.T) {
+	require.ErrorIs(t, ValidateValueInAllowlist("x", []string{}), extensionerrors.ErrPolicyAllowlistEmpty)
+	require.NoError(t, ValidateValueInAllowlist("b", []string{"a", "b", "c"}))
+	require.ErrorIs(t, ValidateValueInAllowlist("z", []string{"a", "b", "c"}), extensionerrors.ErrItemNotInAllowlist)
+}
+
 func TestValidateAgainstAllowlist(t *testing.T) {
 	// Setup test parameters
 	manager, err := NewExtensionPolicySettingsManager[TestPolicy](extensionRuntimePolicySettingsFilePath)
@@ -154,8 +200,38 @@ func TestValidateAgainstAllowlist(t *testing.T) {
 
 }
 
-// Helper functions for tests
+func TestValidateFileHashInAllowlist_HashTypeNone_UsesRawContent(t *testing.T) {
+	filePath := "./testutils/raw_content_test.txt"
+	content := "raw-content-123"
 
+	require.NoError(t, writeToFile(filePath, content))
+	defer cleanupFile(filePath)
+
+	require.NoError(t, ValidateFileHashInAllowlist(filePath, []string{content}, HashTypeNone))
+	require.ErrorIs(t, ValidateFileHashInAllowlist(filePath, []string{"different-content"}, HashTypeNone), extensionerrors.ErrItemNotInAllowlist)
+}
+
+func TestComputeFileHash(t *testing.T) {
+	input := "abc"
+
+	sha1Expected := sha1.Sum([]byte(input))
+	sha256Expected := sha256.Sum256([]byte(input))
+
+	gotSHA1, err := ComputeFileHash(input, HashTypeSHA1)
+	require.NoError(t, err)
+	require.Equal(t, hex.EncodeToString(sha1Expected[:]), gotSHA1)
+
+	gotSHA256, err := ComputeFileHash(input, HashTypeSHA256)
+	require.NoError(t, err)
+	require.Equal(t, hex.EncodeToString(sha256Expected[:]), gotSHA256)
+
+	// Current behavior: unknown hash type falls back to SHA256.
+	gotUnknown, err := ComputeFileHash(input, HashType(999))
+	require.NoError(t, err)
+	require.Equal(t, hex.EncodeToString(sha256Expected[:]), gotUnknown)
+}
+
+// Helper functions for tests
 func writeToFile(filePath, content string) error {
 	err := os.WriteFile(filePath, []byte(content), 0644)
 	return err
