@@ -59,7 +59,7 @@ func TestNewExtensionPolicySettingsManager(t *testing.T) {
 	require.Nil(t, manager.settings) // settings should not be loaded until LoadExtensionPolicySettings is called
 }
 
-func TestLoadExtensionPolicySettings_EmptyManagerPath(t *testing.T) { // lourdes: go back and understand the difference between this test and the test above
+func TestLoadExtensionPolicySettings_EmptyManagerPath(t *testing.T) {
 	manager := &ExtensionPolicySettingsManager[TestPolicy]{}
 	err := manager.LoadExtensionPolicySettings()
 	require.ErrorIs(t, err, extensionerrors.ErrEmptyPolicyFilePath)
