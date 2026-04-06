@@ -144,7 +144,7 @@ func (*prodGetVMExtensionEnvironmentManager) SetSequenceNumberInternal(extension
 	return seqno.SetSequenceNumber(extensionName, extensionVersion, seqNo)
 }
 
-func GuestAgentEnvironmetVariable(envVarName GuestAgentEnvVar) (string, error) {
+func GetGuestAgentEnvironmetVariable(envVarName GuestAgentEnvVar) (string, error) {
 	extensionVersion, isSet := os.LookupEnv(string(envVarName))
 	if !isSet || extensionVersion == "" {
 		return "", errors.Errorf("Extension environment variable '%s' is not set", envVarName)
