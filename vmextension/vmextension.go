@@ -30,9 +30,10 @@ const (
 	GuestAgentEnvVarExtensionVersion     GuestAgentEnvVar = "AZURE_GUEST_AGENT_EXTENSION_VERSION"
 	GuestAgentEnvVarExtensionFullPath    GuestAgentEnvVar = "AZURE_GUEST_AGENT_EXTENSION_PATH"
 	GuestAgentEnvVarConfigSequenceNumber GuestAgentEnvVar = "ConfigSequenceNumber"
-	GuestAgentEnvVarConfigExtensionName  GuestAgentEnvVar = "ConfigExtensionName"
 	GuestAgentEnvVarUpdateToVersion      GuestAgentEnvVar = "VERSION"
 	GuestAgentEnvVarUpdateFromVersion    GuestAgentEnvVar = "AZURE_GUEST_AGENT_UPDATING_FROM_VERSION"
+	GuestAgentEnvVarDisableCmdExitCode   GuestAgentEnvVar = "AZURE_GUEST_AGENT_DISABLE_CMD_EXIT_CODE"
+	GuestAgentEnvVarUninstallCmdExitCode GuestAgentEnvVar = "AZURE_GUEST_AGENT_UNINSTALL_CMD_EXIT_CODE"
 )
 
 type OperationName string
