@@ -31,6 +31,7 @@ func TestLockFileMetadata(t *testing.T) {
 	var lf ILockedFile
 	lf, err := New(testFilePath, time.Second)
 	assert.NoError(t, err)
+	time.Sleep(time.Second)
 	lf.Close()
 	lastOpened, lastClosed, err := getLastOpenedAndLastClosedTime(testFilePath)
 	assert.NoError(t, err)
