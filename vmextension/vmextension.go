@@ -23,6 +23,22 @@ import (
 // Azure Guest Agent.
 const handlerEnvFileName = "HandlerEnvironment.json"
 
+// GuestAgentEnvVar represents environment variable names set by the Azure Guest Agent.
+type GuestAgentEnvVar string
+
+const (
+	// environment variables are declared here
+	// https://github.com/Azure/azure-vmextension-publishing/wiki/2.0-Partner-Guide-Handler-Design-Details#236-summary
+	GuestAgentEnvVarExtensionVersion     GuestAgentEnvVar = "AZURE_GUEST_AGENT_EXTENSION_VERSION"
+	GuestAgentEnvVarExtensionFullPath    GuestAgentEnvVar = "AZURE_GUEST_AGENT_EXTENSION_PATH"
+	GuestAgentEnvVarConfigSequenceNumber GuestAgentEnvVar = "ConfigSequenceNumber"
+	GuestAgentEnvVarUpdateToVersion      GuestAgentEnvVar = "VERSION"
+	GuestAgentEnvVarUpdateFromVersion    GuestAgentEnvVar = "AZURE_GUEST_AGENT_UPDATING_FROM_VERSION"
+	GuestAgentEnvVarDisableCmdExitCode   GuestAgentEnvVar = "AZURE_GUEST_AGENT_DISABLE_CMD_EXIT_CODE"
+	GuestAgentEnvVarUninstallCmdExitCode GuestAgentEnvVar = "AZURE_GUEST_AGENT_UNINSTALL_CMD_EXIT_CODE"
+	// environment variables that are for multiconfig extensions are excluded
+)
+
 type OperationName string
 
 const (
@@ -126,6 +142,14 @@ func (em *prodGetVMExtensionEnvironmentManager) GetHandlerSettings(el logging.IL
 
 func (*prodGetVMExtensionEnvironmentManager) SetSequenceNumberInternal(extensionName, extensionVersion string, seqNo uint) error {
 	return seqno.SetSequenceNumber(extensionName, extensionVersion, seqNo)
+}
+
+func GetGuestAgentEnvironmetVariable(envVarName GuestAgentEnvVar) (string, error) {
+	extensionVersion, isSet := os.LookupEnv(string(envVarName))
+	if !isSet || extensionVersion == "" {
+		return "", errors.Errorf("Extension environment variable '%s' is not set", envVarName)
+	}
+	return extensionVersion, nil
 }
 
 // GetVMExtension returns a new VMExtension object
