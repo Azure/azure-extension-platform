@@ -21,10 +21,18 @@ import (
 
 // HandlerEnvFileName is the file name of the Handler Environment as placed by the
 // Azure Guest Agent.
+const handlerEnvFileName = "HandlerEnvironment.json"
+
+// GuestAgentEnvVar represents environment variable names set by the Azure Guest Agent.
+type GuestAgentEnvVar string
+
 const (
-	handlerEnvFileName          = "HandlerEnvironment.json"
-	ExtensionVersionEnvVarName  = "AZURE_GUEST_AGENT_EXTENSION_VERSION"
-	ExtensionFullPathEnvVarName = "AZURE_GUEST_AGENT_EXTENSION_PATH"
+	GuestAgentEnvVarExtensionVersion     GuestAgentEnvVar = "AZURE_GUEST_AGENT_EXTENSION_VERSION"
+	GuestAgentEnvVarExtensionFullPath    GuestAgentEnvVar = "AZURE_GUEST_AGENT_EXTENSION_PATH"
+	GuestAgentEnvVarConfigSequenceNumber GuestAgentEnvVar = "ConfigSequenceNumber"
+	GuestAgentEnvVarConfigExtensionName  GuestAgentEnvVar = "ConfigExtensionName"
+	GuestAgentEnvVarUpdateToVersion      GuestAgentEnvVar = "VERSION"
+	GuestAgentEnvVarUpdateFromVersion    GuestAgentEnvVar = "AZURE_GUEST_AGENT_UPDATING_FROM_VERSION"
 )
 
 type OperationName string
@@ -132,20 +140,12 @@ func (*prodGetVMExtensionEnvironmentManager) SetSequenceNumberInternal(extension
 	return seqno.SetSequenceNumber(extensionName, extensionVersion, seqNo)
 }
 
-func GetExtensionVersionFromEnvironmentVariable() (string, error) {
-	extensionVersion, isSet := os.LookupEnv(ExtensionVersionEnvVarName)
+func GuestAgentEnvironmetVariable(envVarName GuestAgentEnvVar) (string, error) {
+	extensionVersion, isSet := os.LookupEnv(string(envVarName))
 	if !isSet || extensionVersion == "" {
-		return "", errors.Errorf("Extension version is not set in environment variable '%s'", ExtensionFullPathEnvVarName)
+		return "", errors.Errorf("Extension environment variable '%s' is not set", envVarName)
 	}
 	return extensionVersion, nil
-}
-
-func GetExtensionFullPathFromEnvironmentVariable() (string, error) {
-	extensionDirPath, isSet := os.LookupEnv(ExtensionFullPathEnvVarName)
-	if !isSet || extensionDirPath == "" {
-		return "", errors.Errorf("Extension path is not set in environment variable '%s'", ExtensionFullPathEnvVarName)
-	}
-	return extensionDirPath, nil
 }
 
 // GetVMExtension returns a new VMExtension object

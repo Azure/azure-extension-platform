@@ -724,42 +724,22 @@ func cleanupDirsForVMExtension(vmExt *VMExtension) (combinedError error) {
 	return
 }
 
-func Test_GetExtensionVersionFromEnvironmentVariable_ReturnsVersion(t *testing.T) {
-	t.Setenv(ExtensionVersionEnvVarName, "1.2.3")
-	version, err := GetExtensionVersionFromEnvironmentVariable()
+func Test_GuestAgentEnvironmentVariable_ReturnsValue(t *testing.T) {
+	t.Setenv(string(GuestAgentEnvVarExtensionVersion), "1.2.3")
+	version, err := GuestAgentEnvironmetVariable(GuestAgentEnvVarExtensionVersion)
 	require.NoError(t, err)
 	require.Equal(t, "1.2.3", version)
 }
 
-func Test_GetExtensionVersionFromEnvironmentVariable_NotSet(t *testing.T) {
-	t.Setenv(ExtensionVersionEnvVarName, "")
-	_, err := GetExtensionVersionFromEnvironmentVariable()
+func Test_GuestAgentEnvironmentVariable_EmptyValue(t *testing.T) {
+	t.Setenv(string(GuestAgentEnvVarExtensionVersion), "")
+	_, err := GuestAgentEnvironmetVariable(GuestAgentEnvVarExtensionVersion)
 	require.Error(t, err)
-	require.Contains(t, err.Error(), ExtensionFullPathEnvVarName)
+	require.Contains(t, err.Error(), string(GuestAgentEnvVarExtensionVersion))
 }
 
-func Test_GetExtensionVersionFromEnvironmentVariable_Unset(t *testing.T) {
-	os.Unsetenv(ExtensionVersionEnvVarName)
-	_, err := GetExtensionVersionFromEnvironmentVariable()
-	require.Error(t, err)
-}
-
-func Test_GetExtensionFullPathFromEnvironmentVariable_ReturnsPath(t *testing.T) {
-	t.Setenv(ExtensionFullPathEnvVarName, "/opt/extensions/myext")
-	path, err := GetExtensionFullPathFromEnvironmentVariable()
-	require.NoError(t, err)
-	require.Equal(t, "/opt/extensions/myext", path)
-}
-
-func Test_GetExtensionFullPathFromEnvironmentVariable_NotSet(t *testing.T) {
-	t.Setenv(ExtensionFullPathEnvVarName, "")
-	_, err := GetExtensionFullPathFromEnvironmentVariable()
-	require.Error(t, err)
-	require.Contains(t, err.Error(), ExtensionFullPathEnvVarName)
-}
-
-func Test_GetExtensionFullPathFromEnvironmentVariable_Unset(t *testing.T) {
-	os.Unsetenv(ExtensionFullPathEnvVarName)
-	_, err := GetExtensionFullPathFromEnvironmentVariable()
+func Test_GuestAgentEnvironmentVariable_Unset(t *testing.T) {
+	os.Unsetenv(string(GuestAgentEnvVarExtensionVersion))
+	_, err := GuestAgentEnvironmetVariable(GuestAgentEnvVarExtensionVersion)
 	require.Error(t, err)
 }
