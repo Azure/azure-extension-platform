@@ -723,3 +723,43 @@ func cleanupDirsForVMExtension(vmExt *VMExtension) (combinedError error) {
 	combinedError = extensionerrors.CombineErrors(combinedError, os.RemoveAll(vmExt.HandlerEnv.DataFolder))
 	return
 }
+
+func Test_GetExtensionVersionFromEnvironmentVariable_ReturnsVersion(t *testing.T) {
+	t.Setenv(ExtensionVersionEnvVarName, "1.2.3")
+	version, err := GetExtensionVersionFromEnvironmentVariable()
+	require.NoError(t, err)
+	require.Equal(t, "1.2.3", version)
+}
+
+func Test_GetExtensionVersionFromEnvironmentVariable_NotSet(t *testing.T) {
+	t.Setenv(ExtensionVersionEnvVarName, "")
+	_, err := GetExtensionVersionFromEnvironmentVariable()
+	require.Error(t, err)
+	require.Contains(t, err.Error(), ExtensionFullPathEnvVarName)
+}
+
+func Test_GetExtensionVersionFromEnvironmentVariable_Unset(t *testing.T) {
+	os.Unsetenv(ExtensionVersionEnvVarName)
+	_, err := GetExtensionVersionFromEnvironmentVariable()
+	require.Error(t, err)
+}
+
+func Test_GetExtensionFullPathFromEnvironmentVariable_ReturnsPath(t *testing.T) {
+	t.Setenv(ExtensionFullPathEnvVarName, "/opt/extensions/myext")
+	path, err := GetExtensionFullPathFromEnvironmentVariable()
+	require.NoError(t, err)
+	require.Equal(t, "/opt/extensions/myext", path)
+}
+
+func Test_GetExtensionFullPathFromEnvironmentVariable_NotSet(t *testing.T) {
+	t.Setenv(ExtensionFullPathEnvVarName, "")
+	_, err := GetExtensionFullPathFromEnvironmentVariable()
+	require.Error(t, err)
+	require.Contains(t, err.Error(), ExtensionFullPathEnvVarName)
+}
+
+func Test_GetExtensionFullPathFromEnvironmentVariable_Unset(t *testing.T) {
+	os.Unsetenv(ExtensionFullPathEnvVarName)
+	_, err := GetExtensionFullPathFromEnvironmentVariable()
+	require.Error(t, err)
+}

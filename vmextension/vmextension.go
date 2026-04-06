@@ -21,7 +21,11 @@ import (
 
 // HandlerEnvFileName is the file name of the Handler Environment as placed by the
 // Azure Guest Agent.
-const handlerEnvFileName = "HandlerEnvironment.json"
+const (
+	handlerEnvFileName          = "HandlerEnvironment.json"
+	ExtensionVersionEnvVarName  = "AZURE_GUEST_AGENT_EXTENSION_VERSION"
+	ExtensionFullPathEnvVarName = "AZURE_GUEST_AGENT_EXTENSION_PATH"
+)
 
 type OperationName string
 
@@ -126,6 +130,22 @@ func (em *prodGetVMExtensionEnvironmentManager) GetHandlerSettings(el logging.IL
 
 func (*prodGetVMExtensionEnvironmentManager) SetSequenceNumberInternal(extensionName, extensionVersion string, seqNo uint) error {
 	return seqno.SetSequenceNumber(extensionName, extensionVersion, seqNo)
+}
+
+func GetExtensionVersionFromEnvironmentVariable() (string, error) {
+	extensionVersion, isSet := os.LookupEnv(ExtensionVersionEnvVarName)
+	if !isSet || extensionVersion == "" {
+		return "", errors.Errorf("Extension version is not set in environment variable '%s'", ExtensionFullPathEnvVarName)
+	}
+	return extensionVersion, nil
+}
+
+func GetExtensionFullPathFromEnvironmentVariable() (string, error) {
+	extensionDirPath, isSet := os.LookupEnv(ExtensionFullPathEnvVarName)
+	if !isSet || extensionDirPath == "" {
+		return "", errors.Errorf("Extension path is not set in environment variable '%s'", ExtensionFullPathEnvVarName)
+	}
+	return extensionDirPath, nil
 }
 
 // GetVMExtension returns a new VMExtension object
