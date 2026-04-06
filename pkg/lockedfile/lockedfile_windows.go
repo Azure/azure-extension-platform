@@ -3,9 +3,10 @@
 package lockedfile
 
 import (
-	"golang.org/x/sys/windows"
 	"syscall"
 	"time"
+
+	"golang.org/x/sys/windows"
 )
 
 const (
@@ -137,8 +138,6 @@ func (self *lockedFile) WriteLockedFile(bytes []byte) error {
 	default:
 		return err
 	}
-
-	return nil
 }
 
 func (self *lockedFile) closeInner() error {
