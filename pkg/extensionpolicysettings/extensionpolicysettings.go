@@ -3,11 +3,12 @@ package extensionpolicysettings
 import (
 	"crypto/sha1"
 	"crypto/sha256"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
+
+	"github.com/Azure/azure-extension-platform/pkg/utils"
 
 	"github.com/Azure/azure-extension-platform/pkg/extensionerrors"
 )
@@ -135,17 +136,16 @@ func ValidateFileHashInAllowlist(filePath string, allowlist []string, hashOpt Ha
 	return ValidateValueInAllowlist(value, allowlist)
 }
 
-// ComputeFileHash computes the hash of a file or leaves string as is.
+// ComputeFileHash computes the hash of a file.
 func ComputeFileHash(contents string, hashOpt HashType) (string, error) {
-	var hashStr string
 	switch hashOpt {
 	case HashTypeSHA1:
-		hash := sha1.Sum([]byte(contents))
-		hashStr = hex.EncodeToString(hash[:])
+		return utils.ComputeHash(contents, sha1.New()), nil
+	case HashTypeSHA256:
+		return utils.ComputeHash(contents, sha256.New()), nil
+	case HashTypeNone:
+		return contents, nil
 	default:
-		hash := sha256.Sum256([]byte(contents))
-		hashStr = hex.EncodeToString(hash[:])
+		return "", fmt.Errorf("unsupported hash type option: %v", hashOpt)
 	}
-
-	return hashStr, nil
 }
