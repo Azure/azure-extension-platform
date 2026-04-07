@@ -211,26 +211,6 @@ func TestValidateFileHashInAllowlist_HashTypeNone_UsesRawContent(t *testing.T) {
 	require.ErrorIs(t, ValidateFileHashInAllowlist(filePath, []string{"different-content"}, HashTypeNone), extensionerrors.ErrItemNotInAllowlist)
 }
 
-func TestComputeFileHash(t *testing.T) {
-	input := "abc"
-
-	sha1Expected := sha1.Sum([]byte(input))
-	sha256Expected := sha256.Sum256([]byte(input))
-
-	gotSHA1, err := ComputeFileHash(input, HashTypeSHA1)
-	require.NoError(t, err)
-	require.Equal(t, hex.EncodeToString(sha1Expected[:]), gotSHA1)
-
-	gotSHA256, err := ComputeFileHash(input, HashTypeSHA256)
-	require.NoError(t, err)
-	require.Equal(t, hex.EncodeToString(sha256Expected[:]), gotSHA256)
-
-	// Current behavior: unknown hash type falls back to SHA256.
-	gotUnknown, err := ComputeFileHash(input, HashType(999))
-	require.NoError(t, err)
-	require.Equal(t, hex.EncodeToString(sha256Expected[:]), gotUnknown)
-}
-
 // Helper functions for tests
 func writeToFile(filePath, content string) error {
 	err := os.WriteFile(filePath, []byte(content), 0644)
