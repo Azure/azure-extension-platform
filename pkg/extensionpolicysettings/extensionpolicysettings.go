@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/Azure/azure-extension-platform/pkg/extensionerrors"
-	"github.com/Azure/azure-extension-platform/pkg/utils"
+	"github.com/Azure/azure-extension-platform/pkg/hashutils"
 )
 
 type ExtensionPolicySettings interface {
@@ -74,9 +74,9 @@ func (epsm *ExtensionPolicySettingsManager[T]) GetSettings() (*T, error) {
 }
 
 // These are the hash types supported by this package; they extend the definitions from utils.
-// However, they must be explicitly mapped instead of just reusing utils.HashType because
-// the hash types we support will be more restricted than the ones in utils, which may grow over time.
-type HashType utils.HashType
+// However, they must be explicitly mapped instead of just reusing hashutils.HashType because
+// the hash types we support will be more restricted than the ones in hashutils, which may grow over time.
+type HashType hashutils.HashType
 
 const (
 	HashTypeNone   HashType = 0
@@ -127,11 +127,11 @@ func ValidateFileHashInAllowlist(filePath string, allowlist []string, hashOpt Ha
 		return ValidateValueInAllowlist(string(content), allowlist)
 	}
 
-	hashAlg, err := utils.GetHashAlgorithm(utils.HashType(hashOpt))
+	hashAlg, err := hashutils.GetHashAlgorithm(hashutils.HashType(hashOpt))
 	if err != nil {
 		return fmt.Errorf("error occured when getting hash algorithm for file %s: %w", filePath, err)
 	}
-	value, err := utils.ComputeFileHash(filePath, hashAlg)
+	value, err := hashutils.ComputeFileHash(filePath, hashAlg)
 	if err != nil {
 		return fmt.Errorf("error occured when hashing contents of file %s for validation: %w", filePath, err)
 	}
