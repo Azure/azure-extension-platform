@@ -2,12 +2,13 @@ package catalog
 
 import (
 	"encoding/hex"
-	"fmt"
 	"strings"
 	"syscall"
 	"unsafe"
 
 	"github.com/Azure/azure-extension-platform/pkg/utils"
+	"github.com/Azure/azure-extension-platform/vmextension"
+	"github.com/pkg/errors"
 )
 
 const (
@@ -130,10 +131,10 @@ func verifySignatureWinVerifyTrust(hWnd syscall.Handle, actionId *syscall.GUID, 
 
 // VerifyFileSignature verifies Authenticode signature for a file using WinVerifyTrust.
 // Returns WinVerifyTrust status code (0 == valid).
-func VerifyFileSignature(filePath string) (uint32, error) {
+func VerifyFileSignature(filePath string) (uint32, *vmextension.ErrorWithClarification) {
 	filePathPtr, err := syscall.UTF16PtrFromString(filePath) // WinVerifyTrust takes in a LPCWSTR type, which is a ptr to a const null-terminated UTF-16 string
 	if err != nil {
-		return 1, err
+		return 1, vmextension.NewErrorWithClarificationPtr(1, errors.Wrap(err, "failed to convert file path to UTF16"))
 	}
 
 	fileInfo := winTrustFileInfo{
@@ -172,37 +173,41 @@ func VerifyFileSignature(filePath string) (uint32, error) {
 	trustData.dwStateAction = WTD_STATEACTION_CLOSE
 	_, _ = verifySignatureWinVerifyTrust(0, &actionID, &trustData)
 
-	return status, verifyErr
+	if status != 0 {
+		return status, vmextension.NewErrorWithClarificationPtr(int(status), errors.Wrap(verifyErr, "failed to verify file signature"))
+	} else {
+		return 0, nil
+	}
 }
 
-func ValidateFileAgainstCatalog(catalogFilePath, fileToVerifyPath, hashAlgorithm string) (uint32, error) {
+func ValidateFileAgainstCatalog(catalogFilePath, fileToVerifyPath, hashAlgorithm string) (uint32, *vmextension.ErrorWithClarification) {
 	hashfunction, err := utils.GetHashAlgorithm(hashAlgorithm)
 	if err != nil {
-		return 1, err
+		return 1, vmextension.NewErrorWithClarificationPtr(1, errors.Wrap(err, "failed to get hash algorithm"))
 	}
 
 	fileHash, err := utils.ComputeFileHash(fileToVerifyPath, hashfunction)
 	if err != nil {
-		return 1, err
+		return 1, vmextension.NewErrorWithClarificationPtr(1, errors.Wrap(err, "failed to compute file hash"))
 	}
 	if len(fileHash) == 0 {
-		return 1, fmt.Errorf("calculated file hash is empty")
+		return 1, vmextension.NewErrorWithClarificationPtr(1, errors.New("calculated file hash is empty"))
 	}
 
 	catalogPathPtr, err := syscall.UTF16PtrFromString(catalogFilePath)
 	if err != nil {
-		return 1, err
+		return 1, vmextension.NewErrorWithClarificationPtr(1, errors.Wrap(err, "failed to convert catalog file path to UTF16"))
 	}
 	memberFilePathPtr, err := syscall.UTF16PtrFromString(fileToVerifyPath)
 	if err != nil {
-		return 1, err
+		return 1, vmextension.NewErrorWithClarificationPtr(1, errors.Wrap(err, "failed to convert member file path to UTF16"))
 	}
 
 	// Catalog member tag is the file hash as uppercase hex.
 	memberTag := strings.ToUpper(hex.EncodeToString(fileHash))
 	memberTagPtr, err := syscall.UTF16PtrFromString(memberTag)
 	if err != nil {
-		return 1, err
+		return 1, vmextension.NewErrorWithClarificationPtr(1, errors.Wrap(err, "failed to convert member tag to UTF16"))
 	}
 
 	catalogInfo := winTrustCatalogInfo{
@@ -245,5 +250,9 @@ func ValidateFileAgainstCatalog(catalogFilePath, fileToVerifyPath, hashAlgorithm
 	trustData.dwStateAction = WTD_STATEACTION_CLOSE
 	_, _ = verifySignatureWinVerifyTrust(0, &actionID, &trustData)
 
-	return status, verifyErr
+	if status != 0 {
+		return status, vmextension.NewErrorWithClarificationPtr(int(status), errors.Wrap(verifyErr, "failed to verify file signature"))
+	} else {
+		return 0, nil
+	}
 }
