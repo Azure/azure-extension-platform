@@ -1,16 +1,13 @@
 package extensionpolicysettings
 
 import (
-	"crypto/sha1"
-	"crypto/sha256"
 	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
 
-	"github.com/Azure/azure-extension-platform/pkg/utils"
-
 	"github.com/Azure/azure-extension-platform/pkg/extensionerrors"
+	"github.com/Azure/azure-extension-platform/pkg/hashutils"
 )
 
 type ExtensionPolicySettings interface {
@@ -76,15 +73,18 @@ func (epsm *ExtensionPolicySettingsManager[T]) GetSettings() (*T, error) {
 	return epsm.settings, nil
 }
 
-// Validation Helper Functions
-type HashType int
+// These are the hash types supported by this package; they extend the definitions from utils.
+// However, they must be explicitly mapped instead of just reusing hashutils.HashType because
+// the hash types we support will be more restricted than the ones in hashutils, which may grow over time.
+type HashType hashutils.HashType
 
 const (
-	HashTypeNone HashType = iota
-	HashTypeSHA1
-	HashTypeSHA256
+	HashTypeNone   HashType = 0
+	HashTypeSHA1   HashType = 1
+	HashTypeSHA256 HashType = 2
 )
 
+// Validation Helper Functions
 func ValidateValueInAllowlist(value string, allowlist []string) error {
 	if len(allowlist) == 0 {
 		return extensionerrors.ErrPolicyAllowlistEmpty
@@ -118,34 +118,22 @@ func ValidateFileHashInAllowlist(filePath string, allowlist []string, hashOpt Ha
 		return fmt.Errorf("file to validate does not exist: %w", err)
 	}
 
-	content, err := os.ReadFile(filePath)
-	if err != nil {
-		return fmt.Errorf("failed to read file %s for validation: %w", filePath, err)
-	}
-
-	value := string(content)
-
-	if hashOpt != HashTypeNone {
-		value, err := ComputeFileHash(value, hashOpt)
+	if hashOpt == HashTypeNone {
+		// If no hashing is needed, we can directly validate the file content against the allowlist.
+		content, err := os.ReadFile(filePath)
 		if err != nil {
-			return fmt.Errorf("error occured when hashing contents of file %s for validation: %w", filePath, err)
+			return fmt.Errorf("failed to read file %s for validation: %w", filePath, err)
 		}
-		return ValidateValueInAllowlist(value, allowlist)
+		return ValidateValueInAllowlist(string(content), allowlist)
 	}
 
+	hashAlg, err := hashutils.GetHashAlgorithm(hashutils.HashType(hashOpt))
+	if err != nil {
+		return fmt.Errorf("error occured when getting hash algorithm for file %s: %w", filePath, err)
+	}
+	value, err := hashutils.ComputeFileHash(filePath, hashAlg)
+	if err != nil {
+		return fmt.Errorf("error occured when hashing contents of file %s for validation: %w", filePath, err)
+	}
 	return ValidateValueInAllowlist(value, allowlist)
-}
-
-// ComputeFileHash computes the hash of a file.
-func ComputeFileHash(contents string, hashOpt HashType) (string, error) {
-	switch hashOpt {
-	case HashTypeSHA1:
-		return utils.ComputeHash(contents, sha1.New()), nil
-	case HashTypeSHA256:
-		return utils.ComputeHash(contents, sha256.New()), nil
-	case HashTypeNone:
-		return contents, nil
-	default:
-		return "", fmt.Errorf("unsupported hash type option: %v", hashOpt)
-	}
 }
