@@ -12,6 +12,7 @@ import (
 	"testing"
 
 	"github.com/Azure/azure-extension-platform/pkg/extensionerrors"
+	"github.com/Azure/azure-extension-platform/pkg/hashutils"
 	"github.com/stretchr/testify/require"
 )
 
@@ -184,19 +185,19 @@ func TestValidateAgainstAllowlist(t *testing.T) {
 	require.Equal(t, "true", manager.settings.RequiresSigning)
 	require.NotEmpty(t, manager.settings.AllowedScripts)
 
-	require.NoError(t, ValidateFileHashInAllowlist("./testutils/testscripts/script1.sh", manager.settings.AllowedScripts, HashTypeSHA256))
-	require.NoError(t, ValidateFileHashInAllowlist("./testutils/testscripts/script2.sh", manager.settings.AllowedScripts, HashTypeSHA256))
-	require.ErrorIs(t, ValidateFileHashInAllowlist("./testutils/testscripts/script3.sh", manager.settings.AllowedScripts, HashTypeSHA256), extensionerrors.ErrItemNotInAllowlist)
-	require.NoError(t, ValidateFileHashInAllowlist("./testutils/testscripts/script5.sh", manager.settings.AllowedScripts, HashTypeSHA1))
+	require.NoError(t, ValidateFileHashInAllowlist("./testutils/testscripts/script1.sh", manager.settings.AllowedScripts, hashutils.HashTypeSHA256))
+	require.NoError(t, ValidateFileHashInAllowlist("./testutils/testscripts/script2.sh", manager.settings.AllowedScripts, hashutils.HashTypeSHA256))
+	require.ErrorIs(t, ValidateFileHashInAllowlist("./testutils/testscripts/script3.sh", manager.settings.AllowedScripts, hashutils.HashTypeSHA256), extensionerrors.ErrItemNotInAllowlist)
+	require.NoError(t, ValidateFileHashInAllowlist("./testutils/testscripts/script5.sh", manager.settings.AllowedScripts, hashutils.HashTypeSHA1))
 
 	// Empty filepath
-	require.ErrorIs(t, ValidateFileHashInAllowlist("", manager.settings.AllowedScripts, HashTypeSHA256), extensionerrors.ErrEmptyFilepathToValidate)
+	require.ErrorIs(t, ValidateFileHashInAllowlist("", manager.settings.AllowedScripts, hashutils.HashTypeSHA256), extensionerrors.ErrEmptyFilepathToValidate)
 	// Missing file
-	require.Error(t, ValidateFileHashInAllowlist("./testutils/testscripts/missing.sh", manager.settings.AllowedScripts, HashTypeSHA256))
+	require.Error(t, ValidateFileHashInAllowlist("./testutils/testscripts/missing.sh", manager.settings.AllowedScripts, hashutils.HashTypeSHA256))
 	// Now, empty list.
-	require.ErrorIs(t, ValidateFileHashInAllowlist("./testutils/testscripts/script1.sh", []string{}, HashTypeSHA256), extensionerrors.ErrPolicyAllowlistEmpty)
+	require.ErrorIs(t, ValidateFileHashInAllowlist("./testutils/testscripts/script1.sh", []string{}, hashutils.HashTypeSHA256), extensionerrors.ErrPolicyAllowlistEmpty)
 	// Empty file
-	require.NoError(t, ValidateFileHashInAllowlist("./testutils/testscripts/script4.sh", manager.settings.AllowedScripts, HashTypeSHA256))
+	require.NoError(t, ValidateFileHashInAllowlist("./testutils/testscripts/script4.sh", manager.settings.AllowedScripts, hashutils.HashTypeSHA256))
 
 }
 
@@ -207,8 +208,8 @@ func TestValidateFileHashInAllowlist_HashTypeNone_UsesRawContent(t *testing.T) {
 	require.NoError(t, writeToFile(filePath, content))
 	defer cleanupFile(filePath)
 
-	require.NoError(t, ValidateFileHashInAllowlist(filePath, []string{content}, HashTypeNone))
-	require.ErrorIs(t, ValidateFileHashInAllowlist(filePath, []string{"different-content"}, HashTypeNone), extensionerrors.ErrItemNotInAllowlist)
+	require.NoError(t, ValidateFileHashInAllowlist(filePath, []string{content}, hashutils.HashTypeNone))
+	require.ErrorIs(t, ValidateFileHashInAllowlist(filePath, []string{"different-content"}, hashutils.HashTypeNone), extensionerrors.ErrItemNotInAllowlist)
 }
 
 // Helper functions for tests

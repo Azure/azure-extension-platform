@@ -73,17 +73,6 @@ func (epsm *ExtensionPolicySettingsManager[T]) GetSettings() (*T, error) {
 	return epsm.settings, nil
 }
 
-// These are the hash types supported by this package; they extend the definitions from utils.
-// However, they must be explicitly mapped instead of just reusing hashutils.HashType because
-// the hash types we support will be more restricted than the ones in hashutils, which may grow over time.
-type HashType hashutils.HashType
-
-const (
-	HashTypeNone   HashType = 0
-	HashTypeSHA1   HashType = 1
-	HashTypeSHA256 HashType = 2
-)
-
 // Validation Helper Functions
 func ValidateValueInAllowlist(value string, allowlist []string) error {
 	if len(allowlist) == 0 {
@@ -105,7 +94,7 @@ func ValidateValueInAllowlist(value string, allowlist []string) error {
 // determines if the content is allowlisted. If hashOpt is not HashTypeNone, it will compute the hash of the file content.
 // If extensions don't want to validate a filepath but a value directly, they can call ValidateValueInAllowlist,
 // which this function calls.
-func ValidateFileHashInAllowlist(filePath string, allowlist []string, hashOpt HashType) error {
+func ValidateFileHashInAllowlist(filePath string, allowlist []string, hashOpt hashutils.HashType) error {
 	if len(allowlist) == 0 {
 		return extensionerrors.ErrPolicyAllowlistEmpty
 	}
@@ -118,7 +107,7 @@ func ValidateFileHashInAllowlist(filePath string, allowlist []string, hashOpt Ha
 		return fmt.Errorf("file to validate does not exist: %w", err)
 	}
 
-	if hashOpt == HashTypeNone {
+	if hashOpt == hashutils.HashTypeNone {
 		// If no hashing is needed, we can directly validate the file content against the allowlist.
 		content, err := os.ReadFile(filePath)
 		if err != nil {
