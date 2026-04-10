@@ -723,3 +723,23 @@ func cleanupDirsForVMExtension(vmExt *VMExtension) (combinedError error) {
 	combinedError = extensionerrors.CombineErrors(combinedError, os.RemoveAll(vmExt.HandlerEnv.DataFolder))
 	return
 }
+
+func Test_GuestAgentEnvironmentVariable_ReturnsValue(t *testing.T) {
+	t.Setenv(string(GuestAgentEnvVarExtensionVersion), "1.2.3")
+	version, err := GetGuestAgentEnvironmetVariable(GuestAgentEnvVarExtensionVersion)
+	require.NoError(t, err)
+	require.Equal(t, "1.2.3", version)
+}
+
+func Test_GuestAgentEnvironmentVariable_EmptyValue(t *testing.T) {
+	t.Setenv(string(GuestAgentEnvVarExtensionVersion), "")
+	_, err := GetGuestAgentEnvironmetVariable(GuestAgentEnvVarExtensionVersion)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), string(GuestAgentEnvVarExtensionVersion))
+}
+
+func Test_GuestAgentEnvironmentVariable_Unset(t *testing.T) {
+	os.Unsetenv(string(GuestAgentEnvVarExtensionVersion))
+	_, err := GetGuestAgentEnvironmetVariable(GuestAgentEnvVarExtensionVersion)
+	require.Error(t, err)
+}
