@@ -6,7 +6,7 @@ import (
 	"syscall"
 	"unsafe"
 
-	"github.com/Azure/azure-extension-platform/pkg/utils"
+	"github.com/Azure/azure-extension-platform/pkg/hashutils"
 	"github.com/Azure/azure-extension-platform/vmextension"
 	"github.com/pkg/errors"
 )
@@ -180,13 +180,13 @@ func VerifyFileSignature(filePath string) (uint32, *vmextension.ErrorWithClarifi
 	}
 }
 
-func ValidateFileAgainstCatalog(catalogFilePath, fileToVerifyPath, hashAlgorithm string) (uint32, *vmextension.ErrorWithClarification) {
-	hashfunction, err := utils.GetHashAlgorithm(hashAlgorithm)
+func ValidateFileAgainstCatalog(catalogFilePath, fileToVerifyPath string, hashAlgorithm hashutils.HashType) (uint32, *vmextension.ErrorWithClarification) {
+	hashfunction, err := hashutils.GetHashAlgorithm(hashAlgorithm)
 	if err != nil {
 		return 1, vmextension.NewErrorWithClarificationPtr(1, errors.Wrap(err, "failed to get hash algorithm"))
 	}
 
-	fileHash, err := utils.ComputeFileHash(fileToVerifyPath, hashfunction)
+	fileHash, err := hashutils.ComputeFileHash(fileToVerifyPath, hashfunction)
 	if err != nil {
 		return 1, vmextension.NewErrorWithClarificationPtr(1, errors.Wrap(err, "failed to compute file hash"))
 	}
@@ -204,10 +204,15 @@ func ValidateFileAgainstCatalog(catalogFilePath, fileToVerifyPath, hashAlgorithm
 	}
 
 	// Catalog member tag is the file hash as uppercase hex.
-	memberTag := strings.ToUpper(hex.EncodeToString(fileHash))
+	memberTag := strings.ToUpper(hex.EncodeToString([]byte(fileHash)))
 	memberTagPtr, err := syscall.UTF16PtrFromString(memberTag)
 	if err != nil {
 		return 1, vmextension.NewErrorWithClarificationPtr(1, errors.Wrap(err, "failed to convert member tag to UTF16"))
+	}
+
+	fileHashPtr, err := syscall.UTF16PtrFromString(fileHash)
+	if err != nil {
+		return 1, vmextension.NewErrorWithClarificationPtr(1, errors.Wrap(err, "failed to convert file hash to UTF16"))
 	}
 
 	catalogInfo := winTrustCatalogInfo{
@@ -217,7 +222,7 @@ func ValidateFileAgainstCatalog(catalogFilePath, fileToVerifyPath, hashAlgorithm
 		pcwszMemberTag:       uintptr(unsafe.Pointer(memberTagPtr)),
 		pcwszMemberFilePath:  uintptr(unsafe.Pointer(memberFilePathPtr)),
 		hMemberFile:          0,
-		pbCalculatedFileHash: uintptr(unsafe.Pointer(&fileHash[0])),
+		pbCalculatedFileHash: uintptr(unsafe.Pointer(fileHashPtr)),
 		cbCalculatedFileHash: uint32(len(fileHash)),
 		pcCatalogContext:     0,
 	}
